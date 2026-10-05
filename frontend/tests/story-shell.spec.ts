@@ -21,15 +21,12 @@ test("clean story shell starts every segment from the CUI skill picker", async (
   await expect(page.getByText("供需总览", { exact: true })).toHaveCount(0);
   await expect(page.getByText("周度分货", { exact: true })).toHaveCount(0);
 
-  const progress = page.getByTestId("story-progress");
-  await expect(progress.getByText("单港影响研判", { exact: true })).toBeVisible();
-  await expect(progress.getByText("船次分车", { exact: true })).toBeVisible();
-  await expect(progress.getByText("物流方案", { exact: true })).toBeVisible();
-  await expect(progress.getByText("到港执行", { exact: true })).toBeVisible();
-  await expect(progress.getByText("每日调拨", { exact: true })).toBeVisible();
-
-  await expect(page.getByTestId("stage-allocation")).toBeDisabled();
-  await page.getByTestId("stage-allocation").click({ force: true });
+  await expect(page.getByTestId("workspace-sidebar")).toBeVisible();
+  await expect(page.getByTestId("workspace-project-tree")).toContainText(
+    "ALJ · 沙特供应链",
+  );
+  await expect(page.getByTestId("story-progress")).toHaveCount(0);
+  await expect(page.getByTestId("workspace-overview")).toBeVisible();
   await expect(page.getByTestId("story-run-block")).toHaveCount(0);
 
   const command = page.getByTestId("story-command");
@@ -38,7 +35,7 @@ test("clean story shell starts every segment from the CUI skill picker", async (
 
   await page
     .getByTestId("story-skill-option")
-    .filter({ hasText: "/crisis-brief" })
+    .filter({ has: page.getByText("/crisis-brief", { exact: true }) })
     .click();
   await expect(command).toHaveValue(/\/crisis-brief.*1,800/);
   await expect(page.getByTestId("story-user-message")).toHaveCount(0);
@@ -69,7 +66,9 @@ test("mobile canvas stays contained and opens the CUI as a right overlay", async
   await expect(page.getByTestId("story-skill-option")).toHaveCount(5);
 });
 
-test("tablet width uses the compact overlay without horizontal clipping", async ({ page }) => {
+test("tablet width uses the compact overlay without horizontal clipping", async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 1024, height: 768 });
   await page.goto("/");
   await expect(page.getByTestId("mobile-chat-toggle")).toBeVisible();
@@ -88,36 +87,54 @@ test("reload preserves streamed blocks and pauses an active story run", async ({
   await page.clock.pauseAt((await page.evaluate(() => Date.now())) + 1_000);
   const command = page.getByTestId("story-command");
   await command.fill("/");
-  await page.getByTestId("story-skill-option").filter({ hasText: "/crisis-brief" }).click();
+  await page
+    .getByTestId("story-skill-option")
+    .filter({ has: page.getByText("/crisis-brief", { exact: true }) })
+    .click();
   await command.press("Enter");
   await page.clock.runFor(1_600);
   const visibleBefore = await page.locator(".story-block").count();
   expect(visibleBefore).toBeGreaterThan(0);
   await page.clock.runFor(400);
   const visibleAtSave = await page.locator(".story-block").count();
-  await expect.poll(() => page.evaluate(async () => {
-    return new Promise<number>((resolve) => {
-      const open = indexedDB.open("atlas-single-port-workspace", 1);
-      open.onerror = () => resolve(0);
-      open.onsuccess = () => {
-        const request = open.result
-          .transaction("snapshots")
-          .objectStore("snapshots")
-          .get("atlas-single-port-workspace-v3");
-        request.onerror = () => resolve(0);
-        request.onsuccess = () => resolve(
-          request.result?.sessions?.[0]?.snapshot?.campaign?.runs?.length ?? 0,
-        );
-      };
-    });
-  })).toBe(1);
-  const persistedStatus = await page.evaluate(async () => new Promise<string>((resolve) => {
-    const open = indexedDB.open("atlas-single-port-workspace", 1);
-    open.onsuccess = () => {
-      const request = open.result.transaction("snapshots").objectStore("snapshots").get("atlas-single-port-workspace-v3");
-      request.onsuccess = () => resolve(request.result.sessions[0].snapshot.campaign.runs[0].status);
-    };
-  }));
+  await expect
+    .poll(() =>
+      page.evaluate(async () => {
+        return new Promise<number>((resolve) => {
+          const open = indexedDB.open("atlas-single-port-workspace", 1);
+          open.onerror = () => resolve(0);
+          open.onsuccess = () => {
+            const request = open.result
+              .transaction("snapshots")
+              .objectStore("snapshots")
+              .get("atlas-single-port-workspace-v3");
+            request.onerror = () => resolve(0);
+            request.onsuccess = () =>
+              resolve(
+                request.result?.sessions?.[0]?.snapshot?.campaign?.runs
+                  ?.length ?? 0,
+              );
+          };
+        });
+      }),
+    )
+    .toBe(1);
+  const persistedStatus = await page.evaluate(
+    async () =>
+      new Promise<string>((resolve) => {
+        const open = indexedDB.open("atlas-single-port-workspace", 1);
+        open.onsuccess = () => {
+          const request = open.result
+            .transaction("snapshots")
+            .objectStore("snapshots")
+            .get("atlas-single-port-workspace-v3");
+          request.onsuccess = () =>
+            resolve(
+              request.result.sessions[0].snapshot.campaign.runs[0].status,
+            );
+        };
+      }),
+  );
   expect(persistedStatus).toBe("running");
 
   await page.reload();

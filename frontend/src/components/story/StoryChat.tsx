@@ -14,6 +14,7 @@ export default function StoryChat({
   onDraft,
   onSubmit,
   onToggleRun,
+  onViewEvidence,
   open,
   onClose,
 }: {
@@ -23,12 +24,14 @@ export default function StoryChat({
   onDraft: (value: string) => void;
   onSubmit: (value: string) => void;
   onToggleRun: (runId: string) => void;
+  onViewEvidence: (runId: string, step: number) => void;
   open: boolean;
   onClose: () => void;
 }) {
   const [highlighted, setHighlighted] = useState(0);
   const bodyRef = useRef<HTMLDivElement>(null);
-  const menuOpen = draft.trimStart().startsWith("/") && !draft.trimStart().includes(" ");
+  const menuOpen =
+    draft.trimStart().startsWith("/") && !draft.trimStart().includes(" ");
   const query = draft.trim().toLowerCase();
   const options = useMemo(
     () => storySkills.filter((skill) => skill.command.startsWith(query || "/")),
@@ -36,7 +39,10 @@ export default function StoryChat({
   );
   useEffect(() => setHighlighted(0), [query]);
   useEffect(() => {
-    bodyRef.current?.scrollTo({ top: bodyRef.current.scrollHeight, behavior: "smooth" });
+    bodyRef.current?.scrollTo({
+      top: bodyRef.current.scrollHeight,
+      behavior: "smooth",
+    });
   }, [messages, campaign.runs]);
 
   function choose(index: number) {
@@ -46,17 +52,37 @@ export default function StoryChat({
   }
 
   return (
-    <aside className={`story-chat ${open ? "open" : ""}`} aria-label="Agent CUI">
+    <aside
+      className={`story-chat ${open ? "open" : ""}`}
+      aria-label="Agent CUI"
+    >
       <header className="story-chat-head">
-        <span className="story-agent-mark"><Bot size={17} /></span>
-        <div><strong>ATLAS Agent</strong><small>CUI · Skill 驱动</small></div>
-        <span className="story-online"><i /> online</span>
-        <button type="button" className="story-chat-close" aria-label="关闭 CUI" onClick={onClose}><X size={15} /></button>
+        <span className="story-agent-mark">
+          <Bot size={17} />
+        </span>
+        <div>
+          <strong>ATLAS Agent</strong>
+          <small>CUI · Skill 驱动</small>
+        </div>
+        <span className="story-online">
+          <i /> online
+        </span>
+        <button
+          type="button"
+          className="story-chat-close"
+          aria-label="关闭 CUI"
+          onClick={onClose}
+        >
+          <X size={15} />
+        </button>
       </header>
       <div className="story-chat-body" ref={bodyRef}>
         <div className="story-agent-intro">
           <Sparkles size={15} />
-          <p>输入 <kbd>/</kbd> 选择一段故事。选择只会带出提示词，按回车后才开始分析。</p>
+          <p>
+            输入 <kbd>/</kbd>{" "}
+            选择能力。告诉我业务目标和约束，我会给出可追溯的方案。
+          </p>
         </div>
         {messages.map((message) => {
           const run = message.storyRunId
@@ -66,25 +92,75 @@ export default function StoryChat({
             <article
               key={message.id}
               className={`story-message ${message.role}`}
-              data-testid={message.role === "user" ? "story-user-message" : "story-agent-message"}
+              data-testid={
+                message.role === "user"
+                  ? "story-user-message"
+                  : "story-agent-message"
+              }
             >
               {message.title && <strong>{message.title}</strong>}
               <p>{message.text}</p>
               {run && (
                 <div className="story-run-trace">
                   {visibleStoryEvents(run).map((event, index) => (
-                    <div className="story-cui-event" data-testid="story-cui-event" key={event.id}>
-                      <span>{index + 1}</span><div><strong>{event.title}</strong><p>{event.detail}</p></div>
+                    <div
+                      className="story-cui-event"
+                      data-testid="story-cui-event"
+                      key={event.id}
+                    >
+                      <span>{index + 1}</span>
+                      <div>
+                        {event.operation && (
+                          <small className="cui-operation-label">
+                            {event.operation}
+                          </small>
+                        )}
+                        <strong>{event.title}</strong>
+                        <p>{event.detail}</p>
+                        {event.sources && (
+                          <footer>
+                            {event.sources.map((source) => (
+                              <small key={source}>{source}</small>
+                            ))}
+                          </footer>
+                        )}
+                        {run.evidence && (
+                          <button
+                            type="button"
+                            className="cui-evidence-link"
+                            onClick={() =>
+                              onViewEvidence(
+                                run.id,
+                                Math.min(index, run.evidence!.steps.length - 1),
+                              )
+                            }
+                          >
+                            查看判断依据 ↗
+                          </button>
+                        )}
+                      </div>
                     </div>
                   ))}
-                  {run.status === "blocked" && <div className="story-run-warning">{run.blockedReason}</div>}
+                  {run.status === "blocked" && (
+                    <div className="story-run-warning">{run.blockedReason}</div>
+                  )}
                   {(run.status === "running" || run.status === "paused") && (
-                    <button type="button" className="story-run-toggle" onClick={() => onToggleRun(run.id)}>
-                      {run.status === "running" ? <Pause size={13} /> : <Play size={13} />}
+                    <button
+                      type="button"
+                      className="story-run-toggle"
+                      onClick={() => onToggleRun(run.id)}
+                    >
+                      {run.status === "running" ? (
+                        <Pause size={13} />
+                      ) : (
+                        <Play size={13} />
+                      )}
                       {run.status === "running" ? "暂停" : "继续"}
                     </button>
                   )}
-                  {run.status === "complete" && <div className="story-run-answer">{run.answer}</div>}
+                  {run.status === "complete" && (
+                    <div className="story-run-answer">{run.answer}</div>
+                  )}
                 </div>
               )}
             </article>
@@ -94,7 +170,7 @@ export default function StoryChat({
       <div className="story-composer">
         {menuOpen && (
           <div className="story-skill-menu" role="listbox">
-            <div className="story-skill-menu-title">选择故事 Skill</div>
+            <div className="story-skill-menu-title">供应链 Skills</div>
             {options.map((skill, index) => {
               const availability = skillAvailability(skill.command, campaign);
               return (
@@ -106,8 +182,16 @@ export default function StoryChat({
                   onMouseEnter={() => setHighlighted(index)}
                   onClick={() => choose(index)}
                 >
-                  <span><strong>{skill.command}</strong><small>{skill.title}</small></span>
-                  <em>{skill.description}<small>{availability.available ? "已解锁" : "等待前序 Skill"}</small></em>
+                  <span>
+                    <strong>{skill.command}</strong>
+                    <small>{skill.title}</small>
+                  </span>
+                  <em>
+                    {skill.description}
+                    <small>
+                      {availability.available ? "可运行" : availability.reason}
+                    </small>
+                  </em>
                 </button>
               );
             })}
@@ -122,7 +206,9 @@ export default function StoryChat({
           onKeyDown={(event) => {
             if (menuOpen && event.key === "ArrowDown") {
               event.preventDefault();
-              setHighlighted((value) => Math.min(options.length - 1, value + 1));
+              setHighlighted((value) =>
+                Math.min(options.length - 1, value + 1),
+              );
               return;
             }
             if (menuOpen && event.key === "ArrowUp") {
@@ -142,8 +228,14 @@ export default function StoryChat({
           }}
         />
         <div className="story-composer-foot">
-          <span><kbd>Shift</kbd> + <kbd>Enter</kbd> 换行</span>
-          <button type="button" aria-label="发送" onClick={() => draft.trim() && onSubmit(draft.trim())}>
+          <span>
+            <kbd>Shift</kbd> + <kbd>Enter</kbd> 换行
+          </span>
+          <button
+            type="button"
+            aria-label="发送"
+            onClick={() => draft.trim() && onSubmit(draft.trim())}
+          >
             <Send size={15} />
           </button>
         </div>

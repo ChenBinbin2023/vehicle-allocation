@@ -5,7 +5,7 @@ async function runSkill(page: Page, command: string) {
   await input.fill("/");
   await page
     .getByTestId("story-skill-option")
-    .filter({ hasText: command })
+    .filter({ has: page.getByText(command, { exact: true }) })
     .click();
   await input.press("Enter");
 }
@@ -36,17 +36,23 @@ test("phase one streams four workbenches and conserves all 1800 vehicles", async
     await expect(routes).toContainText(quantity);
   }
   await runSkill(page, "/arrival-execution");
-  await expect(page.getByTestId("stage-execution")).toBeEnabled();
   await expect(page.locator(".story-run-state")).toContainText("Agent 运行中");
   await page.clock.runFor(12_000);
   await expect(page.getByTestId("final-conservation")).toContainText("1,800");
   await expect(page.getByTestId("inventory-baseline")).toContainText("1,180");
-  await page.getByTestId("stage-allocation").click();
+  await page.getByTestId("canvas-history-toggle").click();
+  await page
+    .locator(
+      '[data-testid="canvas-history-item"][data-run-command="/vessel-allocation"]',
+    )
+    .click();
   await expect(page.getByTestId("raise-dammam-safety")).toHaveCount(0);
   await expect(page.getByText("只读运行快照", { exact: true })).toBeVisible();
 });
 
-test("allocation parameter changes invalidate the snapshot and preserve run history", async ({ page }) => {
+test("allocation parameter changes invalidate the snapshot and preserve run history", async ({
+  page,
+}) => {
   await page.goto("/");
   await page.clock.install();
 
@@ -56,13 +62,21 @@ test("allocation parameter changes invalidate the snapshot and preserve run hist
   await page.clock.runFor(10_000);
   await page.getByTestId("raise-dammam-safety").click();
   await expect(page.locator(".story-run-state")).toContainText("输入已变更");
-  await expect(page.getByText(/CUI 重新运行 \/vessel-allocation/)).toBeVisible();
+  await expect(
+    page.getByText(/CUI 重新运行 \/vessel-allocation/),
+  ).toBeVisible();
 
   await runSkill(page, "/vessel-allocation");
   await page.clock.runFor(10_000);
-  await expect(page.getByTestId("run-history-select")).toBeVisible();
+  await expect(page.getByTestId("canvas-history-toggle")).toBeVisible();
   await expect(page.getByText("达曼 VPC · 120", { exact: true })).toBeVisible();
-  await page.getByTestId("run-history-select").selectOption({ index: 0 });
+  await page.getByTestId("canvas-history-toggle").click();
+  await page
+    .locator(
+      '[data-testid="canvas-history-item"][data-run-command="/vessel-allocation"]',
+    )
+    .last()
+    .click();
   await expect(page.locator(".story-run-state")).toContainText("输入已变更");
   await expect(page.getByTestId("raise-dammam-safety")).toHaveCount(0);
 });

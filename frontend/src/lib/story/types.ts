@@ -1,3 +1,5 @@
+import type { DecisionEvidence } from "./decision-evidence";
+
 export type StoryCommand =
   | "/crisis-brief"
   | "/vessel-allocation"
@@ -6,11 +8,7 @@ export type StoryCommand =
   | "/daily-rebalance";
 
 export type StoryStage =
-  | "crisis"
-  | "allocation"
-  | "delivery"
-  | "execution"
-  | "rebalance";
+  "crisis" | "allocation" | "delivery" | "execution" | "rebalance";
 
 export type DemandCategory =
   | "enterprise"
@@ -33,11 +31,7 @@ export type VehicleStatus =
   | "exception";
 
 export type RouteId =
-  | "west"
-  | "riyadh"
-  | "eastDirect"
-  | "riyadhIntercept"
-  | "dammamSafety";
+  "west" | "riyadh" | "eastDirect" | "riyadhIntercept" | "dammamSafety";
 
 export type VpcId = "JED" | "RUH" | "DMM";
 
@@ -168,7 +162,12 @@ export type DeliveryPlan = {
 export type ExecutionEvent =
   | { id: string; type: "arrive"; day: number }
   | { id: string; type: "clear" | "pdi"; day: number; vehicleIds: string[] }
-  | { id: string; type: "ship" | "receive" | "cancel"; day: number; batchId: string };
+  | {
+      id: string;
+      type: "ship" | "receive" | "cancel";
+      day: number;
+      batchId: string;
+    };
 
 export type ExecutionRecord = {
   events: ExecutionEvent[];
@@ -268,15 +267,12 @@ export type StoryEvent = {
   title: string;
   detail: string;
   duration: number;
+  operation?: string;
+  sources?: string[];
 };
 
 export type StoryBlockStatus =
-  | "queued"
-  | "streaming"
-  | "ready"
-  | "action_required"
-  | "stale"
-  | "error";
+  "queued" | "streaming" | "ready" | "action_required" | "stale" | "error";
 
 export type StoryBlock = {
   id: string;
@@ -315,6 +311,7 @@ export type StoryRun = {
   nextSkillSuggestions: StoryCommand[];
   answer?: string;
   blockedReason?: string;
+  evidence?: DecisionEvidence;
 };
 
 export type AuditEntry = {

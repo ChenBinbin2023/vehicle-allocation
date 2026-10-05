@@ -3,7 +3,10 @@ import { expect, test, type Page } from "@playwright/test";
 async function runSkill(page: Page, command: string, duration = 10_000) {
   const input = page.getByTestId("story-command");
   await input.fill("/");
-  await page.getByTestId("story-skill-option").filter({ hasText: command }).click();
+  await page
+    .getByTestId("story-skill-option")
+    .filter({ has: page.getByText(command, { exact: true }) })
+    .click();
   await input.press("Enter");
   await page.clock.runFor(duration);
 }
@@ -15,9 +18,11 @@ test("daily rebalance stays gated, then supports approval and inventory locking"
   await page.clock.install();
 
   await runSkill(page, "/daily-rebalance", 500);
-  await expect(page.getByText("前置条件尚未满足", { exact: true })).toBeVisible();
+  await expect(
+    page.getByText("前置条件尚未满足", { exact: true }),
+  ).toBeVisible();
   await expect(page.getByText(/库存基线/).last()).toBeVisible();
-  await expect(page.getByTestId("stage-rebalance")).toBeDisabled();
+  await expect(page.getByTestId("story-progress")).toHaveCount(0);
   await expect(page.getByTestId("story-run-block")).toHaveCount(0);
 
   await runSkill(page, "/crisis-brief");
@@ -34,6 +39,10 @@ test("daily rebalance stays gated, then supports approval and inventory locking"
   await expect(page.getByTestId("buyback-disabled")).toBeDisabled();
 
   await page.getByTestId("approve-enterprise").click();
-  await expect(page.getByTestId("daily-execution")).toContainText("3 个运输任务");
-  await expect(page.getByTestId("daily-execution")).toContainText("80 台已锁定");
+  await expect(page.getByTestId("daily-execution")).toContainText(
+    "3 个运输任务",
+  );
+  await expect(page.getByTestId("daily-execution")).toContainText(
+    "80 台已锁定",
+  );
 });

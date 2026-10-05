@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useState } from "react";
-import { ChevronRight, MessageSquare, Plus } from "lucide-react";
+import { MessageSquare } from "lucide-react";
 import type { Session, SessionSnapshot, StoryMessage } from "@/lib/sessions";
 import { resolveStorySkill } from "@/lib/story/skill-catalog";
 import {
@@ -13,7 +13,7 @@ import {
 import type { StoryStage } from "@/lib/story/types";
 import { approveDailyDecision } from "@/lib/story/rebalance-engine";
 import StoryChat from "./StoryChat";
-import StoryProgress from "./StoryProgress";
+import WorkspaceSidebar, { type WorkspaceView } from "./WorkspaceSidebar";
 import StreamingCanvas from "./StreamingCanvas";
 
 export default function StoryWorkspace({
@@ -34,9 +34,17 @@ export default function StoryWorkspace({
   const [campaign, setCampaign] = useState(snapshot.campaign);
   const [messages, setMessages] = useState<StoryMessage[]>(snapshot.messages);
   const [draft, setDraft] = useState(snapshot.draft);
-  const [activeStage, setActiveStage] = useState<StoryStage | "welcome">(snapshot.activeStage);
-  const [viewedRunId, setViewedRunId] = useState<string | null>(snapshot.campaign.activeRunId);
+  const [activeStage, setActiveStage] = useState<StoryStage | "welcome">(
+    snapshot.activeStage,
+  );
+  const [viewedRunId, setViewedRunId] = useState<string | null>(
+    snapshot.campaign.activeRunId,
+  );
   const [chatOpen, setChatOpen] = useState(true);
+  const [workspaceView, setWorkspaceView] = useState<WorkspaceView>(
+    snapshot.activeStage === "welcome" ? "overview" : "task",
+  );
+  const [focusedStep, setFocusedStep] = useState<number | null>(null);
   const busy = campaign.runs.some((run) => run.status === "running");
 
   useEffect(() => {
@@ -62,12 +70,16 @@ export default function StoryWorkspace({
       const delta = now - previous;
       previous = now;
       setCampaign((current) => {
-        const active = current.runs.find((run) => run.id === current.activeRunId);
+        const active = current.runs.find(
+          (run) => run.id === current.activeRunId,
+        );
         if (!active || active.status !== "running") return current;
         const advanced = advanceStoryRun(active, delta);
         const withRun = {
           ...current,
-          runs: current.runs.map((run) => run.id === advanced.id ? advanced : run),
+          runs: current.runs.map((run) =>
+            run.id === advanced.id ? advanced : run,
+          ),
         };
         return advanced.status === "complete"
           ? applyStoryRunResult(withRun, advanced)
@@ -78,19 +90,30 @@ export default function StoryWorkspace({
   }, [busy]);
 
   function submit(value: string) {
-    if (campaign.runs.some((run) => run.status === "running" || run.status === "paused")) return;
+    if (
+      campaign.runs.some(
+        (run) => run.status === "running" || run.status === "paused",
+      )
+    )
+      return;
     const skill = resolveStorySkill(value);
     const now = Date.now();
     if (!skill) {
       setMessages((current) => [
         ...current,
         { id: now, role: "user", text: value },
-        { id: now + 1, role: "agent", title: "未找到这个 Skill", text: "输入 / 从五段供应保障故事中选择。" },
+        {
+          id: now + 1,
+          role: "agent",
+          title: "未找到这个 Skill",
+          text: "输入 / 选择供应链分析能力。",
+        },
       ]);
       setDraft("");
       return;
     }
-    const prompt = value.slice(skill.command.length).trim() || skill.defaultPrompt;
+    const prompt =
+      value.slice(skill.command.length).trim() || skill.defaultPrompt;
     const run = startStoryRun(skill.command, prompt, campaign);
     if (run.status === "blocked") {
       setMessages((current) => [
@@ -118,51 +141,58 @@ export default function StoryWorkspace({
         id: now + 1,
         role: "agent",
         title: `${skill.title}已启动`,
-        text: "我会同步生成 CUI 推理轨迹和中间业务工作台。",
+        text: "我会读取业务快照，展示采用的规则、候选方案与校验结果。点击过程记录可以查看画布中的对应依据。",
         storyRunId: run.id,
       },
     ]);
     setActiveStage(skill.stage);
     setViewedRunId(run.id);
+    setFocusedStep(null);
+    setWorkspaceView("task");
     setDraft("");
   }
 
-  function selectStage(stage: StoryStage) {
-    const command = {
-      crisis: "/crisis-brief",
-      allocation: "/vessel-allocation",
-      delivery: "/delivery-plan",
-      execution: "/arrival-execution",
-      rebalance: "/daily-rebalance",
-    } as const;
-    const latest = campaign.runs.filter((run) => run.command === command[stage]).at(-1);
-    setActiveStage(stage);
-    setViewedRunId(latest?.id ?? null);
+  function selectRun(runId: string, step: number | null = null) {
+    const run = campaign.runs.find((item) => item.id === runId);
+    const skill = run && resolveStorySkill(run.command);
+    if (!skill) return;
+    setActiveStage(skill.stage);
+    setViewedRunId(runId);
+    setWorkspaceView("task");
+    setFocusedStep(step);
   }
 
-  function changeDammamSafety() {
+  function changeDammamSafety(nextSafety = 120) {
     setCampaign((current) => {
       const latestAllocationRun = current.runs
         .filter((run) => run.command === "/vessel-allocation")
         .at(-1);
       if (
         latestAllocationRun?.id !== viewedRunId ||
-        current.deliveryPlan ||
+        (current.deliveryPlan && current.deliveryPlan.status !== "blocked") ||
         current.inventoryBaseline ||
-        current.dailyOperations.length > 0
+        current.dailyOperations.length > 0 ||
+        latestAllocationRun.status !== "complete" ||
+        current.planningParameters.dammamSafetyStock === nextSafety
       ) {
         return current;
       }
       const newVersion = current.version + 1;
-      const nextSafety = 120;
       return {
         ...current,
         version: newVersion,
-        planningParameters: { ...current.planningParameters, dammamSafetyStock: nextSafety },
-        allocation: current.allocation ? { ...current.allocation, status: "stale" } : null,
+        planningParameters: {
+          ...current.planningParameters,
+          dammamSafetyStock: nextSafety,
+        },
+        allocation: current.allocation
+          ? { ...current.allocation, status: "stale" }
+          : null,
         deliveryPlan: null,
         runs: current.runs.map((run) =>
-          run.id === viewedRunId ? markStoryRunStale(run, newVersion) : run,
+          run.id === viewedRunId || run.command === "/delivery-plan"
+            ? markStoryRunStale(run, newVersion)
+            : run,
         ),
         auditTrail: [
           ...current.auditTrail,
@@ -175,42 +205,66 @@ export default function StoryWorkspace({
         ],
       };
     });
+    setDraft(
+      `/vessel-allocation 按达曼 ${nextSafety} 台自由安全库存重新分车，保护 620 台已确认订单，并说明利雅得库存的变化。`,
+    );
   }
 
   function toggleRun(runId: string) {
     setCampaign((current) => ({
       ...current,
-      runs: current.runs.map((run) => run.id === runId && (run.status === "running" || run.status === "paused")
-        ? { ...run, status: run.status === "running" ? "paused" : "running" }
-        : run),
+      runs: current.runs.map((run) =>
+        run.id === runId &&
+        (run.status === "running" || run.status === "paused")
+          ? { ...run, status: run.status === "running" ? "paused" : "running" }
+          : run,
+      ),
     }));
   }
 
   return (
     <div className="story-shell" data-testid="story-shell">
-      <aside className="story-sidebar">
-        <div className="story-brand"><span>AT</span><div><strong>ATLAS</strong><small>Vehicle Supply Agent</small></div></div>
-        <div className="story-session-head"><span>工作会话</span><button type="button" onClick={onNewSession} aria-label="新建 Session"><Plus size={15} /></button></div>
-        <div className="story-session-list">
-          {sessions.map((item) => (
-            <button type="button" key={item.id} onClick={() => onSelectSession(item.id)} className={item.id === session.id ? "active" : ""}>
-              <span><i />{item.title}</span><ChevronRight size={13} />
-            </button>
-          ))}
-        </div>
-        <StoryProgress campaign={campaign} activeStage={activeStage} onSelect={selectStage} />
-        <div className="story-sidebar-foot"><span>JED · Single Port</span><small>Demo data · v3</small></div>
-      </aside>
+      <WorkspaceSidebar
+        sessions={sessions}
+        activeId={session.id}
+        view={workspaceView}
+        onView={setWorkspaceView}
+        onSelectSession={onSelectSession}
+        onNewSession={onNewSession}
+      />
       <StreamingCanvas
         campaign={campaign}
         activeStage={activeStage}
         viewedRunId={viewedRunId}
-        onSelectRun={setViewedRunId}
+        onSelectRun={selectRun}
+        focusedStep={focusedStep}
+        workspaceView={workspaceView}
+        sessionTitle={session.title}
         onChangeDammamSafety={changeDammamSafety}
-        onApprove={(decisionId) => setCampaign((current) => approveDailyDecision(current, decisionId))}
+        onApprove={(decisionId) =>
+          setCampaign((current) => approveDailyDecision(current, decisionId))
+        }
       />
-      <button type="button" className="story-mobile-chat-toggle" data-testid="mobile-chat-toggle" aria-label="打开 Agent CUI" onClick={() => setChatOpen(true)}><MessageSquare size={17} /></button>
-      <StoryChat campaign={campaign} messages={messages} draft={draft} onDraft={setDraft} onSubmit={submit} onToggleRun={toggleRun} open={chatOpen} onClose={() => setChatOpen(false)} />
+      <button
+        type="button"
+        className="story-mobile-chat-toggle"
+        data-testid="mobile-chat-toggle"
+        aria-label="打开 Agent CUI"
+        onClick={() => setChatOpen(true)}
+      >
+        <MessageSquare size={17} />
+      </button>
+      <StoryChat
+        campaign={campaign}
+        messages={messages}
+        draft={draft}
+        onDraft={setDraft}
+        onSubmit={submit}
+        onToggleRun={toggleRun}
+        onViewEvidence={selectRun}
+        open={chatOpen}
+        onClose={() => setChatOpen(false)}
+      />
     </div>
   );
 }
