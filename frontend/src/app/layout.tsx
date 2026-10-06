@@ -1,8 +1,15 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "@/styles/ui-tokens.css";
 import "@/styles/story.css";
 import "@/styles/decision-workspace.css";
 import "@/styles/visual-decisions.css";
+import "@/styles/smart-query.css";
+import "@/styles/store-planning.css";
+import "@/styles/profit-analysis.css";
+import "@/styles/workspace-layout.css";
+import "@/styles/vessel-overview.css";
+import "@/styles/vessel-orders.css";
 export const metadata: Metadata = {
   title: "ATLAS · 吉达单港供应保障 Agent",
   description:

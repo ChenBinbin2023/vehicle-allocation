@@ -50,6 +50,8 @@ export default function WorkspaceSidebar({
         <nav aria-label="工作空间">
           <button
             type="button"
+            aria-label="供应链工作台"
+            title="供应链工作台"
             className={view === "overview" ? "active" : ""}
             onClick={() => onView("overview")}
           >
@@ -58,6 +60,8 @@ export default function WorkspaceSidebar({
           </button>
           <button
             type="button"
+            aria-label="数据与业务规则"
+            title="数据与业务规则"
             className={view === "data" ? "active" : ""}
             onClick={() => onView("data")}
           >
@@ -83,6 +87,8 @@ export default function WorkspaceSidebar({
         <button
           type="button"
           className="workspace-project-title"
+          aria-label="ALJ · 沙特供应链"
+          title="ALJ · 沙特供应链"
           aria-expanded={expanded}
           onClick={() => setExpanded((value) => !value)}
         >

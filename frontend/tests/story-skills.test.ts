@@ -12,6 +12,7 @@ import {
 } from "../src/lib/story/skill-catalog";
 import {
   advanceStoryRun,
+  applyStoryRunResult,
   markStoryRunStale,
   startStoryRun,
   visibleStoryBlocks,
@@ -19,7 +20,7 @@ import {
 } from "../src/lib/story/skill-runner";
 import type { CampaignState } from "../src/lib/story/types";
 
-test("five story skills resolve without mutating campaign state", () => {
+test("story skills resolve without mutating campaign state", () => {
   const state = createCampaignState();
   const before = JSON.stringify(state);
 
@@ -31,6 +32,9 @@ test("five story skills resolve without mutating campaign state", () => {
       "/delivery-plan",
       "/arrival-execution",
       "/daily-rebalance",
+      "/daily-transfer",
+      "/profit-analysis",
+      "/smart-query",
     ],
   );
   assert.equal(
@@ -44,23 +48,122 @@ test("five story skills resolve without mutating campaign state", () => {
 test("skill prerequisites unlock only after the prior business result", () => {
   const base = createCampaignState();
   assert.equal(skillAvailability("/crisis-brief", base).available, true);
-  assert.equal(skillAvailability("/vessel-allocation", base).available, false);
+  assert.equal(skillAvailability("/vessel-allocation", base).available, true);
 
   const briefed = { ...base, crisis: analyzeCrisis(base) };
-  assert.equal(skillAvailability("/vessel-allocation", briefed).available, true);
+  assert.equal(
+    skillAvailability("/vessel-allocation", briefed).available,
+    true,
+  );
   assert.equal(skillAvailability("/delivery-plan", briefed).available, false);
 
-  const allocated = { ...briefed, allocation: allocateVessel(briefed) };
+  const run = startStoryRun("/vessel-allocation", "", briefed);
+  const allocated = applyStoryRunResult(
+    briefed,
+    advanceStoryRun(run, run.duration),
+  );
   assert.equal(skillAvailability("/delivery-plan", allocated).available, true);
-  assert.equal(skillAvailability("/arrival-execution", allocated).available, false);
+  assert.equal(
+    skillAvailability("/arrival-execution", allocated).available,
+    false,
+  );
 
-  const planned = planDelivery(allocated);
+  const legacy = { ...base, allocation: allocateVessel(base) };
+  const planned = planDelivery(legacy);
   const published: CampaignState = {
     ...allocated,
     deliveryPlan: { ...planned, status: "published" },
   };
-  assert.equal(skillAvailability("/arrival-execution", published).available, true);
-  assert.equal(skillAvailability("/daily-rebalance", published).available, false);
+  assert.equal(
+    skillAvailability("/arrival-execution", published).available,
+    true,
+  );
+  assert.equal(
+    skillAvailability("/daily-rebalance", published).available,
+    false,
+  );
+  assert.equal(
+    skillAvailability("/daily-transfer", published).available,
+    false,
+  );
+});
+
+function dailyState(): CampaignState {
+  const base = createCampaignState();
+  const allocated = { ...base, allocation: allocateVessel(base) };
+  const published: CampaignState = {
+    ...allocated,
+    deliveryPlan: { ...planDelivery(allocated), status: "published" },
+  };
+  const run = startStoryRun("/arrival-execution", "", published);
+  return applyStoryRunResult(published, advanceStoryRun(run, run.duration));
+}
+
+test("daily transfer shares the inventory baseline gate", () => {
+  const base = createCampaignState();
+  assert.equal(skillAvailability("/daily-transfer", base).available, false);
+  const blocked = startStoryRun("/daily-transfer", "", base);
+  assert.equal(blocked.status, "blocked");
+  assert.match(blocked.blockedReason ?? "", /库存基线/);
+
+  const state = dailyState();
+  assert.equal(skillAvailability("/daily-transfer", state).available, true);
+});
+
+test("daily transfer run streams six scenes on a bounded timeline", () => {
+  const state = dailyState();
+  const run = startStoryRun("/daily-transfer", "", state);
+
+  assert.equal(run.command, "/daily-transfer");
+  assert.equal(run.businessDate, "T+4");
+  assert.equal(run.events.length, 12);
+  assert.equal(run.events[0].role, "thinking");
+  assert.equal(run.events.at(-1)!.role, "agent");
+  assert.equal(
+    run.duration,
+    run.events.reduce((sum, event) => sum + event.duration, 0),
+  );
+  assert.deepEqual(
+    run.blocks.map((block) => block.type),
+    [
+      "transfer-demand-pool",
+      "transfer-enterprise-assembly",
+      "transfer-dual-impact",
+      "transfer-tradeoff",
+      "transfer-execution-docs",
+      "transfer-exception-replan",
+      "transfer-value-summary",
+    ],
+  );
+  assert.ok(
+    run.blocks.every(
+      (block) => block.revealAt > 0 && block.revealAt < run.duration,
+    ),
+  );
+  assert.ok(
+    run.blocks.every(
+      (block, index) =>
+        index === 0 || block.revealAt >= run.blocks[index - 1].revealAt,
+    ),
+  );
+  assert.match(run.answer ?? "", /企业大单/);
+  assert.equal(JSON.stringify(run.blocks).length > 0, true);
+
+  const progressing = advanceStoryRun(run, 5_300);
+  assert.ok(visibleStoryBlocks(progressing).length >= 2);
+  const completed = advanceStoryRun(run, run.duration);
+  assert.equal(completed.status, "complete");
+  assert.ok(completed.blocks.every((block) => block.status === "ready"));
+
+  const applied = applyStoryRunResult(state, completed);
+  assert.equal(applied.dailyOperations.length, 1);
+  assert.equal(applied.dailyOperations[0].businessDate, "T+4");
+  assert.equal(
+    applied.dailyOperations[0].decisions.some(
+      (decision) => decision.status === "approval_required",
+    ),
+    true,
+  );
 });
 
 test("synchronized blocks appear progressively with CUI run time", () => {
@@ -105,11 +208,7 @@ test("CUI event detail streams character by character before it completes", () =
 test("blocked commands explain the missing prerequisite and preserve input", () => {
   const state = createCampaignState();
   const before = JSON.stringify(state);
-  const run = startStoryRun(
-    "/delivery-plan",
-    "请生成运输计划",
-    state,
-  );
+  const run = startStoryRun("/delivery-plan", "请生成运输计划", state);
 
   assert.equal(run.status, "blocked");
   assert.match(run.blockedReason ?? "", /分车/);
@@ -121,7 +220,10 @@ test("stale run marks previously rendered GUI blocks after input version changes
   const state = createCampaignState();
   const started = startStoryRun("/crisis-brief", "分析风险", state);
   const completed = advanceStoryRun(started, started.duration);
-  const stale = markStoryRunStale(completed, (completed.resultVersion ?? 0) + 1);
+  const stale = markStoryRunStale(
+    completed,
+    (completed.resultVersion ?? 0) + 1,
+  );
 
   assert.equal(completed.status, "complete");
   assert.ok(stale.blocks.every((block) => block.status === "stale"));

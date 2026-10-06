@@ -1,14 +1,25 @@
 import type { DecisionEvidence } from "./decision-evidence";
+import type { QueryFilters, QueryTab } from "./query-engine";
 
 export type StoryCommand =
   | "/crisis-brief"
   | "/vessel-allocation"
   | "/delivery-plan"
   | "/arrival-execution"
-  | "/daily-rebalance";
+  | "/daily-rebalance"
+  | "/daily-transfer"
+  | "/smart-query"
+  | "/profit-analysis";
 
 export type StoryStage =
-  "crisis" | "allocation" | "delivery" | "execution" | "rebalance";
+  | "crisis"
+  | "allocation"
+  | "delivery"
+  | "execution"
+  | "rebalance"
+  | "transfer"
+  | "query"
+  | "profit";
 
 export type DemandCategory =
   | "enterprise"
@@ -263,12 +274,25 @@ export type DailyPlan = {
 
 export type StoryEvent = {
   id: string;
-  role: "thinking" | "data" | "validation" | "analysis" | "agent";
+  role:
+    "thinking" | "plan" | "tool" | "data" | "validation" | "analysis" | "agent";
   title: string;
   detail: string;
   duration: number;
   operation?: string;
   sources?: string[];
+  canvasTab?: QueryTab;
+  planningTab?:
+    | "overview"
+    | "allocation"
+    | "graph"
+    | "water"
+    | "map"
+    | "routes"
+    | "compare"
+    | "batches";
+  planningNode?: string;
+  profitTab?: "orders" | "models" | "stores";
 };
 
 export type StoryBlockStatus =
@@ -312,6 +336,10 @@ export type StoryRun = {
   answer?: string;
   blockedReason?: string;
   evidence?: DecisionEvidence;
+  query?: { filters: QueryFilters; summary: string };
+  planning?: import("./store-planning").PlanningSnapshot;
+  planningSummary?: string;
+  profit?: import("./profit-analysis").ProfitSnapshot;
 };
 
 export type AuditEntry = {

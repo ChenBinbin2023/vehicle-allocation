@@ -1,4 +1,6 @@
 import type { CampaignState, StoryCommand, StoryStage } from "./types";
+import { latestDeliveryRun } from "./profit-run";
+import { latestStoreAllocation } from "./store-planning-run";
 
 export type StorySkill = {
   command: StoryCommand;
@@ -25,18 +27,19 @@ export const storySkills: StorySkill[] = [
   {
     command: "/vessel-allocation",
     title: "1,800 台船次分车",
-    description: "保护已预订订单，补充三大 VPC 并保留机动量",
+    description:
+      "查看基本统计、门店订单和单/双港物流建议，再按门店销速与 WoS 注水分车",
     stage: "allocation",
     defaultPrompt:
-      "为本船 1,800 台车制定分车计划，优先保护已预订订单，再补充三大 VPC 库存，并保留必要机动量。",
+      "先展示截至2026-08-05的供需、销速和库存模拟基本统计；供给=1800 直营WoS=3 授权WoS=4，继续按丰田门店数据演示订单优先分车与注水过程。",
   },
   {
     command: "/delivery-plan",
-    title: "单港物流与配载",
-    description: "把分车草案转成可执行的路线、板车和交付计划",
+    title: "到店物流与港口比较",
+    description: "按接车能力拆分直送、VPC 暂存和后续批次，比较单港与双港",
     stage: "delivery",
     defaultPrompt:
-      "基于当前分车草案，设计吉达单港条件下的运输和配载计划，比较订单车、补货车及偏远地区的物流方案。",
+      "基于最新门店分车结果，模拟单港到店物流；按门店接车能力安排部分直送、VPC 暂存和后续配送，比较港口场景。",
   },
   {
     command: "/arrival-execution",
@@ -54,6 +57,30 @@ export const storySkills: StorySkill[] = [
     defaultPrompt:
       "分析今天各门店提交的订单，从 VPC、门店和授权车商库存中寻找最合适车源，并生成发货、调拨或回购方案。",
   },
+  {
+    command: "/daily-transfer",
+    title: "每日调拨",
+    description: "为 80 台企业大单组合全网车源，逐单取舍急单与普通订单",
+    stage: "transfer",
+    defaultPrompt:
+      "整理今天的需求池：80 台 Hilux 企业大单需要多地集结车源，另有一笔高价值急单和一笔普通订单；请评估双端影响、生成调拨单，并跟踪执行异常。",
+  },
+  {
+    command: "/profit-analysis",
+    title: "销售贡献利润分析",
+    description: "按订单、车型、门店拆解收入、采购和物流成本，定位亏损",
+    stage: "profit",
+    defaultPrompt:
+      "基于最新到店物流快照，分析销售情景的订单、车型及门店贡献利润，并拆解物流成本和亏损原因。",
+  },
+  {
+    command: "/smart-query",
+    title: "智能问数",
+    description: "按区域、VPC 与门店分析销量预测、直营/授权库存及陆路运费",
+    stage: "query",
+    defaultPrompt:
+      "查看 2026 年各主要区域、VPC 和门店的月度销量与预测、直营店和授权店库存，并比较双港口与吉达单港的陆路运输成本。",
+  },
 ];
 
 export function resolveStorySkill(input: string): StorySkill | undefined {
@@ -65,14 +92,15 @@ export function skillAvailability(
   command: StoryCommand,
   state: CampaignState,
 ): SkillAvailability {
-  if (command === "/crisis-brief") return { available: true };
-  if (command === "/vessel-allocation") {
-    return state.crisis
+  if (command === "/crisis-brief" || command === "/smart-query")
+    return { available: true };
+  if (command === "/profit-analysis")
+    return latestDeliveryRun(state)
       ? { available: true }
-      : { available: false, reason: "请先运行 /crisis-brief 完成单港影响研判。" };
-  }
+      : { available: false, reason: "请先完成有效的到店物流模拟。" };
+  if (command === "/vessel-allocation") return { available: true };
   if (command === "/delivery-plan") {
-    return state.allocation?.status === "ready"
+    return Boolean(latestStoreAllocation(state))
       ? { available: true }
       : { available: false, reason: "请先完成有效的分车草案。" };
   }

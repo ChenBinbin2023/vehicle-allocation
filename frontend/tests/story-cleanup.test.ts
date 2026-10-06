@@ -14,6 +14,9 @@ test("contains only the new story and no legacy business entrypoints", () => {
       "/delivery-plan",
       "/arrival-execution",
       "/daily-rebalance",
+      "/daily-transfer",
+      "/profit-analysis",
+      "/smart-query",
     ],
   );
 
@@ -37,7 +40,9 @@ test("contains only the new story and no legacy business entrypoints", () => {
     "src/components/SessionHost.tsx",
     "src/components/story/StoryWorkspace.tsx",
     "src/components/story/WorkspaceSidebar.tsx",
-  ].map((path) => readFileSync(path, "utf8")).join("\n");
+  ]
+    .map((path) => readFileSync(path, "utf8"))
+    .join("\n");
   assert.doesNotMatch(renderedStory, /周度分货|教学算例|周末复盘|故事进度/);
   assert.equal(existsSync("src/components/story/StoryProgress.tsx"), false);
 

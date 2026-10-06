@@ -27,3 +27,35 @@ analysis=dict(
  routePeriods=[dict(scenario=r['场景编码'],route=r['路线编码'],start=r['运力周开始'],end=r['运力周结束'],trips=n(r,'计划周车次')) for r in read('04_运力/场景路线运力.csv')]
 )
 (root/'frontend/src/lib/analysis-data.json').write_text(json.dumps(analysis,ensure_ascii=False,separators=(',',':')))
+
+# Smart query keeps store-level monthly facts, rather than using channel totals
+# for regional drill-downs. Missing source months remain missing.
+query=dict(
+ snapshot='H_MOCK_20260929_V1',stockDate='2026-09-29',
+ stores=stores, stock=stock, months=months,
+ sales=[dict(month=r['月份'],store=r['门店编码'],brand=r['品牌'],qty=n(r,'月销量(台)')) for r in read('02_销速/月度门店销量.csv')],
+ ages=analysis['ages'],
+ routes=[dict(id=r['路线编码'],originId=r['始发节点编码'],origin=r['始发节点'],city=r['目的城市'],km=n(r,'单程公里数(km)'),hours=n(r,'单程运输时长(小时)'),load=n(r,'每车次装载量(台)')) for r in read('04_运力/路线主数据.csv')],
+ mapping=analysis['mapping'],scenarioRoutes=routes,
+)
+(root/'frontend/src/lib/query-data.json').write_text(json.dumps(query,ensure_ascii=False,separators=(',',':'))+'\n')
+print(f'Smart query imported {len(query["sales"])} monthly store/brand facts.')
+
+# Product planning reads exactly the supplied store × brand grain.
+planning=dict(
+ snapshot=query['snapshot'], stockDate=query['stockDate'], nature='模拟数据',
+ stores=[dict(**s,capacity=n(r,'库容上限(台)')) for s,r in zip(stores,read('00_客户/门店主数据.csv'))],
+ stock=stock,
+ velocity=[dict(store=r['门店编码'],brand=r['品牌'],weekly=n(r,'平均周销量(台)'),start=r['统计起始日'],end=r['统计截止日'],basis=r['销速计算口径']) for r in read('02_销速/销速汇总_门店.csv')],
+ routes=[dict(**r,tripCost=n(raw,'标准整趟费用(SAR)')) for r,raw in zip(query['routes'],read('04_运力/路线主数据.csv'))],
+ mapping=analysis['mapping'],scenarioRoutes=routes,
+)
+(root/'frontend/src/lib/store-planning-data.json').write_text(json.dumps(planning,ensure_ascii=False,separators=(',',':'))+'\n')
+print(f'Product planning imported {len(planning["stock"])} store/brand baselines.')
+
+# Financial data is newly authored, explicitly simulated and isolated from baseline facts.
+profit=dict(nature='新增模拟情景_非实际财务数据',currency='SAR',storageDays=3,
+ models=[dict(brand=r['品牌'],model=r['车型'],unitPrice=n(r,'未税单价(SAR)'),discount=n(r,'单台折扣(SAR)'),purchase=n(r,'采购成本(SAR)'),commissionPct=n(r,'佣金率(%)'),other=n(r,'其他单台费用(SAR)')) for r in read('05_利润/车型利润情景.csv')],
+ rates={r['费用编码']:n(r,'单台费率(SAR)') for r in read('05_利润/物流补充费用情景.csv')})
+(root/'frontend/src/lib/profit-data.json').write_text(json.dumps(profit,ensure_ascii=False,separators=(',',':'))+'\n')
+print(f'Profit simulation imported {len(profit["models"])} model assumptions; not actual finance records.')

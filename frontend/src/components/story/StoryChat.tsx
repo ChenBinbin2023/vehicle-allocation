@@ -1,7 +1,17 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Bot, Pause, Play, Send, Sparkles, X } from "lucide-react";
+import {
+  Bot,
+  Pause,
+  Play,
+  Send,
+  Sparkles,
+  X,
+  Wrench,
+  ListChecks,
+  CheckCircle2,
+} from "lucide-react";
 import type { StoryMessage } from "@/lib/sessions";
 import { skillAvailability, storySkills } from "@/lib/story/skill-catalog";
 import { visibleStoryEvents } from "@/lib/story/skill-runner";
@@ -55,6 +65,7 @@ export default function StoryChat({
     <aside
       className={`story-chat ${open ? "open" : ""}`}
       aria-label="Agent CUI"
+      inert={!open}
     >
       <header className="story-chat-head">
         <span className="story-agent-mark">
@@ -71,6 +82,7 @@ export default function StoryChat({
           type="button"
           className="story-chat-close"
           aria-label="关闭 CUI"
+          title="关闭 CUI"
           onClick={onClose}
         >
           <X size={15} />
@@ -104,17 +116,41 @@ export default function StoryChat({
                 <div className="story-run-trace">
                   {visibleStoryEvents(run).map((event, index) => (
                     <div
-                      className="story-cui-event"
+                      className={`story-cui-event ${run.query || run.planning || run.profit ? `query-cui-event ${event.role}` : ""}`}
                       data-testid="story-cui-event"
                       key={event.id}
                     >
                       <span>{index + 1}</span>
                       <div>
-                        {event.operation && (
-                          <small className="cui-operation-label">
-                            {event.operation}
+                        {(run.query || run.planning || run.profit) && (
+                          <small className="query-cui-kind">
+                            {event.role === "tool" ? (
+                              <Wrench size={12} />
+                            ) : event.role === "plan" ? (
+                              <ListChecks size={12} />
+                            ) : event.role === "agent" ? (
+                              <CheckCircle2 size={12} />
+                            ) : (
+                              <Sparkles size={12} />
+                            )}
+                            {event.role === "tool"
+                              ? "调用工具"
+                              : event.role === "plan"
+                                ? "规划"
+                                : event.role === "agent"
+                                  ? "阶段总结"
+                                  : "思考"}
                           </small>
                         )}
+                        {event.operation &&
+                          (!(run.query || run.planning || run.profit) ||
+                            !["思考", "规划", "阶段总结"].includes(
+                              event.operation,
+                            )) && (
+                            <small className="cui-operation-label">
+                              {event.operation}
+                            </small>
+                          )}
                         <strong>{event.title}</strong>
                         <p>{event.detail}</p>
                         {event.sources && (
@@ -124,18 +160,33 @@ export default function StoryChat({
                             ))}
                           </footer>
                         )}
-                        {run.evidence && (
+                        {(run.evidence ||
+                          event.canvasTab ||
+                          event.planningTab ||
+                          event.profitTab) && (
                           <button
                             type="button"
                             className="cui-evidence-link"
                             onClick={() =>
                               onViewEvidence(
                                 run.id,
-                                Math.min(index, run.evidence!.steps.length - 1),
+                                run.evidence
+                                  ? Math.min(
+                                      index,
+                                      run.evidence.steps.length - 1,
+                                    )
+                                  : index,
                               )
                             }
                           >
-                            查看判断依据 ↗
+                            {event.profitTab
+                              ? `查看${event.profitTab === "orders" ? "订单利润" : event.profitTab === "models" ? "车型利润" : "门店利润"}`
+                              : event.planningTab
+                                ? `查看${event.planningTab === "overview" ? "基本统计" : event.planningTab === "graph" ? (event.operation === "vessel.orders.logistics" ? "物流建议" : event.operation === "vessel.orders.read" ? "订单分车" : "分车图谱") : event.planningTab === "water" ? "注水演示" : event.planningTab === "allocation" ? "门店分车" : event.planningTab === "map" ? "路线地图" : event.planningTab === "routes" ? "到店路线" : event.planningTab === "compare" ? "港口比较" : "到店批次"}`
+                                : event.canvasTab
+                                  ? `查看${event.canvasTab === "sales" ? "销量与预测" : event.canvasTab === "inventory" ? "库存与渠道" : "陆路运输成本"}`
+                                  : "查看判断依据"}{" "}
+                            ↗
                           </button>
                         )}
                       </div>
@@ -145,21 +196,43 @@ export default function StoryChat({
                     <div className="story-run-warning">{run.blockedReason}</div>
                   )}
                   {(run.status === "running" || run.status === "paused") && (
-                    <button
-                      type="button"
-                      className="story-run-toggle"
-                      onClick={() => onToggleRun(run.id)}
-                    >
-                      {run.status === "running" ? (
-                        <Pause size={13} />
-                      ) : (
-                        <Play size={13} />
+                    <>
+                      {(run.query || run.planning || run.profit) && (
+                        <div className="query-cui-progress">
+                          <i
+                            style={{
+                              width: `${Math.min(100, (run.elapsed / run.duration) * 100)}%`,
+                            }}
+                          />
+                          <span>
+                            {run.status === "paused"
+                              ? "已暂停"
+                              : "分析结果同步生成到画布"}{" "}
+                            · {Math.round((run.elapsed / run.duration) * 100)}%
+                          </span>
+                        </div>
                       )}
-                      {run.status === "running" ? "暂停" : "继续"}
-                    </button>
+                      <button
+                        type="button"
+                        className="story-run-toggle"
+                        onClick={() => onToggleRun(run.id)}
+                      >
+                        {run.status === "running" ? (
+                          <Pause size={13} />
+                        ) : (
+                          <Play size={13} />
+                        )}
+                        {run.status === "running" ? "暂停" : "继续"}
+                      </button>
+                    </>
                   )}
                   {run.status === "complete" && (
-                    <div className="story-run-answer">{run.answer}</div>
+                    <div className="story-run-answer">
+                      {(run.query || run.planning || run.profit) && (
+                        <strong className="query-cui-summary">任务总结</strong>
+                      )}
+                      {run.answer}
+                    </div>
                   )}
                 </div>
               )}

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { createCampaignState } from "../src/lib/story/seed";
 import { allocateVessel } from "../src/lib/story/allocation-engine";
+import { dailyCampaign, publishedCampaign } from "./legacy-campaign-fixture";
 import {
   buildDecisionEvidence,
   simulateAllocation,
@@ -14,7 +15,7 @@ import {
   applyStoryRunResult,
 } from "../src/lib/story/skill-runner";
 
-test("every skill links each streamed event to one complete evidence step", () => {
+test("skills link streamed events to evidence steps or saved planning inputs", () => {
   let state = createCampaignState();
   for (const command of [
     "/crisis-brief",
@@ -24,15 +25,26 @@ test("every skill links each streamed event to one complete evidence step", () =
     "/daily-rebalance",
   ] as const) {
     const run = startStoryRun(command, "", state);
-    assert.equal(run.events.length, run.evidence?.steps.length);
+    if (command === "/arrival-execution") state = publishedCampaign();
+    if (command === "/daily-rebalance") state = dailyCampaign();
+    const current =
+      command === "/arrival-execution" || command === "/daily-rebalance"
+        ? startStoryRun(command, "", state)
+        : run;
+    assert.ok(current.planning || current.evidence);
+    if (current.evidence)
+      assert.equal(current.events.length, current.evidence.steps.length);
     assert.ok(
-      run.events.every((event) => event.operation && event.sources?.length),
+      current.events.every((event) => event.operation && event.sources?.length),
     );
-    state = applyStoryRunResult(state, advanceStoryRun(run, run.duration));
+    state = applyStoryRunResult(
+      state,
+      advanceStoryRun(current, current.duration),
+    );
   }
 });
 
-test("an over-capacity delivery calculation cannot publish or start arrival execution", () => {
+test("a store logistics simulation cannot publish or start arrival execution", () => {
   let state = createCampaignState();
   state.planningParameters.dammamSafetyStock = 120;
   for (const command of [
@@ -43,7 +55,7 @@ test("an over-capacity delivery calculation cannot publish or start arrival exec
     const run = startStoryRun(command, "", state);
     state = applyStoryRunResult(state, advanceStoryRun(run, run.duration));
   }
-  assert.equal(state.deliveryPlan?.status, "blocked");
+  assert.equal(state.deliveryPlan, null);
   assert.equal(
     startStoryRun("/arrival-execution", "", state).status,
     "blocked",
@@ -87,16 +99,7 @@ test("logistics capacity simulation exposes affected VINs while preserving reser
 });
 
 test("daily source explanations expose economic comparison and reject unconfirmed ownership", () => {
-  let state = createCampaignState();
-  for (const command of [
-    "/crisis-brief",
-    "/vessel-allocation",
-    "/delivery-plan",
-    "/arrival-execution",
-  ] as const) {
-    const run = startStoryRun(command, "", state);
-    state = applyStoryRunResult(state, advanceStoryRun(run, run.duration));
-  }
+  const state = dailyCampaign();
   const evidence = buildDecisionEvidence("/daily-rebalance", state, "T+4");
   const plan = evidence.dailyPlan!;
   const premium = plan.orders.find((order) => order.type === "premium")!;

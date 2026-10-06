@@ -11,6 +11,10 @@ import {
 import type { CampaignState } from "@/lib/story/types";
 import { resolveStorySkill } from "@/lib/story/skill-catalog";
 import { MetricGrid, StatusPill } from "./shared";
+import {
+  calculateStoreAllocation,
+  defaultAllocationScenario,
+} from "@/lib/story/store-planning";
 
 export default function WorkspaceOverview({
   campaign,
@@ -21,6 +25,15 @@ export default function WorkspaceOverview({
   mode: "overview" | "data";
   onViewRun: (runId: string) => void;
 }) {
+  const latestAllocation = [...campaign.runs]
+    .reverse()
+    .find(
+      (run) => run.status === "complete" && run.planning?.kind === "allocation",
+    );
+  const storePlan =
+    latestAllocation?.planning?.kind === "allocation"
+      ? latestAllocation.planning.result
+      : calculateStoreAllocation(defaultAllocationScenario());
   if (mode === "data")
     return (
       <div className="workspace-data-library">
@@ -30,20 +43,21 @@ export default function WorkspaceOverview({
         <div className="source-library-grid">
           {[
             {
-              name: "滚装船 VIN 清单",
-              detail: "Toyota / Lexus · 配置、颜色、需求类别",
+              name: "船次供给情景",
+              detail: "1,800 台为情景输入；data 无本船 VIN 清单",
               value: "1,800 台",
               icon: Ship,
             },
             {
-              name: "已确认销售需求",
-              detail: "企业合同、付款零售、稀缺配置",
-              value: "620 台",
+              name: "门店分车模拟快照",
+              detail:
+                "data 门店 × 品牌周销速、自由库存与 WoS 目标；订单单独输入",
+              value: "79 家门店 / 99 条记录",
               icon: FileText,
             },
             {
-              name: "三大 VPC 库存",
-              detail: "当前可售、危机覆盖策略和库存落点",
+              name: "门店接车与 VPC 容量",
+              detail: "路线与整趟报价来自 data；接车时段与 VPC 容量为情景假设",
               value: "3 个区域",
               icon: Database,
             },
@@ -76,11 +90,11 @@ export default function WorkspaceOverview({
               },
               {
                 title: "补货看有效缺口",
-                rule: "目标覆盖量 − 当前可售 − 已确认在途 + 订单需求；剩余保留机动和异常缓冲。",
+                rule: "周销速 × 目标 WoS − 到店日自由库存；订单单列，剩余供给按门店相对水位注水。",
               },
               {
                 title: "物流先校验再承诺",
-                rule: "按最终地址选路，逐路线检查容量；同方向按 8 位演示模板配载。",
+                rule: "最终目的地是门店；按首批接车能力拆分直送与 VPC 暂存，再排后续到店批次。",
               },
               {
                 title: "车源先过滤再比价",
@@ -109,19 +123,31 @@ export default function WorkspaceOverview({
         <Sparkles size={14} /> ALJ · 沙特供应链
       </div>
       <h1>供应链工作台</h1>
-      <p>把下一船的分配、物流与每天的订单承诺放在同一个工作空间。</p>
+      <p>先按订单与 WoS 分车到门店，再模拟直送、VPC 暂存和分批到店。</p>
       <article className="workspace-vessel-card">
         <div>
           <span>INBOUND VESSEL</span>
           <h2>JEDDAH HORIZON</h2>
-          <p>预计两周后抵达吉达 · Toyota / Lexus · 1,800 台</p>
+          <p>
+            {storePlan.rows.length} 家门店 ·{" "}
+            {storePlan.input.brand ?? "历史情景"} ·{" "}
+            {storePlan.input.supply.toLocaleString("en-US")} 台供给模拟
+          </p>
         </div>
-        <StatusPill tone="amber">吉达单港入境</StatusPill>
+        <StatusPill tone="amber">单港 / 双港到店比较</StatusPill>
       </article>
       <MetricGrid
         items={[
-          { label: "已预订订单", value: "620", note: "企业 · 零售 · 高配" },
-          { label: "库存补充", value: "1,180", note: "覆盖 · 机动 · 异常缓冲" },
+          {
+            label: "订单基准",
+            value: storePlan.summary.orders.toLocaleString("en-US"),
+            note: "缺少未配订单源数据，默认 0",
+          },
+          {
+            label: "门店补库",
+            value: storePlan.summary.replenishment.toLocaleString("en-US"),
+            note: "按直营 / 授权的 WoS 注水",
+          },
           {
             label: "生成的分析画布",
             value: String(campaign.runs.length),

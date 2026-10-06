@@ -1,0 +1,45 @@
+:root {
+  font-size: 14px;
+  --ui-text-xs: 0.857143rem;
+  --ui-text-sm: 0.928571rem;
+  --ui-text-base: 1rem;
+  --ui-text-body: 1.071429rem;
+  --ui-text-lg: 1.142857rem;
+  --ui-heading-sm: 1.285714rem;
+  --ui-heading-md: 1.428571rem;
+  --ui-page-title: 2rem;
+  --ui-metric: 1.714286rem;
+  --ui-ink: #243b32;
+  --ui-muted: #586960;
+  --ui-warning: #895d20;
+  --ui-control-height: 38px;
+}
+
+.story-shell {
+  font-size: var(--ui-text-base);
+  line-height: 1.6;
+  --story-muted: var(--ui-muted);
+}
+
+.story-shell :is(button, input, select, textarea) {
+  font-family: var(--font);
+}
+
+.story-shell :is(input:not([type="checkbox"]):not([type="range"]), select) {
+  min-height: var(--ui-control-height);
+}
+
+.story-shell :is(.planning-workspace, .profit-workspace) button,
+.query-filter-actions button,
+.query-trend-store-toolbar button,
+.canvas-history-control > button {
+  min-height: 36px;
+}
+
+.story-shell :is(h2, h3) {
+  line-height: 1.45;
+}
+
+.story-shell :is(p, td, th) {
+  line-height: 1.65;
+}

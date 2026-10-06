@@ -1,75 +1,63 @@
 import { expect, test, type Page } from "@playwright/test";
-
 async function runSkill(page: Page, command: string) {
-  const input = page.getByTestId("story-command");
-  await input.fill("/");
-  await page
-    .getByTestId("story-skill-option")
-    .filter({ has: page.getByText(command, { exact: true }) })
-    .click();
-  await input.press("Enter");
+  await page.getByTestId("story-command").fill(command + " 模拟");
+  await page.getByTestId("story-command").press("Enter");
+  await page.clock.runFor(8000);
+  if (command === "/vessel-allocation")
+    await page.getByRole("tab", { name: "注水演示", exact: true }).click();
 }
-
-test("phase one streams four workbenches and conserves all 1800 vehicles", async ({
+test("store simulation preserves all assigned cars and cannot fabricate arrival execution", async ({
   page,
 }) => {
   await page.goto("/");
   await page.clock.install();
-
   await runSkill(page, "/crisis-brief");
-  await page.clock.runFor(900);
-  const partialCount = await page.locator(".story-block").count();
-  expect(partialCount).toBeGreaterThan(0);
-  expect(partialCount).toBeLessThan(6);
-  await page.clock.runFor(8_000);
   await expect(page.locator(".story-block")).toHaveCount(6);
-
   await runSkill(page, "/vessel-allocation");
-  await page.clock.runFor(10_000);
-  await expect(page.getByTestId("allocation-pools")).toContainText("620");
-  await expect(page.getByTestId("allocation-pools")).toContainText("1,180");
-
+  await expect(page.getByTestId("planning-conclusion")).toContainText(
+    "先分订单 0 台",
+  );
+  await expect(page.getByTestId("planning-conclusion")).toContainText(
+    "补库存 1,800 台",
+  );
   await runSkill(page, "/delivery-plan");
-  await page.clock.runFor(10_000);
-  const routes = page.getByTestId("route-counts");
-  for (const quantity of ["520", "650", "360", "170", "100"]) {
-    await expect(routes).toContainText(quantity);
-  }
+  await expect(page.getByTestId("planning-conclusion")).toContainText(
+    "首批直送 557 台",
+  );
+  await expect(page.getByTestId("planning-conclusion")).toContainText(
+    "经 VPC 1,070 台",
+  );
   await runSkill(page, "/arrival-execution");
-  await expect(page.locator(".story-run-state")).toContainText("Agent 运行中");
-  await page.clock.runFor(12_000);
-  await expect(page.getByTestId("final-conservation")).toContainText("1,800");
-  await expect(page.getByTestId("inventory-baseline")).toContainText("1,180");
+  await expect(
+    page.getByText("前置条件尚未满足", { exact: true }),
+  ).toBeVisible();
+  await expect(page.getByTestId("final-conservation")).toHaveCount(0);
   await page.getByTestId("canvas-history-toggle").click();
   await page
     .locator(
       '[data-testid="canvas-history-item"][data-run-command="/vessel-allocation"]',
     )
     .click();
-  await expect(page.getByTestId("raise-dammam-safety")).toHaveCount(0);
-  await expect(page.getByText("只读运行快照", { exact: true })).toBeVisible();
+  await page.getByRole("tab", { name: "注水演示", exact: true }).click();
+  await page.getByRole("tab", { name: "订单分车", exact: true }).click();
+  await page.getByText("品牌注水情景 · 原分车图谱", { exact: true }).click();
+  await expect(page.getByTestId("allocation-graph")).toBeVisible();
 });
-
-test("allocation parameter changes invalidate the snapshot and preserve run history", async ({
+test("channel targets alter waterfill while the old canvas retains its own parameters", async ({
   page,
 }) => {
   await page.goto("/");
   await page.clock.install();
-
-  await runSkill(page, "/crisis-brief");
-  await page.clock.runFor(10_000);
   await runSkill(page, "/vessel-allocation");
-  await page.clock.runFor(10_000);
-  await page.getByTestId("raise-dammam-safety").click();
-  await expect(page.locator(".story-run-state")).toContainText("输入已变更");
-  await expect(
-    page.getByText(/CUI 重新运行 \/vessel-allocation/),
-  ).toBeVisible();
-
-  await runSkill(page, "/vessel-allocation");
-  await page.clock.runFor(10_000);
-  await expect(page.getByTestId("canvas-history-toggle")).toBeVisible();
-  await expect(page.getByText("达曼 VPC · 120", { exact: true })).toBeVisible();
+  await page.locator(".allocation-parameters summary").click();
+  await page.getByLabel("授权目标 WoS", { exact: true }).fill("3");
+  await page.getByRole("button", { name: "模拟重跑", exact: true }).click();
+  await page.clock.runFor(8000);
+  await page.getByRole("tab", { name: "注水演示", exact: true }).click();
+  await page.locator(".allocation-parameters summary").click();
+  await expect(page.getByLabel("授权目标 WoS", { exact: true })).toHaveValue(
+    "3",
+  );
   await page.getByTestId("canvas-history-toggle").click();
   await page
     .locator(
@@ -77,6 +65,11 @@ test("allocation parameter changes invalidate the snapshot and preserve run hist
     )
     .last()
     .click();
-  await expect(page.locator(".story-run-state")).toContainText("输入已变更");
-  await expect(page.getByTestId("raise-dammam-safety")).toHaveCount(0);
+  await page.getByRole("tab", { name: "注水演示", exact: true }).click();
+  await expect(page.getByLabel("授权目标 WoS", { exact: true })).toHaveValue(
+    "4",
+  );
+  await page.getByRole("tab", { name: "订单分车", exact: true }).click();
+  await page.getByText("品牌注水情景 · 原分车图谱", { exact: true }).click();
+  await expect(page.getByTestId("allocation-graph")).toContainText("授权 4 周");
 });

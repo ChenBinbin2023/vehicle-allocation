@@ -1,0 +1,526 @@
+.profit-workspace,
+.delivery-map-panel {
+  --profit-green: #0e7666;
+  --profit-ink: #243d36;
+  min-width: 0;
+}
+.delivery-parameters {
+  margin: 18px 0;
+  border: 1px solid #dde5dd;
+  border-radius: 12px;
+  background: #fbfcf9;
+  overflow: hidden;
+}
+.delivery-parameters > summary {
+  cursor: pointer;
+  padding: 16px 20px;
+  font-size: var(--ui-text-base);
+  color: #42634e;
+  font-weight: 600;
+}
+.delivery-parameters .planning-panel {
+  border: 0;
+  margin: 0;
+  border-radius: 0;
+}
+.profit-section-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+.profit-section-header small,
+.profit-order-detail > small {
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  letter-spacing: 1.5px;
+  font-weight: 700;
+}
+.profit-section-header h2 {
+  font-size: var(--ui-heading-md);
+  color: #243d36;
+  margin: 7px 0;
+}
+.profit-section-header p {
+  font-size: var(--ui-text-base);
+  color: var(--ui-muted);
+  margin: 0;
+  line-height: 1.7;
+}
+.delivery-map-panel {
+  background: #fff;
+  border: 1px solid #dce5df;
+  border-radius: 16px;
+  padding: 22px;
+  margin: 20px 0;
+}
+.map-layer-toggle {
+  display: flex;
+  background: #edf3ee;
+  border-radius: 8px;
+  padding: 3px;
+  flex-shrink: 0;
+}
+.planning-workspace .map-layer-toggle button {
+  border: 0;
+  background: transparent;
+  padding: 7px 10px;
+  font-size: var(--ui-text-base);
+  white-space: nowrap;
+}
+.planning-workspace .map-layer-toggle button[aria-pressed="true"] {
+  background: #fff;
+  color: #126954;
+  box-shadow: 0 1px 5px #203f2514;
+}
+.delivery-map-controls,
+.profit-filters {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  align-items: end;
+  margin-bottom: 16px;
+}
+.delivery-map-controls label,
+.profit-filters label {
+  display: grid;
+  gap: 7px;
+  font-size: var(--ui-text-sm);
+  color: var(--ui-muted);
+  min-width: 0;
+}
+.delivery-map-controls select,
+.profit-filters select,
+.profit-filters input {
+  max-width: 100%;
+  min-width: 150px;
+  border: 1px solid #dce5df;
+  border-radius: 7px;
+  padding: 9px 11px;
+  background: #fff;
+  color: #2d473d;
+  font-size: var(--ui-text-base);
+}
+.delivery-map-controls label:first-child {
+  flex: 1;
+}
+.delivery-map-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 240px;
+  gap: 18px;
+  align-items: start;
+}
+.delivery-map-art {
+  min-width: 0;
+  background: #eef4f5;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.delivery-map-art svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.delivery-map-art > p {
+  font-size: var(--ui-text-xs);
+  color: var(--ui-muted);
+  padding: 0 12px 12px;
+  line-height: 1.6;
+  margin: 0;
+}
+.delivery-map-art a {
+  color: inherit;
+  text-decoration: underline;
+}
+.map-country-label {
+  font-size: var(--ui-metric);
+  letter-spacing: 5px;
+  fill: #cad1c4;
+}
+.map-sea-label {
+  font-size: var(--ui-text-base);
+  fill: #91b6c0;
+}
+.map-city-label {
+  font-size: var(--ui-text-sm);
+  fill: #4b675c;
+  paint-order: stroke;
+  stroke: #f5f8f3;
+  stroke-width: 3px;
+}
+.map-city-label.selected {
+  font-size: var(--ui-text-base);
+  font-weight: 700;
+  fill: #0e7666;
+}
+.map-origin-label {
+  font-size: var(--ui-text-base);
+  font-weight: 700;
+  fill: #263e3b;
+  paint-order: stroke;
+  stroke: #f5f8f3;
+  stroke-width: 3px;
+}
+.map-route-hit {
+  cursor: pointer;
+  outline: 0;
+}
+.map-route-hit:focus line,
+.map-route-hit:hover line {
+  stroke: #0e7666;
+  opacity: 1;
+}
+.delivery-map-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 8px 12px;
+  font-size: var(--ui-text-xs);
+  color: var(--ui-muted);
+}
+.delivery-map-legend span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.delivery-map-legend i {
+  width: 18px;
+  border-top: 2px solid #0e7666;
+}
+.delivery-map-legend i.via {
+  border-top: 2px dashed #b87947;
+}
+.delivery-map-inspector {
+  background: #f4f7f2;
+  border: 1px solid #e0e7dc;
+  border-radius: 12px;
+  padding: 16px;
+  min-width: 0;
+}
+.delivery-map-inspector > small {
+  font-size: var(--ui-text-sm);
+  color: var(--ui-muted);
+}
+.delivery-map-inspector h3 {
+  font-size: var(--ui-heading-sm);
+  margin: 8px 0 18px;
+}
+.delivery-map-inspector dl,
+.profit-order-detail dl {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px 8px;
+  font-size: var(--ui-text-sm);
+}
+.delivery-map-inspector dt,
+.profit-order-detail dt {
+  color: var(--ui-muted);
+}
+.delivery-map-inspector dd,
+.profit-order-detail dd {
+  margin: 0;
+  text-align: right;
+  color: #2a4537;
+  font-weight: 600;
+}
+.delivery-map-inspector p {
+  font-size: var(--ui-text-sm);
+  color: var(--ui-muted);
+  line-height: 1.8;
+}
+.planning-workspace .delivery-map-inspector > button {
+  font-size: var(--ui-text-sm);
+  width: 100%;
+  margin-top: 8px;
+  background: #e2ece2;
+  color: #35644a;
+}
+.map-selected-batch {
+  border-top: 1px solid #d5e0d4;
+  padding-top: 14px;
+}
+.map-selected-batch small,
+.map-selected-batch strong {
+  display: block;
+  overflow-wrap: anywhere;
+}
+.map-selected-batch strong {
+  font-size: var(--ui-text-base);
+  margin-top: 8px;
+}
+.logistics-cost-summary {
+  padding: 20px;
+  background: #fff;
+  border: 1px solid #e1e7df;
+  border-radius: 13px;
+  margin: 18px 0;
+}
+.logistics-cost-summary h2 {
+  font-size: var(--ui-text-lg);
+  margin: 0 0 9px;
+}
+.logistics-cost-summary p {
+  font-size: var(--ui-text-sm);
+  color: var(--ui-muted);
+  line-height: 1.8;
+}
+.cost-breakdown-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 17px 0;
+}
+.cost-breakdown-grid > div {
+  padding: 13px;
+  border-radius: 8px;
+  background: #f3f6f0;
+}
+.cost-breakdown-grid small {
+  display: block;
+  font-size: var(--ui-text-sm);
+  color: var(--ui-muted);
+  margin-bottom: 8px;
+}
+.cost-breakdown-grid strong {
+  font-size: var(--ui-heading-sm);
+  font-weight: 600;
+  color: #374e36;
+}
+.cost-editor > button {
+  font-size: var(--ui-text-sm);
+  margin-top: 12px;
+}
+.profit-parameters {
+  margin: 20px 0;
+  border: 1px solid #dde5dd;
+  border-radius: 12px;
+  background: #fbfcf9;
+  padding: 17px 20px;
+}
+.profit-parameters > summary {
+  cursor: pointer;
+  font-size: var(--ui-text-base);
+  font-weight: 600;
+  color: #42634e;
+}
+.profit-parameters > p {
+  font-size: var(--ui-text-sm);
+  color: var(--ui-muted);
+  line-height: 1.8;
+}
+.profit-parameters h3 {
+  font-size: var(--ui-text-base);
+  color: #4f6750;
+  margin: 24px 0 12px;
+}
+.profit-edit-table {
+  min-width: 940px;
+}
+.profit-edit-table td:first-child {
+  min-width: 220px;
+  font-size: var(--ui-text-sm);
+}
+.profit-edit-table input {
+  width: 90px;
+  min-width: 0;
+  font-size: var(--ui-text-sm);
+  border: 1px solid #d8e1d4;
+  border-radius: 5px;
+  padding: 7px;
+}
+.planning-workspace .profit-metrics {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.profit-metrics .planning-metric strong {
+  font-size: var(--ui-metric);
+  overflow-wrap: anywhere;
+}
+.profit-negative {
+  color: #ad5748 !important;
+}
+.profit-positive {
+  color: #23794f !important;
+}
+.profit-missing {
+  color: #a07739 !important;
+}
+.profit-detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  gap: 18px;
+  margin: 20px 0;
+}
+.profit-bridge,
+.profit-order-detail,
+.profit-comparison {
+  background: #fff;
+  border: 1px solid #dde5dd;
+  border-radius: 13px;
+  padding: 22px;
+  margin-bottom: 20px;
+  min-width: 0;
+}
+.profit-detail-grid > section {
+  margin: 0;
+}
+.profit-bridge h2,
+.profit-order-detail h2,
+.profit-comparison h2 {
+  font-size: var(--ui-text-lg);
+  margin: 0 0 10px;
+  color: #304a38;
+}
+.profit-bridge header p,
+.profit-comparison header p,
+.profit-order-detail > p {
+  font-size: var(--ui-text-sm);
+  color: var(--ui-muted);
+  line-height: 1.8;
+}
+.profit-bridge-row {
+  display: grid;
+  grid-template-columns: 90px minmax(0, 1fr) 84px;
+  gap: 10px;
+  align-items: center;
+  font-size: var(--ui-text-sm);
+  margin: 19px 0;
+}
+.profit-bridge-row > span {
+  color: var(--ui-muted);
+}
+.profit-bridge-row > strong {
+  text-align: right;
+  font-size: var(--ui-text-base);
+}
+.profit-bridge-track {
+  background: #f2f5ee;
+  border-radius: 4px;
+  height: 14px;
+  overflow: hidden;
+}
+.profit-bridge-track i {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  background: #b3c5ab;
+}
+.profit-bridge-track .income {
+  background: #527f70;
+}
+.profit-bridge-track .logistics {
+  background: #bd9b6b;
+}
+.profit-bridge-track .purchase {
+  background: #99ad88;
+}
+.profit-bridge-track .commission,
+.profit-bridge-track .other {
+  background: #c6cab9;
+}
+.profit-bridge-track .profit {
+  background: #1a8265;
+}
+.profit-bridge-track .negative {
+  background: #b65e51;
+}
+.profit-order-detail h2 {
+  margin-top: 9px;
+  font-size: var(--ui-heading-md);
+}
+.planning-workspace table tr.selected {
+  background: #f0f6ed;
+}
+.planning-workspace table td button {
+  padding: 0;
+  background: transparent;
+  border: 0;
+  color: #356d55;
+  text-align: left;
+  font-size: var(--ui-text-sm);
+  white-space: normal;
+}
+.profit-filters label {
+  flex: 1;
+  min-width: 160px;
+}
+.profit-filters > button {
+  height: 36px;
+  font-size: var(--ui-text-sm);
+}
+@media (max-width: 1100px) {
+  .delivery-map-layout {
+    grid-template-columns: minmax(0, 1fr) 210px;
+  }
+  .planning-workspace .profit-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .profit-detail-grid {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 700px) {
+  .delivery-map-panel {
+    padding: 15px;
+  }
+  .profit-section-header {
+    display: block;
+  }
+  .map-layer-toggle {
+    margin-top: 16px;
+    width: fit-content;
+  }
+  .delivery-map-layout {
+    grid-template-columns: 1fr;
+  }
+  .delivery-map-controls {
+    display: block;
+  }
+  .delivery-map-controls label {
+    margin: 10px 0;
+  }
+  .delivery-map-inspector dl {
+    grid-template-columns: 1fr auto;
+  }
+  .delivery-map-inspector {
+    padding: 15px;
+  }
+  .delivery-map-art svg {
+    min-height: 280px;
+  }
+  .profit-parameters {
+    padding: 15px;
+  }
+  .cost-breakdown-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .profit-bridge,
+  .profit-order-detail,
+  .profit-comparison {
+    padding: 17px;
+  }
+  .profit-bridge-row {
+    grid-template-columns: 75px minmax(0, 1fr) 72px;
+    gap: 6px;
+    font-size: var(--ui-text-sm);
+  }
+  .profit-bridge-row > strong {
+    font-size: var(--ui-text-sm);
+  }
+  .profit-filters label {
+    min-width: 100%;
+    width: 100%;
+  }
+  .profit-filters select,
+  .profit-filters input {
+    width: 100%;
+    min-width: 0;
+  }
+  .profit-metrics .planning-metric strong {
+    font-size: var(--ui-heading-sm);
+  }
+  .delivery-map-controls select {
+    width: 100%;
+    min-width: 0;
+  }
+}

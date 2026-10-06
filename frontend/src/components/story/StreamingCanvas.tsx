@@ -1,21 +1,38 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Clock3, FileText, History, Ship } from "lucide-react";
+import {
+  Clock3,
+  FileText,
+  History,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Ship,
+} from "lucide-react";
 import { resolveStorySkill } from "@/lib/story/skill-catalog";
 import { visibleStoryBlocks } from "@/lib/story/skill-runner";
-import type { CampaignState, StoryStage } from "@/lib/story/types";
+import type {
+  CampaignState,
+  StoryStage,
+  StoryCommand,
+} from "@/lib/story/types";
+import type { PlanningInput } from "@/lib/story/store-planning";
+import type { ProfitScenario } from "@/lib/story/profit-analysis";
+import ProfitWorkspace from "./ProfitWorkspace";
+import StorePlanningWorkspace from "./StorePlanningWorkspace";
 import CrisisBlocks from "./blocks/CrisisBlocks";
 import AllocationBlocks from "./blocks/AllocationBlocks";
 import DeliveryBlocks from "./blocks/DeliveryBlocks";
 import ExecutionBlocks from "./blocks/ExecutionBlocks";
 import RebalanceBlocks from "./blocks/RebalanceBlocks";
+import TransferBlocks from "./blocks/TransferBlocks";
 import DecisionProcess from "./DecisionProcess";
 import AllocationDecisionModel from "./AllocationDecisionModel";
 import LogisticsDecisionModel from "./LogisticsDecisionModel";
 import RebalanceDecisionModel from "./RebalanceDecisionModel";
 import WorkspaceOverview from "./WorkspaceOverview";
 import type { WorkspaceView } from "./WorkspaceSidebar";
+import SmartQueryWorkspace from "./SmartQueryWorkspace";
 
 const stageCommand = {
   crisis: "/crisis-brief",
@@ -23,6 +40,9 @@ const stageCommand = {
   delivery: "/delivery-plan",
   execution: "/arrival-execution",
   rebalance: "/daily-rebalance",
+  transfer: "/daily-transfer",
+  query: "/smart-query",
+  profit: "/profit-analysis",
 } as const;
 
 export default function StreamingCanvas({
@@ -33,9 +53,19 @@ export default function StreamingCanvas({
   onChangeDammamSafety,
   onApprove,
   focusedStep,
+  focusRevision,
   workspaceView,
   sessionTitle,
+  sidebarCollapsed,
+  onToggleSidebar,
+  busy,
+  onRunPlanning,
+  onRunProfit,
 }: {
+  onRunProfit: (
+    input: ProfitScenario | undefined,
+    deliveryRunId: string,
+  ) => void;
   campaign: CampaignState;
   activeStage: StoryStage | "welcome";
   viewedRunId: string | null;
@@ -43,8 +73,17 @@ export default function StreamingCanvas({
   onChangeDammamSafety: (value?: number) => void;
   onApprove: (decisionId: string) => void;
   focusedStep: number | null;
+  focusRevision: number;
   workspaceView: WorkspaceView;
   sessionTitle: string;
+  sidebarCollapsed: boolean;
+  onToggleSidebar: () => void;
+  busy: boolean;
+  onRunPlanning: (
+    command: StoryCommand,
+    input: PlanningInput,
+    allocationRunId?: string,
+  ) => void;
 }) {
   const [historyOpen, setHistoryOpen] = useState(false);
   const mainRef = useRef<HTMLElement>(null);
@@ -70,9 +109,14 @@ export default function StreamingCanvas({
     (!campaign.deliveryPlan || campaign.deliveryPlan.status === "blocked") &&
     !campaign.inventoryBaseline;
   const canApprove =
-    run?.id ===
+    run?.status === "complete" &&
+    (run?.id ===
       campaign.runs.filter((item) => item.command === "/daily-rebalance").at(-1)
-        ?.id && run?.status === "complete";
+        ?.id ||
+      run?.id ===
+        campaign.runs
+          .filter((item) => item.command === "/daily-transfer")
+          .at(-1)?.id);
   useEffect(() => {
     mainRef.current?.scrollTo({ top: 0 });
   }, [run?.id, workspaceView]);
@@ -102,6 +146,20 @@ export default function StreamingCanvas({
     <div className="workspace-canvas-shell">
       <div className="workspace-canvas-toolbar">
         <div>
+          <button
+            type="button"
+            className="workspace-sidebar-toggle"
+            aria-label={sidebarCollapsed ? "展开导航" : "收起导航"}
+            title={sidebarCollapsed ? "展开导航" : "收起导航"}
+            aria-expanded={!sidebarCollapsed}
+            onClick={onToggleSidebar}
+          >
+            {sidebarCollapsed ? (
+              <PanelLeftOpen size={18} />
+            ) : (
+              <PanelLeftClose size={18} />
+            )}
+          </button>
           <span>ALJ</span>
           <i>/</i>
           <strong>{sessionTitle}</strong>
@@ -170,136 +228,185 @@ export default function StreamingCanvas({
           />
         ) : (
           <>
-            <header className="story-canvas-head">
-              <div>
-                <span>{run.command}</span>
-                <h1>{resolveStorySkill(run.command)?.title}</h1>
-                <p>{run.prompt.replace(run.command, "").trim()}</p>
-              </div>
-              <div
-                className={`story-run-state ${stale ? "stale" : run.status}`}
-              >
-                <i />
-                {stale
-                  ? "输入已变更"
-                  : run.status === "complete"
-                    ? "已完成"
-                    : run.status === "paused"
-                      ? "已暂停"
-                      : "Agent 运行中"}
-              </div>
-            </header>
-            <div className="story-canvas-meta">
-              <span>
-                <Ship size={14} />
-                JEDDAH HORIZON · 1,800 台
-              </span>
-              <span>
-                <Clock3 size={14} />
-                {run.businessDate}
-              </span>
-              <span>输入版本 v{run.inputVersion}</span>
-              <span>本地演示快照</span>
-            </div>
-            <DecisionProcess key={run.id} run={run} focusedStep={focusedStep} />
-            <div className="story-block-stream">
-              {blocks.map((block) => {
-                let content;
-                if (block.status === "streaming")
-                  content = (
-                    <div className="block-loading">
-                      <i />
-                      <i />
-                      <i />
-                      <p>正在汇总本轮数据与判断依据…</p>
-                    </div>
-                  );
-                else if (block.type === "allocation-logic" && run.evidence)
-                  content = (
-                    <AllocationDecisionModel
-                      key={run.id}
-                      evidence={run.evidence}
-                      canApply={Boolean(canChangeSafety)}
-                      stale={stale}
-                      onApply={onChangeDammamSafety}
-                    />
-                  );
-                else if (block.type === "delivery-logic" && run.evidence)
-                  content = (
-                    <LogisticsDecisionModel
-                      key={run.id}
-                      evidence={run.evidence}
-                    />
-                  );
-                else if (
-                  block.type === "rebalance-logic" &&
-                  run.evidence?.dailyPlan
-                )
-                  content = (
-                    <RebalanceDecisionModel
-                      key={run.id}
-                      evidence={run.evidence}
-                      plan={
-                        campaign.dailyOperations.find(
-                          (plan) => plan.id === run.evidence?.dailyPlan?.id,
-                        ) ?? run.evidence.dailyPlan
-                      }
-                      canApprove={Boolean(canApprove)}
-                      onApprove={onApprove}
-                    />
-                  );
-                else if (run.command === "/crisis-brief")
-                  content = <CrisisBlocks block={block} campaign={campaign} />;
-                else if (run.command === "/vessel-allocation")
-                  content = (
-                    <AllocationBlocks
-                      block={block}
-                      campaign={campaign}
-                      canChangeDammamSafety={Boolean(canChangeSafety)}
-                      onChangeDammamSafety={() => onChangeDammamSafety(120)}
-                    />
-                  );
-                else if (run.command === "/delivery-plan")
-                  content = (
-                    <DeliveryBlocks block={block} campaign={campaign} />
-                  );
-                else if (run.command === "/arrival-execution")
-                  content = (
-                    <ExecutionBlocks block={block} campaign={campaign} />
-                  );
-                else
-                  content = (
-                    <RebalanceBlocks
-                      block={block}
-                      campaign={campaign}
-                      canApprove={Boolean(canApprove)}
-                      onApprove={onApprove}
-                    />
-                  );
-                return (
-                  <section
-                    className={`story-block ${block.status} ${block.type.endsWith("-logic") ? "decision-model-block" : ""}`}
-                    key={block.id}
-                    data-block-type={block.type}
+            {run.command !== "/smart-query" && !run.planning && !run.profit && (
+              <>
+                <header className="story-canvas-head">
+                  <div>
+                    <span>{run.command}</span>
+                    <h1>{resolveStorySkill(run.command)?.title}</h1>
+                    <p>{run.prompt.replace(run.command, "").trim()}</p>
+                  </div>
+                  <div
+                    className={`story-run-state ${stale ? "stale" : run.status}`}
                   >
-                    <div className="story-block-copy">
-                      <div className="business-block-heading">
-                        <h2>{block.title}</h2>
-                        <div className="story-block-status">
+                    <i />
+                    {stale
+                      ? "输入已变更"
+                      : run.status === "complete"
+                        ? "已完成"
+                        : run.status === "paused"
+                          ? "已暂停"
+                          : "Agent 运行中"}
+                  </div>
+                </header>
+                <div className="story-canvas-meta">
+                  <span>
+                    <Ship size={14} />
+                    JEDDAH HORIZON · 1,800 台
+                  </span>
+                  <span>
+                    <Clock3 size={14} />
+                    {run.businessDate}
+                  </span>
+                  <span>输入版本 v{run.inputVersion}</span>
+                  <span>本地演示快照</span>
+                </div>
+              </>
+            )}
+            {run.profit ? (
+              <ProfitWorkspace
+                key={run.id}
+                run={run}
+                focusedStep={focusedStep}
+                focusRevision={focusRevision}
+                busy={busy}
+                onRunProfit={onRunProfit}
+              />
+            ) : run.planning ? (
+              <StorePlanningWorkspace
+                key={run.id}
+                run={run}
+                focusedStep={focusedStep}
+                focusRevision={focusRevision}
+                busy={busy}
+                onRunPlanning={onRunPlanning}
+                onRunProfit={onRunProfit}
+              />
+            ) : run.command === "/smart-query" ? (
+              <SmartQueryWorkspace
+                key={run.id}
+                run={run}
+                focusedStep={focusedStep}
+                focusRevision={focusRevision}
+              />
+            ) : (
+              <>
+                <DecisionProcess
+                  key={run.id}
+                  run={run}
+                  focusedStep={focusedStep}
+                />
+                <div className="story-block-stream">
+                  {blocks.map((block) => {
+                    let content;
+                    if (block.status === "streaming")
+                      content = (
+                        <div className="block-loading">
                           <i />
-                          {block.status === "streaming"
-                            ? "生成中"
-                            : block.status === "stale"
-                              ? "已失效"
-                              : "已就绪"}
+                          <i />
+                          <i />
+                          <p>正在汇总本轮数据与判断依据…</p>
                         </div>
-                      </div>
-                      {content}
-                    </div>
-                  </section>
-                );
-              })}
-            </div>
+                      );
+                    else if (block.type === "allocation-logic" && run.evidence)
+                      content = (
+                        <AllocationDecisionModel
+                          key={run.id}
+                          evidence={run.evidence}
+                          canApply={Boolean(canChangeSafety)}
+                          stale={stale}
+                          onApply={onChangeDammamSafety}
+                        />
+                      );
+                    else if (block.type === "delivery-logic" && run.evidence)
+                      content = (
+                        <LogisticsDecisionModel
+                          key={run.id}
+                          evidence={run.evidence}
+                        />
+                      );
+                    else if (
+                      block.type === "rebalance-logic" &&
+                      run.evidence?.dailyPlan
+                    )
+                      content = (
+                        <RebalanceDecisionModel
+                          key={run.id}
+                          evidence={run.evidence}
+                          plan={
+                            campaign.dailyOperations.find(
+                              (plan) => plan.id === run.evidence?.dailyPlan?.id,
+                            ) ?? run.evidence.dailyPlan
+                          }
+                          canApprove={Boolean(canApprove)}
+                          onApprove={onApprove}
+                        />
+                      );
+                    else if (run.command === "/crisis-brief")
+                      content = (
+                        <CrisisBlocks block={block} campaign={campaign} />
+                      );
+                    else if (run.command === "/vessel-allocation")
+                      content = (
+                        <AllocationBlocks
+                          block={block}
+                          campaign={campaign}
+                          canChangeDammamSafety={Boolean(canChangeSafety)}
+                          onChangeDammamSafety={() => onChangeDammamSafety(120)}
+                        />
+                      );
+                    else if (run.command === "/delivery-plan")
+                      content = (
+                        <DeliveryBlocks block={block} campaign={campaign} />
+                      );
+                    else if (run.command === "/arrival-execution")
+                      content = (
+                        <ExecutionBlocks block={block} campaign={campaign} />
+                      );
+                    else if (run.command === "/daily-transfer")
+                      content = (
+                        <TransferBlocks
+                          block={block}
+                          campaign={campaign}
+                          canApprove={Boolean(canApprove)}
+                          onApprove={onApprove}
+                        />
+                      );
+                    else
+                      content = (
+                        <RebalanceBlocks
+                          block={block}
+                          campaign={campaign}
+                          canApprove={Boolean(canApprove)}
+                          onApprove={onApprove}
+                        />
+                      );
+                    return (
+                      <section
+                        className={`story-block ${block.status} ${block.type.endsWith("-logic") ? "decision-model-block" : ""}`}
+                        key={block.id}
+                        data-block-type={block.type}
+                      >
+                        <div className="story-block-copy">
+                          <div className="business-block-heading">
+                            <h2>{block.title}</h2>
+                            <div className="story-block-status">
+                              <i />
+                              {block.status === "streaming"
+                                ? "生成中"
+                                : block.status === "stale"
+                                  ? "已失效"
+                                  : "已就绪"}
+                            </div>
+                          </div>
+                          {content}
+                        </div>
+                      </section>
+                    );
+                  })}
+                </div>
+              </>
+            )}
           </>
         )}
       </main>

@@ -5,6 +5,13 @@ import { planDelivery } from "./delivery-engine";
 import { applyExecutionEvent, closeArrivalExecution } from "./execution-engine";
 import { rebalanceDailyOrders } from "./rebalance-engine";
 import { resolveStorySkill, skillAvailability } from "./skill-catalog";
+import { startProfitRun } from "./profit-run";
+import { startQueryRun } from "./query-run";
+import { startDailyTransferRun } from "./daily-transfer-run";
+import {
+  startStorePlanningRun,
+  type PlanningRunOptions,
+} from "./store-planning-run";
 import type {
   CampaignState,
   RouteId,
@@ -72,14 +79,18 @@ const blockTitles: Record<StoryCommand, Array<[string, string]>> = {
     ["daily-approvals", "今日待审批事项"],
     ["daily-execution", "发货、签收与库存更新"],
   ],
+  "/daily-transfer": [],
+  "/smart-query": [],
+  "/profit-analysis": [],
 };
 
 const nextSkill: Partial<Record<StoryCommand, StoryCommand[]>> = {
   "/crisis-brief": ["/vessel-allocation"],
   "/vessel-allocation": ["/delivery-plan"],
   "/delivery-plan": ["/arrival-execution"],
-  "/arrival-execution": ["/daily-rebalance"],
+  "/arrival-execution": ["/daily-rebalance", "/daily-transfer"],
   "/daily-rebalance": ["/daily-rebalance"],
+  "/daily-transfer": ["/daily-transfer"],
 };
 
 function runData(
@@ -207,12 +218,25 @@ export function startStoryRun(
   command: StoryCommand,
   prompt: string,
   state: CampaignState,
+  planningOptions: PlanningRunOptions = {},
 ): StoryRun {
   const skill = resolveStorySkill(command)!;
   const availability = skillAvailability(command, state);
   const id = `RUN-${command.slice(1).toUpperCase()}-${state.version}-${state.runs.length + 1}`;
+  if (command === "/profit-analysis")
+    return startProfitRun(id, prompt, state, planningOptions);
+  if (command === "/smart-query")
+    return startQueryRun(id, prompt || skill.defaultPrompt, state);
+  if (command === "/vessel-allocation" || command === "/delivery-plan")
+    return startStorePlanningRun(
+      id,
+      command,
+      prompt || skill.defaultPrompt,
+      state,
+      planningOptions,
+    );
   const businessDate =
-    command === "/daily-rebalance"
+    command === "/daily-rebalance" || command === "/daily-transfer"
       ? `T+${4 + state.dailyOperations.length}`
       : "T-14 / T+3";
   if (!availability.available) {
@@ -234,6 +258,8 @@ export function startStoryRun(
       answer: availability.reason,
     };
   }
+  if (command === "/daily-transfer")
+    return startDailyTransferRun(id, prompt || skill.defaultPrompt, state);
   const evidence = buildDecisionEvidence(command, state, businessDate);
   const events: StoryEvent[] = evidence.steps.map((step, index) => ({
     id: `${id}-EVENT-${index + 1}`,
@@ -302,9 +328,15 @@ export function advanceStoryRun(run: StoryRun, milliseconds: number): StoryRun {
     ...run,
     elapsed,
     status: complete ? "complete" : "running",
-    resultVersion: complete ? run.inputVersion + 1 : null,
+    resultVersion: complete
+      ? run.inputVersion + (run.query || run.planning || run.profit ? 0 : 1)
+      : null,
     answer: complete
-      ? (run.evidence?.conclusion ??
+      ? (run.profit?.result.summaryText ??
+        run.planningSummary ??
+        run.query?.summary ??
+        run.evidence?.conclusion ??
+        run.answer ??
         `已完成${resolveStorySkill(run.command)?.title ?? run.command}，结果已同步到工作台。`)
       : run.answer,
     blocks: run.blocks.map((block) => ({
@@ -401,6 +433,16 @@ export function applyStoryRunResult(
   if (run.status !== "complete" || state.version !== run.inputVersion) {
     return state;
   }
+  if (run.command === "/smart-query" || run.planning || run.profit) {
+    const saved = { ...run, resultVersion: state.version };
+    return {
+      ...state,
+      activeRunId: run.id,
+      runs: state.runs.some((item) => item.id === run.id)
+        ? state.runs.map((item) => (item.id === run.id ? saved : item))
+        : [...state.runs, saved],
+    };
+  }
   let next: CampaignState;
   if (run.command === "/crisis-brief") {
     next = {
@@ -426,7 +468,10 @@ export function applyStoryRunResult(
     };
   } else if (run.command === "/arrival-execution") {
     next = finishArrival(state);
-  } else {
+  } else if (
+    run.command === "/daily-rebalance" ||
+    run.command === "/daily-transfer"
+  ) {
     next = {
       ...state,
       version: state.version + 1,
@@ -435,6 +480,8 @@ export function applyStoryRunResult(
         rebalanceDailyOrders(state, run.businessDate),
       ],
     };
+  } else {
+    next = state;
   }
   const completedRun = { ...run, resultVersion: next.version };
   const exists = next.runs.some((item) => item.id === run.id);

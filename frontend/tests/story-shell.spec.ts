@@ -31,7 +31,7 @@ test("clean story shell starts every segment from the CUI skill picker", async (
 
   const command = page.getByTestId("story-command");
   await command.fill("/");
-  await expect(page.getByTestId("story-skill-option")).toHaveCount(5);
+  await expect(page.getByTestId("story-skill-option")).toHaveCount(8);
 
   await page
     .getByTestId("story-skill-option")
@@ -63,7 +63,7 @@ test("mobile canvas stays contained and opens the CUI as a right overlay", async
   await page.getByTestId("mobile-chat-toggle").click();
   await expect(page.locator(".story-chat")).toHaveClass(/open/);
   await page.getByTestId("story-command").fill("/");
-  await expect(page.getByTestId("story-skill-option")).toHaveCount(5);
+  await expect(page.getByTestId("story-skill-option")).toHaveCount(8);
 });
 
 test("tablet width uses the compact overlay without horizontal clipping", async ({
@@ -97,6 +97,9 @@ test("reload preserves streamed blocks and pauses an active story run", async ({
   expect(visibleBefore).toBeGreaterThan(0);
   await page.clock.runFor(400);
   const visibleAtSave = await page.locator(".story-block").count();
+  // Let the 180ms persistence batch capture this stable reveal interval before
+  // testing reload. The next block does not start streaming until 2340ms.
+  await page.clock.runFor(200);
   await expect
     .poll(() =>
       page.evaluate(async () => {

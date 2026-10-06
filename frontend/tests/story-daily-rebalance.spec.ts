@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { seedPublishedCampaign } from "./legacy-campaign-fixture";
 
 async function runSkill(page: Page, command: string, duration = 10_000) {
   const input = page.getByTestId("story-command");
@@ -25,9 +26,7 @@ test("daily rebalance stays gated, then supports approval and inventory locking"
   await expect(page.getByTestId("story-progress")).toHaveCount(0);
   await expect(page.getByTestId("story-run-block")).toHaveCount(0);
 
-  await runSkill(page, "/crisis-brief");
-  await runSkill(page, "/vessel-allocation");
-  await runSkill(page, "/delivery-plan");
+  await seedPublishedCampaign(page);
   await runSkill(page, "/arrival-execution", 12_000);
   await runSkill(page, "/daily-rebalance", 14_000);
 

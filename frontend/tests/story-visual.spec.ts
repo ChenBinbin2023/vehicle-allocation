@@ -24,7 +24,7 @@ test("captures desktop and mobile visual acceptance", async ({ page }) => {
     .click();
   await input.press("Enter");
   await page.clock.runFor(10_000);
-  await page.locator(".decision-model-block").scrollIntoViewIfNeeded();
+  await page.getByTestId("store-planning-workspace").scrollIntoViewIfNeeded();
   await page.screenshot({
     path: "docs/decision-allocation-desktop.png",
     fullPage: false,
@@ -32,14 +32,14 @@ test("captures desktop and mobile visual acceptance", async ({ page }) => {
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.reload();
-  await page.locator(".decision-model-block").scrollIntoViewIfNeeded();
+  await page.getByTestId("store-planning-workspace").scrollIntoViewIfNeeded();
   const dimensions = await page.evaluate(() => ({
     viewport: innerWidth,
     page: document.documentElement.scrollWidth,
   }));
   expect(dimensions.page).toBeLessThanOrEqual(dimensions.viewport);
   const blockBounds = await page
-    .locator(".decision-model-block")
+    .getByTestId("store-planning-workspace")
     .evaluate((element) => ({
       right: element.getBoundingClientRect().right,
       width: element.getBoundingClientRect().width,

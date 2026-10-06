@@ -12,6 +12,7 @@ import {
 } from "@/lib/story/skill-runner";
 import type { StoryStage } from "@/lib/story/types";
 import { approveDailyDecision } from "@/lib/story/rebalance-engine";
+import type { PlanningRunOptions } from "@/lib/story/store-planning-run";
 import StoryChat from "./StoryChat";
 import WorkspaceSidebar, { type WorkspaceView } from "./WorkspaceSidebar";
 import StreamingCanvas from "./StreamingCanvas";
@@ -41,10 +42,12 @@ export default function StoryWorkspace({
     snapshot.campaign.activeRunId,
   );
   const [chatOpen, setChatOpen] = useState(true);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [workspaceView, setWorkspaceView] = useState<WorkspaceView>(
     snapshot.activeStage === "welcome" ? "overview" : "task",
   );
   const [focusedStep, setFocusedStep] = useState<number | null>(null);
+  const [focusRevision, setFocusRevision] = useState(0);
   const busy = campaign.runs.some((run) => run.status === "running");
 
   useEffect(() => {
@@ -89,7 +92,7 @@ export default function StoryWorkspace({
     return () => window.clearInterval(timer);
   }, [busy]);
 
-  function submit(value: string) {
+  function submit(value: string, options: PlanningRunOptions = {}) {
     if (
       campaign.runs.some(
         (run) => run.status === "running" || run.status === "paused",
@@ -114,7 +117,7 @@ export default function StoryWorkspace({
     }
     const prompt =
       value.slice(skill.command.length).trim() || skill.defaultPrompt;
-    const run = startStoryRun(skill.command, prompt, campaign);
+    const run = startStoryRun(skill.command, prompt, campaign, options);
     if (run.status === "blocked") {
       setMessages((current) => [
         ...current,
@@ -141,7 +144,12 @@ export default function StoryWorkspace({
         id: now + 1,
         role: "agent",
         title: `${skill.title}已启动`,
-        text: "我会读取业务快照，展示采用的规则、候选方案与校验结果。点击过程记录可以查看画布中的对应依据。",
+        text:
+          skill.command === "/smart-query"
+            ? "我会从本地数据读取销量、库存和路线费用，逐步生成三个分析视图。思考、规划与工具调用均为演示记录，可点击查看对应结果。"
+            : skill.command === "/vessel-allocation"
+              ? "我会先生成截至 2026-08-05 的模拟基本统计，展示本船车型、订单缺口和全网销速库存。工作台可切换分车图谱、注水演示与门店结果；点击过程记录可返回基本统计。"
+              : "我会读取业务快照，展示采用的规则、候选方案与校验结果。点击过程记录可以查看画布中的对应依据。",
         storyRunId: run.id,
       },
     ]);
@@ -160,6 +168,7 @@ export default function StoryWorkspace({
     setViewedRunId(runId);
     setWorkspaceView("task");
     setFocusedStep(step);
+    setFocusRevision((value) => value + 1);
   }
 
   function changeDammamSafety(nextSafety = 120) {
@@ -223,7 +232,10 @@ export default function StoryWorkspace({
   }
 
   return (
-    <div className="story-shell" data-testid="story-shell">
+    <div
+      className={`story-shell${sidebarCollapsed ? " sidebar-collapsed" : ""}${chatOpen ? "" : " chat-closed"}`}
+      data-testid="story-shell"
+    >
       <WorkspaceSidebar
         sessions={sessions}
         activeId={session.id}
@@ -238,9 +250,26 @@ export default function StoryWorkspace({
         viewedRunId={viewedRunId}
         onSelectRun={selectRun}
         focusedStep={focusedStep}
+        focusRevision={focusRevision}
         workspaceView={workspaceView}
         sessionTitle={session.title}
+        sidebarCollapsed={sidebarCollapsed}
+        onToggleSidebar={() => setSidebarCollapsed((value) => !value)}
         onChangeDammamSafety={changeDammamSafety}
+        busy={busy || campaign.runs.some((run) => run.status === "paused")}
+        onRunProfit={(profitInput, deliveryRunId) =>
+          submit(
+            "/profit-analysis 按已选物流快照和当前销售情景分析贡献利润。",
+            { profitInput, deliveryRunId },
+          )
+        }
+        onRunPlanning={(command, input, allocationRunId) => {
+          const detail =
+            "supply" in input
+              ? `供给=${input.supply} 直营WoS=${input.targetDirect} 授权WoS=${input.targetAuthorized}；按当前门店快照模拟。`
+              : `${input.mode === "single" ? "单港" : "双港"}到店模拟；D2接车=${input.stores.find((s) => s.id === "D2")?.firstCapacity ?? 0}；按当前接车和 VPC 容量重算。`;
+          submit(command + " " + detail, { input, allocationRunId });
+        }}
         onApprove={(decisionId) =>
           setCampaign((current) => approveDailyDecision(current, decisionId))
         }
