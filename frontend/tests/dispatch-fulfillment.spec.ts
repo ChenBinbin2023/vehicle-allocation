@@ -19,7 +19,7 @@ test("per-car choices survive reload and the follow-up skill appends two documen
   );
   await expect(
     page.getByRole("button", { name: "生成调度建议与采购订单", exact: true }),
-  ).toBeDisabled();
+  ).toBeEnabled();
   for (let i = 0; i < 6; i++) {
     await page.getByTestId("dispatch-shortage-item").nth(i).click();
     await page
@@ -90,10 +90,17 @@ test("the compact shortage chooser and generated tabs stay usable on mobile", as
   await page.getByTestId("story-command").press("Enter");
   await page.clock.runFor(15000);
   await page.getByRole("button", { name: "关闭 CUI", exact: true }).click();
-  await page.getByRole("button", { name: "填入建议方案", exact: true }).click();
+  await page
+    .getByRole("button", { name: "填入最高利润方案", exact: true })
+    .click();
   await expect(page.getByTestId("dispatch-selection-count")).toHaveText(
     "已选 6 / 6 台",
   );
+  await page
+    .getByTestId("dispatch-option")
+    .filter({ hasText: "本区域授权店采购" })
+    .getByRole("button", { name: "选择此方案", exact: true })
+    .click();
   await page
     .getByRole("button", { name: "生成调度建议与采购订单", exact: true })
     .click();
@@ -105,4 +112,39 @@ test("the compact shortage chooser and generated tabs stay usable on mobile", as
   expect(
     await page.evaluate(() => document.documentElement.scrollWidth),
   ).toBeLessThanOrEqual(390);
+});
+
+test("the fulfillment skill runs without manual choices and saves the highest-profit defaults", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.clock.install();
+  const input = page.getByTestId("story-command");
+  await input.fill("/daily-dispatch 整理今天订单");
+  await input.press("Enter");
+  await page.clock.runFor(15000);
+  await input.fill("/shortage-fulfillment");
+  await expect(page.getByTestId("story-skill-option")).toContainText("可运行");
+  await input.fill(followup);
+  await input.press("Enter");
+  await page.clock.runFor(10000);
+  await expect(page.getByTestId("dispatch-instruction")).toHaveCount(6);
+  await expect(page.getByTestId("dispatch-instruction").first()).toContainText(
+    "跨区域调拨",
+  );
+  await expect(page.getByTestId("dispatch-instruction").first()).toContainText(
+    "20,568 SAR",
+  );
+  await expect(page.getByTestId("dispatch-selection-count")).toHaveText(
+    "已选 6 / 6 台",
+  );
+  await expect(page.locator(".story-run-answer").last()).toContainText(
+    "默认采用贡献利润最高",
+  );
+  await page.clock.runFor(300);
+  await page.reload();
+  await expect(page.getByTestId("dispatch-instruction").first()).toContainText(
+    "20,568 SAR",
+  );
+  await expect(page.getByTestId("dispatch-fulfillment-stale")).toHaveCount(0);
 });

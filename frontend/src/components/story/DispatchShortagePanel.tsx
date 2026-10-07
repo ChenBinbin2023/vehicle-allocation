@@ -1,7 +1,10 @@
 "use client";
 import { useState } from "react";
 import VesselSectionHeading from "./VesselSectionHeading";
-import { selectedDispatchOptions } from "@/lib/story/dispatch-fulfillment";
+import {
+  highestProfitDispatchOption,
+  selectedDispatchOptions,
+} from "@/lib/story/dispatch-fulfillment";
 import {
   ArrowRight,
   Check,
@@ -44,32 +47,35 @@ export default function DispatchShortagePanel({
           number="03"
           english="REGIONAL SHORTAGE"
           title="区域缺货 · 逐车方案比较"
-          note={`区域缺货 ${data.shortages.length} 台 · 逐车比较补齐路径，并选择采用的方案。`}
+          note={`区域缺货 ${data.shortages.length} 台 · 可手动选择；未选车辆默认按贡献利润最高生成。`}
         />
-        <span className="dd-shortage-label">先保交期，再比较利润</span>
+        <span className="dd-shortage-label">手动选择优先</span>
       </div>
       <div className="dd-shortage-toolbar">
         <strong data-testid="dispatch-selection-count">
           已选 {count} / {data.shortages.length} 台
         </strong>
-        <span>选择将随当前计划保存</span>
+        <span>未选车辆默认采用贡献利润最高方案</span>
         <button
           type="button"
           disabled={disabled}
           onClick={() =>
             onSelect(
               Object.fromEntries(
-                data.shortages.map((s) => [s.vehicleId, s.recommendedId]),
+                data.shortages.flatMap((s) => {
+                  const option = highestProfitDispatchOption(s.options);
+                  return option ? [[s.vehicleId, option.id]] : [];
+                }),
               ),
             )
           }
         >
-          填入建议方案
+          填入最高利润方案
         </button>
         <button
           className="dd-generate"
           type="button"
-          disabled={disabled || count !== data.shortages.length}
+          disabled={disabled}
           onClick={onGenerate}
         >
           生成调度建议与采购订单

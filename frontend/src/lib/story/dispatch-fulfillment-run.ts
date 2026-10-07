@@ -2,6 +2,7 @@ import {
   buildDispatchFulfillment,
   dispatchSelectionIssue,
   dispatchSourceRun,
+  effectiveDispatchOptions,
 } from "./dispatch-fulfillment";
 import type { CampaignState, StoryEvent, StoryRun } from "./types";
 
@@ -30,20 +31,27 @@ export function startDispatchFulfillmentRun(
   const issue = dispatchSelectionIssue(source?.dispatch);
   if (issue) return { ...base, blockedReason: issue, answer: issue };
   const dispatch = structuredClone(source!.dispatch!);
+  const defaultCount = effectiveDispatchOptions(dispatch).filter(
+    (s) => s.defaulted,
+  ).length;
   dispatch.fulfillment = buildDispatchFulfillment(dispatch, source!.id, id);
   const result = dispatch.fulfillment;
+  dispatch.selections = { ...result.selections };
+  const selectionPolicy = defaultCount
+    ? `${defaultCount} 台未手动选择，默认采用贡献利润最高的方案；手动选择保持不变。`
+    : "全部沿用当前已选方案。";
   const local = result.instructions.filter(
     (i) => i.kind === "local-dealer",
   ).length;
   const review = result.instructions.filter((i) => i.requiresReview).length;
-  const summary = `已按选定方案为 ${result.instructions.length} 台缺货车辆生成调度建议：${result.instructions.length - local} 台跨区调拨、${local} 台授权店采购；按供应商与收货门店合并为 ${result.purchaseOrders.length} 张采购单草案，采购金额 ${result.purchaseOrders.reduce((n, po) => n + po.purchase, 0).toLocaleString("en-US")} SAR。${review ? `其中 ${review} 台存在亏损或超期，已标注待复核。` : "所有已选方案均按期且贡献利润为正。"}04 部分可切换调度建议与采购订单，并随整份计划导出。单据已保存为演示草案，待车源和报价确认。`;
+  const summary = `${selectionPolicy}已为 ${result.instructions.length} 台缺货车辆生成调度建议：${result.instructions.length - local} 台跨区调拨、${local} 台授权店采购；按供应商与收货门店合并为 ${result.purchaseOrders.length} 张采购单草案，采购金额 ${result.purchaseOrders.reduce((n, po) => n + po.purchase, 0).toLocaleString("en-US")} SAR。${review ? `其中 ${review} 台存在亏损或超期，已标注待复核。` : "所有已选方案均按期且贡献利润为正。"}04 部分可切换调度建议与采购订单，并随整份计划导出。单据已保存为演示草案，待车源和报价确认。`;
   const events: Omit<StoryEvent, "id">[] = [
     {
       role: "thinking",
       title: "按已选方案处理区域缺货",
       operation: "思考",
       detail:
-        "沿用当前每日调拨快照，为每台缺货车辆读取已选择的补齐方案。跨区车生成调拨配送建议，本区采购车同时生成采购单与提车配送建议。",
+        "沿用当前每日调拨快照，保留已手动选择的补齐方案；未选择的车辆默认采用贡献利润最高的候选方案，同利润时优先更快到店。跨区车生成调拨配送建议，本区采购车同时生成采购单与提车配送建议。",
       duration: 900,
     },
     {
@@ -51,14 +59,14 @@ export function startDispatchFulfillmentRun(
       title: "执行计划",
       operation: "规划",
       detail:
-        "1. 核对缺货车辆与选择完整性。\n2. 保留所选车源、候选车辆、成本和时效。\n3. 按供应商与收货门店合并授权店采购单。\n4. 校验单车唯一性、金额与数量，生成 04 部分。",
+        "1. 读取手动选择，未选车辆按贡献利润最高补齐。\n2. 保留所选车源、候选车辆、成本和时效。\n3. 按供应商与收货门店合并授权店采购单。\n4. 校验单车唯一性、金额与数量，生成 04 部分。",
       duration: 800,
     },
     {
       role: "data",
       title: "读取逐车选择与原始订单",
       operation: "shortage.selections.read",
-      detail: `读取 ${dispatch.date} 快照中 ${result.instructions.length} 台车辆的已选方案，全部车辆均已选择有效候选车源，库存编号无重复。`,
+      detail: `读取 ${dispatch.date} 快照中 ${result.instructions.length} 台车辆的方案。${selectionPolicy}全部车辆均匹配有效候选车源，库存编号无重复。`,
       duration: 1000,
     },
     {

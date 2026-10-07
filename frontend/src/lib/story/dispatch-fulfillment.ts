@@ -72,13 +72,33 @@ export function selectedDispatchOptions(data: DispatchSnapshot) {
   }));
 }
 
+export function highestProfitDispatchOption(options: DispatchOption[]) {
+  return options.reduce<DispatchOption | undefined>(
+    (best, option) =>
+      !best ||
+      option.profit > best.profit ||
+      (option.profit === best.profit && option.arrivalHours < best.arrivalHours)
+        ? option
+        : best,
+    undefined,
+  );
+}
+
+export function effectiveDispatchOptions(data: DispatchSnapshot) {
+  return selectedDispatchOptions(data).map(({ shortage, option }) => ({
+    shortage,
+    option: option ?? highestProfitDispatchOption(shortage.options),
+    defaulted: !option,
+  }));
+}
+
 export function dispatchSelectionIssue(data?: DispatchSnapshot) {
-  if (!data) return "请先生成每日调拨计划，并为缺货车辆选择补齐方案。";
+  if (!data) return "请先生成每日调拨计划，获取缺货车辆及补齐方案。";
   if (!data.shortages.length) return "当前计划没有缺货车辆，无需生成缺货单据。";
-  const selected = selectedDispatchOptions(data);
+  const selected = effectiveDispatchOptions(data);
   const missing = selected.filter((item) => !item.option).length;
   if (missing)
-    return `还有 ${missing} 台缺货车辆未选择有效方案，请在 03 区域逐车选择。`;
+    return `有 ${missing} 台缺货车辆暂无可用补齐方案，请先补充候选车源。`;
   const vins = selected.map((item) => item.option!.vin);
   if (new Set(vins).size !== vins.length)
     return "已选方案存在重复候选车辆，请重新选择车源。";
@@ -87,10 +107,9 @@ export function dispatchSelectionIssue(data?: DispatchSnapshot) {
 export function dispatchFulfillmentIsCurrent(data: DispatchSnapshot) {
   return Boolean(
     data.fulfillment &&
-    data.shortages.every(
-      (s) =>
-        data.selections?.[s.vehicleId] ===
-        data.fulfillment!.selections[s.vehicleId],
+    effectiveDispatchOptions(data).every(
+      ({ shortage, option }) =>
+        option?.id === data.fulfillment!.selections[shortage.vehicleId],
     ),
   );
 }
@@ -124,7 +143,7 @@ export function buildDispatchFulfillment(
   if (issue) throw new Error(issue);
   const instructions: DispatchInstruction[] = [];
   const purchaseOrders: DispatchPurchaseOrder[] = [];
-  for (const { shortage, option: choice } of selectedDispatchOptions(data)) {
+  for (const { shortage, option: choice } of effectiveDispatchOptions(data)) {
     const option = choice!;
     const vehicle = data.vehicles.find((v) => v.id === shortage.vehicleId)!;
     const order = data.orders.find((o) => o.id === vehicle.orderId)!;
@@ -191,7 +210,9 @@ export function buildDispatchFulfillment(
   }
   return {
     sourceRunId,
-    selections: { ...data.selections },
+    selections: Object.fromEntries(
+      instructions.map((i) => [i.vehicleId, i.optionId]),
+    ),
     instructions,
     purchaseOrders,
   };

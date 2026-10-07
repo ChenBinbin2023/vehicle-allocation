@@ -38,19 +38,57 @@ test("the requested follow-up prompt resolves to its own skill while daily dispa
   );
 });
 
-test("fulfillment requires a completed source and one valid selected option for every shortage car", () => {
+test("unselected shortages default to the highest contribution profit even when that option arrives late", () => {
   assert.equal(
     startStoryRun(command, "", createCampaignState()).status,
     "blocked",
   );
   const state = selectedState();
   const data = state.runs[0].dispatch!;
-  delete data.selections![data.shortages[0].vehicleId];
-  const missing = startStoryRun(command, "", state);
-  assert.equal(missing.status, "blocked");
-  assert.match(missing.blockedReason!, /1.*未选择/);
-  data.selections![data.shortages[0].vehicleId] = "not-a-real-option";
-  assert.equal(startStoryRun(command, "", state).status, "blocked");
+  delete data.selections;
+  const before = JSON.stringify(state);
+  assert.equal(skillAvailability(command, state).available, true);
+  const run = startStoryRun(command, "", state);
+  assert.equal(run.status, "running");
+  const result = run.dispatch!.fulfillment!;
+  assert.equal(result.instructions.length, 6);
+  assert.equal(result.instructions[0].profit, 20568);
+  assert.equal(result.instructions[0].arrivalHours, 35);
+  assert.equal(result.instructions[0].requiresReview, true);
+  for (const instruction of result.instructions) {
+    const shortage = data.shortages.find(
+      (s) => s.vehicleId === instruction.vehicleId,
+    )!;
+    assert.ok(shortage.options.every((o) => instruction.profit >= o.profit));
+    assert.equal(
+      run.dispatch!.selections![instruction.vehicleId],
+      instruction.optionId,
+    );
+    assert.equal(
+      result.selections[instruction.vehicleId],
+      instruction.optionId,
+    );
+  }
+  assert.match(run.answer!, /默认.*贡献利润最高/);
+  assert.equal(JSON.stringify(state), before);
+});
+
+test("manual selections are preserved while missing or invalid selections use the profit default", () => {
+  const state = selectedState();
+  const data = state.runs[0].dispatch!;
+  const [first, second] = data.shortages;
+  data.selections = {
+    [first.vehicleId]: first.options.find((o) => o.kind === "local-dealer")!.id,
+    [second.vehicleId]: "not-a-real-option",
+  };
+  const run = startStoryRun(command, "", state);
+  assert.equal(run.status, "running");
+  const instructions = run.dispatch!.fulfillment!.instructions;
+  assert.equal(instructions.length, 6);
+  assert.equal(instructions[0].kind, "local-dealer");
+  assert.equal(instructions[0].profit, 2617);
+  assert.equal(instructions[1].kind, "cross-region");
+  assert.equal(instructions[1].profit, 20568);
 });
 
 test("selected local purchases produce six delivery instructions and five grouped supplier purchase drafts", () => {
@@ -113,7 +151,7 @@ test("an explicit historical source stays bound and duplicate candidate vehicles
     20000,
   );
   const withLater = applyStoryRunResult(state, later);
-  assert.equal(skillAvailability(command, withLater).available, false);
+  assert.equal(skillAvailability(command, withLater).available, true);
   assert.equal(
     skillAvailability(command, withLater, original.id).available,
     true,
