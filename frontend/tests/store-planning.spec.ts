@@ -3,7 +3,7 @@ async function run(page: Page, prompt = "/vessel-allocation 供给=1800") {
   await page.getByTestId("story-command").fill(prompt);
   await page.getByTestId("story-command").press("Enter");
   await page.clock.runFor(8000);
-  await page.getByRole("tab", { name: "注水演示", exact: true }).click();
+  await page.getByRole("tab", { name: "分车计划模拟", exact: true }).click();
 }
 test.beforeEach(async ({ page }) => {
   await page.goto("/");
@@ -27,18 +27,26 @@ test("paused runs keep parameter reruns disabled until resumed", async ({
 }) => {
   await page.getByTestId("story-command").fill("/vessel-allocation 模拟");
   await page.getByTestId("story-command").press("Enter");
-  await page.clock.runFor(1200);
-  await page.getByRole("tab", { name: "注水演示", exact: true }).click();
+  await page.clock.runFor(3800);
+  await page.getByRole("tab", { name: "分车计划模拟", exact: true }).click();
   await page.getByRole("button", { name: "暂停", exact: true }).click();
-  await page.locator(".allocation-parameters summary").click();
+  await page.locator(".vs-advanced > summary").click();
   await expect(
-    page.getByRole("button", { name: "模拟重跑", exact: true }),
+    page.getByRole("slider", { name: "零售价格系数", exact: true }),
+  ).toBeDisabled();
+  await expect(
+    page.getByRole("button", { name: "运行模拟", exact: true }),
   ).toBeDisabled();
   await page.getByRole("button", { name: "继续", exact: true }).click();
   await page.clock.runFor(8000);
-  await page.getByRole("tab", { name: "注水演示", exact: true }).click();
+  await page.getByRole("tab", { name: "分车计划模拟", exact: true }).click();
+  if ((await page.locator(".vs-advanced").getAttribute("open")) === null)
+    await page.locator(".vs-advanced > summary").click();
+  await page
+    .getByRole("slider", { name: "零售价格系数", exact: true })
+    .press("ArrowRight");
   await expect(
-    page.getByRole("button", { name: "模拟重跑", exact: true }),
+    page.getByRole("button", { name: "运行模拟", exact: true }),
   ).toBeEnabled();
 });
 test("ontology uses ellipses and straight dependencies, CUI links into graph and water playback", async ({
@@ -68,8 +76,8 @@ test("ontology uses ellipses and straight dependencies, CUI links into graph and
   await expect(page.getByTestId("graph-inspector")).toContainText(
     "需求合并宽表",
   );
-  await page.getByRole("button", { name: /查看注水演示/ }).click();
-  await expect(page.getByRole("tab", { name: "注水演示" })).toHaveAttribute(
+  await page.getByRole("button", { name: /查看分车计划模拟/ }).click();
+  await expect(page.getByRole("tab", { name: "分车计划模拟" })).toHaveAttribute(
     "aria-selected",
     "true",
   );
@@ -104,7 +112,7 @@ test("editable order assumptions and source brand filters rerun without mutating
   await page.getByLabel("供给数量", { exact: true }).fill("1500");
   await page.getByRole("button", { name: "模拟重跑", exact: true }).click();
   await page.clock.runFor(8000);
-  await page.getByRole("tab", { name: "注水演示", exact: true }).click();
+  await page.getByRole("tab", { name: "分车计划模拟", exact: true }).click();
   await expect(page.getByTestId("planning-conclusion")).toContainText(
     "先分订单 100 台",
   );
@@ -118,7 +126,7 @@ test("editable order assumptions and source brand filters rerun without mutating
     )
     .last()
     .click();
-  await page.getByRole("tab", { name: "注水演示", exact: true }).click();
+  await page.getByRole("tab", { name: "分车计划模拟", exact: true }).click();
   await expect(page.getByTestId("planning-conclusion")).toContainText(
     "补库存 1,800 台",
   );
@@ -126,7 +134,7 @@ test("editable order assumptions and source brand filters rerun without mutating
   await page.getByLabel("分车品牌", { exact: true }).selectOption("雷克萨斯");
   await page.getByRole("button", { name: "模拟重跑", exact: true }).click();
   await page.clock.runFor(8000);
-  await page.getByRole("tab", { name: "注水演示", exact: true }).click();
+  await page.getByRole("tab", { name: "分车计划模拟", exact: true }).click();
   await expect(page.locator(".planning-context")).toContainText("20 家门店");
   await page.getByRole("tab", { name: "门店结果" }).click();
   await expect(
@@ -134,7 +142,7 @@ test("editable order assumptions and source brand filters rerun without mutating
   ).toHaveCount(20);
   await page.clock.runFor(300);
   await page.reload();
-  await page.getByRole("tab", { name: "注水演示", exact: true }).click();
+  await page.getByRole("tab", { name: "分车计划模拟", exact: true }).click();
   await expect(page.locator(".planning-context")).toContainText("20 家门店");
 });
 test("source logistics keeps partial receiving and unknown total costs explicit on mobile", async ({

@@ -64,8 +64,8 @@ export function defaultProfitScenario(
   allocation: StoreAllocation,
   delivery: StoreDelivery,
 ): ProfitScenario {
-  const models = data.models.filter(
-    (m) => m.brand === (allocation.input.brand ?? "丰田"),
+  const models = data.models.filter((m) =>
+    (allocation.input.brand ?? "丰田").split(" / ").includes(m.brand),
   );
   const stores = allocation.rows
     .filter(
@@ -81,14 +81,19 @@ export function defaultProfitScenario(
     storageDays: data.storageDays,
     ...delivery.input.costRates,
   } as CostRates;
-  const orders = stores.flatMap((s, i) =>
-    [0, 1].map((n) => ({
-      ...models[(i + n) % models.length],
+  const orders = stores.flatMap((s, i) => {
+    const eligible = models.filter((m) =>
+      (s.brand ?? allocation.input.brand ?? "丰田")
+        .split(" / ")
+        .includes(m.brand),
+    );
+    return [0, 1].map((n) => ({
+      ...eligible[(i + n) % eligible.length],
       id: `SIM-SALE-${i + 1}-${n + 1}`,
       storeId: s.id,
       qty: Math.min(n ? 2 : 3, Math.floor(s.total / 2)),
-    })),
-  );
+    }));
+  });
   return { mode: delivery.input.mode, costRates: rates, orders };
 }
 const moneyKeys = [
@@ -131,7 +136,11 @@ export function calculateProfit(
     ids.add(o.id);
     const store = allocation.rows.find((s) => s.id === o.storeId);
     if (!store) throw new Error("未找到绑定分车门店 " + o.storeId);
-    if (o.brand !== (store.brand ?? allocation.input.brand ?? "丰田"))
+    if (
+      !(store.brand ?? allocation.input.brand ?? "丰田")
+        .split(" / ")
+        .includes(o.brand)
+    )
       throw new Error("订单品牌与分车品牌不一致");
     if (!o.model.trim()) throw new Error("车型不能为空");
     if (!Number.isInteger(o.qty) || o.qty <= 0)

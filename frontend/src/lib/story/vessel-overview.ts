@@ -107,7 +107,7 @@ export const vesselOverview: VesselOverviewData = {
   ],
   assumptions: [
     "全部客户、订单、车型分摊和库存为模拟；源表于2026-09-29生成，本模块为历史情景回放重建2026-08-05状态，不声称数据当日已可获得。",
-    "供给为模拟单船到港量；2025-07至2026-07每月一条代表船次，2026-07最后一期代表当前船次1800台，非全国月进口总量，亦非月销量。",
+    "供给为模拟单船到港量；2025-07至2026-07每月一条代表船次，2026-07最后一期代表当前船次2500台，非全国月进口总量，亦非月销量。",
     "供给月历史参考01_供给的丰田销量代理/雷克萨斯销量推估趋势，但数量另设；销量代理非核实进口，Comtrade日本/泰国全品牌进口不得直接等同丰田或雷克萨斯。",
     "2026-03起丰田代表船次下降为霍尔木兹运输受扰的情景假设。Reuters 2026-03-05（MarketScreener转载）报道中东目的地减产约4万台只是背景，不证明沙特本船或具体车型的到港损失。",
     "Land Cruiser 300、Prado 250、RAV4 Hybrid及Lexus LX/NX为可能供给偏紧的模拟车系；沙特官方产品页用于确认车名，日本Land Cruiser暂停接单仅为海外供需背景，不据此认定沙特实际缺货。车型短缺数量均为模拟。",
@@ -118,59 +118,60 @@ export const vesselOverview: VesselOverviewData = {
     "VPC库存为独立模拟、未分到门店的既有实物，当前船次尚未纳入VPC或门店库存；VPC库存单列不计入本次门店补库可用量，因此与门店库存互不重复。未建VIN、冻结和跨库调拨细目。",
     "区域与VPC月销是同一79店模拟销量的不同维度，不能相加。VPC覆盖映射假设为JED=西部+南部、DMM=东部、RUH=中部+北部；RUH为内陆处理点，其历史曲线非进口卸船量。",
     "预计可售卖周数=(本船供给+门店库存+VPC库存)/(未来4周销售需求/4)。三款主要车型按未来4周需求降序选择；VPC车型库存按需求占比、以最大余数法模拟分摊到整数台。假设本船与现有库存均可售，不另加未来到货；这是需求覆盖估算，不是实际售罄日期。",
+    "本轮供给扩为2500台；新增700台分配至Camry 250、Yaris 180、Hilux 90、Fortuner 100、Highlander 80台，均为可分补库的模拟车型余量，偏紧车系的订单缺口保留。",
     "summary.supplyChangePercent为2026-07与2026-06代表船次总供给环比，品牌合计口径一致。",
   ],
   models: [
     {
       model: "Camry",
       brand: "丰田",
-      supply: 360,
-      directSupply: 252,
-      authorizedSupply: 108,
+      supply: 610,
+      directSupply: 427,
+      authorizedSupply: 183,
       directOrders: 230,
       authorizedOrders: 95,
       directOrderShortage: 0,
       authorizedOrderShortage: 0,
       directDemand4Weeks: 1266,
       directStock: 803,
-      directReplenishmentShortage: 211,
+      directReplenishmentShortage: 36,
       authorizedDemand4Weeks: 547,
       authorizedStock: 363,
-      authorizedReplenishmentShortage: 76,
+      authorizedReplenishmentShortage: 1,
     },
     {
       model: "Yaris",
       brand: "丰田",
-      supply: 300,
-      directSupply: 210,
-      authorizedSupply: 90,
+      supply: 480,
+      directSupply: 336,
+      authorizedSupply: 144,
       directOrders: 182,
       authorizedOrders: 75,
       directOrderShortage: 0,
       authorizedOrderShortage: 0,
       directDemand4Weeks: 978,
       directStock: 589,
-      directReplenishmentShortage: 179,
+      directReplenishmentShortage: 53,
       authorizedDemand4Weeks: 422,
       authorizedStock: 266,
-      authorizedReplenishmentShortage: 66,
+      authorizedReplenishmentShortage: 12,
     },
     {
       model: "Hilux",
       brand: "丰田",
-      supply: 220,
-      directSupply: 154,
-      authorizedSupply: 66,
+      supply: 310,
+      directSupply: 217,
+      authorizedSupply: 93,
       directOrders: 138,
       authorizedOrders: 59,
       directOrderShortage: 0,
       authorizedOrderShortage: 0,
       directDemand4Weeks: 748,
       directStock: 427,
-      directReplenishmentShortage: 167,
+      directReplenishmentShortage: 104,
       authorizedDemand4Weeks: 323,
       authorizedStock: 193,
-      authorizedReplenishmentShortage: 64,
+      authorizedReplenishmentShortage: 37,
     },
     {
       model: "Corolla",
@@ -243,36 +244,36 @@ export const vesselOverview: VesselOverviewData = {
     {
       model: "Fortuner",
       brand: "丰田",
-      supply: 80,
-      directSupply: 56,
-      authorizedSupply: 24,
+      supply: 180,
+      directSupply: 126,
+      authorizedSupply: 54,
       directOrders: 50,
       authorizedOrders: 21,
       directOrderShortage: 0,
       authorizedOrderShortage: 0,
       directDemand4Weeks: 345,
       directStock: 170,
-      directReplenishmentShortage: 119,
+      directReplenishmentShortage: 49,
       authorizedDemand4Weeks: 149,
       authorizedStock: 77,
-      authorizedReplenishmentShortage: 48,
+      authorizedReplenishmentShortage: 18,
     },
     {
       model: "Highlander",
       brand: "丰田",
-      supply: 50,
-      directSupply: 35,
-      authorizedSupply: 15,
+      supply: 130,
+      directSupply: 91,
+      authorizedSupply: 39,
       directOrders: 29,
       authorizedOrders: 12,
       directOrderShortage: 0,
       authorizedOrderShortage: 0,
       directDemand4Weeks: 173,
       directStock: 93,
-      directReplenishmentShortage: 45,
+      directReplenishmentShortage: 0,
       authorizedDemand4Weeks: 75,
       authorizedStock: 42,
-      authorizedReplenishmentShortage: 18,
+      authorizedReplenishmentShortage: 0,
     },
     {
       model: "Lexus LX 600",
@@ -406,7 +407,7 @@ export const vesselOverview: VesselOverviewData = {
     },
     {
       month: "2026-07",
-      toyota: 1540,
+      toyota: 2240,
       lexus: 260,
     },
   ],
@@ -1217,8 +1218,8 @@ export const vesselOverview: VesselOverviewData = {
     },
   ],
   summary: {
-    supply: 1800,
-    toyotaSupply: 1540,
+    supply: 2500,
+    toyotaSupply: 2240,
     lexusSupply: 260,
     orders: 1694,
     orderShortage: 52,
@@ -1229,6 +1230,24 @@ export const vesselOverview: VesselOverviewData = {
     supplyChangePercent: -13.669064748201443,
   },
 };
+
+for (const channel of vesselOverview.channels) {
+  const key =
+    channel.channel === "直营"
+      ? "directReplenishmentShortage"
+      : "authorizedReplenishmentShortage";
+  channel.replenishmentShortage = vesselOverview.models.reduce(
+    (sum, model) => sum + model[key],
+    0,
+  );
+}
+vesselOverview.summary.replenishmentShortage = vesselOverview.channels.reduce(
+  (sum, channel) => sum + channel.replenishmentShortage,
+  0,
+);
+const previousVessel = vesselOverview.supplyHistory.at(-2)!;
+vesselOverview.summary.supplyChangePercent =
+  (2500 / (previousVessel.toyota + previousVessel.lexus) - 1) * 100;
 
 export function calculateVesselCoverage(data: VesselOverviewData) {
   const available =

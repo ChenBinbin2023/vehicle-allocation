@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 async function run(page: Page, prompt: string) {
   await page.getByTestId("story-command").fill(prompt);
   await page.getByTestId("story-command").press("Enter");
-  await page.clock.runFor(6500);
+  await page.clock.runFor(12000);
 }
 test.beforeEach(async ({ page }) => {
   await page.goto("/");

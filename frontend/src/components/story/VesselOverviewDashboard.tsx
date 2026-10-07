@@ -1,20 +1,22 @@
 "use client";
 
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import VesselSectionHeading from "./VesselSectionHeading";
 import {
   calculateVesselCoverage,
   vesselOverview,
+  type VesselOverviewData,
 } from "@/lib/story/vessel-overview";
 
 const COLORS = {
-  toyota: "#4b76cf",
-  lexus: "#9270c8",
-  direct: "#4b76cf",
-  authorized: "#239d96",
-  directShortage: "#c6d5f3",
-  authorizedShortage: "#bfe3df",
+  toyota: "#577c66",
+  lexus: "#8798a7",
+  direct: "#577c66",
+  authorized: "#91b3a0",
+  directShortage: "#d3ad76",
+  authorizedShortage: "#ead5b6",
 };
-const REGION_COLORS = ["#4b76cf", "#239d96", "#9270c8", "#d89342", "#c76685"];
+const REGION_COLORS = ["#577c66", "#8297aa", "#bba06e", "#649d96", "#a28c9e"];
 const LINE_DASHES = [undefined, "6 3", "2 3", "9 3 2 3", "5 2 2 2"];
 const fmt = (value: number, decimals = 0) =>
   value.toLocaleString("zh-CN", { maximumFractionDigits: decimals });
@@ -303,11 +305,14 @@ function HorizontalBars({
   );
 }
 
-function SupplyHistoryChart() {
+function SupplyHistoryChart({
+  history = vesselOverview.supplyHistory,
+}: {
+  history?: VesselOverviewData["supplyHistory"];
+}) {
   const { ref, width } = usePlotWidth();
   const svgId = useId();
   const [tooltip, setTooltip] = useState<TooltipData | null>(null);
-  const history = vesselOverview.supplyHistory;
   const height = 288,
     left = 43,
     right = 9,
@@ -822,12 +827,14 @@ function StoreBars({ metric }: { metric: "weeklySales" | "stock" }) {
 
 function OverviewSection({
   number,
+  english,
   title,
   note,
   columns = 2,
   children,
 }: {
   number: string;
+  english: string;
   title: string;
   note: string;
   columns?: 2 | 3;
@@ -836,20 +843,21 @@ function OverviewSection({
   const headingId = useId();
   return (
     <section className="vo-section" aria-labelledby={headingId}>
-      <header className="vo-section-heading">
-        <div>
-          <span aria-hidden="true">{number}</span>
-          <h2 id={headingId}>{title}</h2>
-        </div>
-        <p>{note}</p>
-      </header>
+      <VesselSectionHeading
+        number={number}
+        english={english}
+        title={title}
+        note={note}
+        headingId={headingId}
+      />
       <div className={`vo-grid vo-grid--${columns}`}>{children}</div>
     </section>
   );
 }
 
-export default function VesselOverviewDashboard() {
-  const data = vesselOverview;
+export default function VesselOverviewDashboard({
+  data = vesselOverview,
+}: { data?: VesselOverviewData } = {}) {
   const summary = data.summary;
   const coverage = calculateVesselCoverage(data);
   const shortageRows = (metric: "order" | "replenishment"): Bar[] =>
@@ -996,6 +1004,7 @@ export default function VesselOverviewDashboard() {
 
       <OverviewSection
         number="01"
+        english="VESSEL SUPPLY"
         title="供给情况"
         note="品牌口径 · 当船与历史代表船次"
       >
@@ -1053,12 +1062,13 @@ export default function VesselOverviewDashboard() {
             </span>
           }
         >
-          <SupplyHistoryChart />
+          <SupplyHistoryChart history={data.supplyHistory} />
         </ChartCard>
       </OverviewSection>
 
       <OverviewSection
         number="02"
+        english="ORDER & REPLENISHMENT DEMAND"
         title="订单与补库缺货"
         note="直营 / 授权 · 缺货按车型降序"
         columns={3}
@@ -1156,6 +1166,7 @@ export default function VesselOverviewDashboard() {
 
       <OverviewSection
         number="03"
+        english="VPC SALES & INVENTORY"
         title="VPC 销速与库存"
         note={`${data.vpcs.length} 个车辆处理中心 · 共用同一配色`}
       >
@@ -1195,6 +1206,7 @@ export default function VesselOverviewDashboard() {
 
       <OverviewSection
         number="04"
+        english="REGIONAL SALES & INVENTORY"
         title="大区销速与库存"
         note={`${data.regions.length} 个大区 · 同色对应同一区域`}
       >
@@ -1230,6 +1242,7 @@ export default function VesselOverviewDashboard() {
 
       <OverviewSection
         number="05"
+        english="STORE SALES & INVENTORY"
         title="门店销速与库存"
         note={`全部 ${data.stores.length} 家门店 · 两图按周均销量同序排列`}
       >

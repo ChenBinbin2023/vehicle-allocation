@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import type { SaveVesselScenario } from "@/lib/story/vessel-scenario";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowRight, Download, Play, Database } from "lucide-react";
 import {
   calculateStoreAllocation,
@@ -15,9 +16,15 @@ import VesselOverviewDashboard from "./VesselOverviewDashboard";
 import { vesselOverview } from "@/lib/story/vessel-overview";
 import VesselOrdersDashboard from "./VesselOrdersDashboard";
 import { vesselOrders } from "@/lib/story/vessel-orders";
+import VesselReplenishmentWorkspace from "./VesselReplenishmentWorkspace";
+import {
+  replenishmentOverview,
+  replenishmentOrders,
+} from "@/lib/story/vessel-replenishment";
 const fmt = (n: number | null, d = 0) =>
   n === null ? "—" : n.toLocaleString("en-US", { maximumFractionDigits: d });
 type Props = {
+  onSaveScenario?: SaveVesselScenario;
   run: StoryRun;
   focusedStep: number | null;
   focusRevision: number;
@@ -34,17 +41,34 @@ export default function AllocationPlanningWorkspace({
   focusRevision,
   busy,
   onRunPlanning,
+  onSaveScenario,
 }: Props) {
   const snapshot = run.planning!;
   if (snapshot.kind !== "allocation") throw new Error("需要分车快照");
   const result = snapshot.result,
     { summary: s } = result;
+  const current = useMemo(
+    () =>
+      snapshot.replenishment
+        ? {
+            overview: replenishmentOverview(snapshot.replenishment),
+            orders: replenishmentOrders(snapshot.replenishment),
+          }
+        : { overview: vesselOverview, orders: vesselOrders },
+    [snapshot.replenishment],
+  );
   const [input, setInput] = useState<AllocationScenario>(() =>
     structuredClone(result.input),
   );
-  const initialTab = /订单分车|物流建议|门店订单/.test(run.prompt)
-    ? "graph"
-    : "overview";
+  const initialTab =
+    /门店补库|补库存|预留比例|物流模拟|物流系数|基准物流成本|中转中心|利润|定价|零售系数|批发系数/.test(
+      run.prompt,
+    ) ||
+    (!!result.input.replenishment && /重跑|参数调整/.test(run.prompt))
+      ? "water"
+      : /订单分车|物流建议|门店订单/.test(run.prompt)
+        ? "graph"
+        : "overview";
   const [tab, setTab] = useState(initialTab),
     [channel, setChannel] = useState("全部"),
     [search, setSearch] = useState(""),
@@ -56,7 +80,8 @@ export default function AllocationPlanningWorkspace({
     setTab(initialTab);
     setSelected(result.rows[0]?.id);
     setError("");
-  }, [run.id, result]);
+  }, [run.id]);
+  useEffect(() => setInput(structuredClone(result.input)), [result]);
   const event = focusedStep === null ? undefined : run.events[focusedStep];
   useEffect(() => {
     if (
@@ -72,7 +97,7 @@ export default function AllocationPlanningWorkspace({
       );
       return () => cancelAnimationFrame(frame);
     }
-  }, [event, focusRevision]);
+  }, [event?.id, focusRevision]);
   const edited = JSON.stringify(input) !== JSON.stringify(result.input);
   const ready =
     run.blocks.find((b) => b.type === "planning-" + tab)?.status === "ready" ||
@@ -106,9 +131,9 @@ export default function AllocationPlanningWorkspace({
         [
           JSON.stringify(
             tab === "overview"
-              ? { runId: run.id, simulation: true, overview: vesselOverview }
+              ? { runId: run.id, simulation: true, overview: current.overview }
               : tab === "graph"
-                ? { runId: run.id, simulation: true, orders: vesselOrders }
+                ? { runId: run.id, simulation: true, orders: current.orders }
                 : { runId: run.id, simulation: true, ...snapshot },
             null,
             2,
@@ -131,7 +156,7 @@ export default function AllocationPlanningWorkspace({
       {[
         ["overview", "基本统计"],
         ["graph", "订单分车"],
-        ["water", "注水演示"],
+        ["water", "分车计划模拟"],
         ["allocation", "门店结果"],
       ].map(([id, label], index, items) => (
         <button
@@ -166,7 +191,11 @@ export default function AllocationPlanningWorkspace({
       ))}
     </nav>
   );
-  if (tab === "overview" || tab === "graph") {
+  if (
+    tab === "overview" ||
+    tab === "graph" ||
+    (tab === "water" && snapshot.replenishment)
+  ) {
     return (
       <div
         className="planning-workspace allocation-data-workspace"
@@ -176,10 +205,16 @@ export default function AllocationPlanningWorkspace({
           <div>
             <small>
               VESSEL ALLOCATION ·{" "}
-              {tab === "overview" ? "供需与库存" : "订单与物流"}
+              {tab === "overview"
+                ? "供需与库存"
+                : tab === "graph"
+                  ? "订单与物流"
+                  : "门店补库存"}
             </small>
             <h1>滚装船分车工作台</h1>
-            <p>先看本船供给与全网需求，再查看订单分车、物流建议和门店结果。</p>
+            <p>
+              先看本船供给与全网需求，再按订单优先分车，将剩余车辆注水补库存。
+            </p>
           </div>
           <span className="planning-status">
             {run.status === "complete"
@@ -198,7 +233,11 @@ export default function AllocationPlanningWorkspace({
           <span>丰田 / 雷克萨斯 · 79 家门店</span>
           <button disabled={run.status !== "complete"} onClick={download}>
             <Download size={13} />
-            {tab === "overview" ? "导出统计快照" : "导出订单与物流快照"}
+            {tab === "overview"
+              ? "导出统计快照"
+              : tab === "graph"
+                ? "导出订单与物流快照"
+                : "导出快照"}
           </button>
         </div>
         <div ref={outputRef}>{tabs}</div>
@@ -209,13 +248,30 @@ export default function AllocationPlanningWorkspace({
         >
           {ready ? (
             tab === "overview" ? (
-              <VesselOverviewDashboard />
+              <VesselOverviewDashboard data={current.overview} />
+            ) : tab === "water" && snapshot.replenishment ? (
+              <VesselReplenishmentWorkspace
+                key={run.id}
+                result={snapshot.replenishment}
+                commercial={snapshot.commercial}
+                versions={snapshot.versions}
+                versionId={snapshot.versionId ?? "V1"}
+                onSave={(parameters, reason) =>
+                  onSaveScenario?.(run.id, { parameters, reason })
+                }
+                onSelectVersion={(versionId) =>
+                  onSaveScenario?.(run.id, { versionId })
+                }
+                busy={busy}
+                focusNode={event?.planningNode}
+              />
             ) : (
               <>
                 <VesselOrdersDashboard
                   key={run.id + "-" + focusRevision}
                   focusNode={event?.planningNode}
                   prompt={run.prompt}
+                  data={current.orders}
                 />
                 <details
                   className="voa-assumptions"
@@ -239,7 +295,9 @@ export default function AllocationPlanningWorkspace({
               <i />
               {tab === "overview"
                 ? "正在汇总供给、订单、销速与库存…"
-                : "正在生成门店订单与物流建议…"}
+                : tab === "water"
+                  ? "正在生成门店补库与注水快照…"
+                  : "正在生成门店订单与物流建议…"}
             </div>
           )}
         </section>
@@ -319,7 +377,10 @@ export default function AllocationPlanningWorkspace({
           </article>
         ))}
       </div>
-      <details className="planning-panel allocation-parameters">
+      <details
+        className="planning-panel allocation-parameters"
+        hidden={!!snapshot.replenishment}
+      >
         <summary>
           情景参数与未配订单{" "}
           <span>
@@ -644,18 +705,35 @@ export default function AllocationPlanningWorkspace({
       </div>
       <details className="planning-input-details allocation-provenance">
         <summary>数据来源与统计窗口</summary>
-        <p>
-          data/00_客户/门店主数据.csv · data/02_销速/销速汇总_门店.csv ·
-          data/03_库存/当前库存_门店.csv
-        </p>
-        <p>
-          直营销速：2026-06-01—07-26（8 周）；授权销速：2026-05-01—07-31（92
-          天折周）。库存快照：2026-09-29。销速与库存日期存在间隔，保留来源口径，不当作到店日预测。
-        </p>
-        <p>
-          模拟数据 H_MOCK_20260929_V1；仅品牌级数据。1800
-          台船量、未配订单、在途按期与接车条件为情景输入。
-        </p>
+        {snapshot.replenishment ? (
+          <>
+            <p>
+              沿用本船基础统计与订单分车的 2026-08-05 模拟快照；八周销速窗口为
+              2026-06-08—08-02，门店库存与 VPC 原有库存分别统计。
+            </p>
+            <p>
+              门店 × 车型库存和销速为模拟分摊；本轮预留{" "}
+              {fmt(snapshot.replenishment.summary.reserved)} 台，未分配{" "}
+              {fmt(snapshot.replenishment.summary.retained)}{" "}
+              台。参数、分车结果与下游物流均保存到本轮快照。
+            </p>
+          </>
+        ) : (
+          <>
+            <p>
+              data/00_客户/门店主数据.csv · data/02_销速/销速汇总_门店.csv ·
+              data/03_库存/当前库存_门店.csv
+            </p>
+            <p>
+              直营销速：2026-06-01—07-26（8 周）；授权销速：2026-05-01—07-31（92
+              天折周）。库存快照：2026-09-29。销速与库存日期存在间隔，保留来源口径，不当作到店日预测。
+            </p>
+            <p>
+              模拟数据 H_MOCK_20260929_V1；仅品牌级数据。1800
+              台船量、未配订单、在途按期与接车条件为情景输入。
+            </p>
+          </>
+        )}
       </details>
     </div>
   );

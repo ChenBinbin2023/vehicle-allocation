@@ -182,7 +182,7 @@ export default function StoryChat({
                             {event.profitTab
                               ? `查看${event.profitTab === "orders" ? "订单利润" : event.profitTab === "models" ? "车型利润" : "门店利润"}`
                               : event.planningTab
-                                ? `查看${event.planningTab === "overview" ? "基本统计" : event.planningTab === "graph" ? (event.operation === "vessel.orders.logistics" ? "物流建议" : event.operation === "vessel.orders.read" ? "订单分车" : "分车图谱") : event.planningTab === "water" ? "注水演示" : event.planningTab === "allocation" ? "门店分车" : event.planningTab === "map" ? "路线地图" : event.planningTab === "routes" ? "到店路线" : event.planningTab === "compare" ? "港口比较" : "到店批次"}`
+                                ? `查看${event.planningTab === "overview" ? "基本统计" : event.planningTab === "graph" ? (event.operation === "vessel.orders.logistics" ? "物流建议" : event.operation === "vessel.orders.read" ? "订单分车" : "分车图谱") : event.planningTab === "water" ? "分车计划模拟" : event.planningTab === "allocation" ? "门店分车" : event.planningTab === "map" ? "路线地图" : event.planningTab === "routes" ? "到店路线" : event.planningTab === "compare" ? "港口比较" : "到店批次"}`
                                 : event.canvasTab
                                   ? `查看${event.canvasTab === "sales" ? "销量与预测" : event.canvasTab === "inventory" ? "库存与渠道" : "陆路运输成本"}`
                                   : "查看判断依据"}{" "}

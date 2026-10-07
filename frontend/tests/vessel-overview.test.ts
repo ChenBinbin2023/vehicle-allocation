@@ -89,7 +89,7 @@ test("history stops before the August snapshot and the sales window contains eig
 
 test("the current vessel reconciles across model, brand and final historical vessel views", async () => {
   const data = await readOverview();
-  assert.equal(data.summary.supply, 1800);
+  assert.equal(data.summary.supply, 2500);
   assert.equal(
     total(data.models.map((model) => model.supply)),
     data.summary.supply,
@@ -310,7 +310,7 @@ test("ranked stores and scenario metadata expose the simulated and incomplete-so
     assert.ok(Number.isInteger(store.stock) && store.stock >= 0);
   }
   const toyota2026 = data.supplyHistory.filter(
-    (month) => month.month >= "2026-02",
+    (month) => month.month >= "2026-02" && month.month <= "2026-06",
   );
   for (let index = 1; index < toyota2026.length; index++)
     assert.ok(toyota2026[index].toyota < toyota2026[index - 1].toyota);

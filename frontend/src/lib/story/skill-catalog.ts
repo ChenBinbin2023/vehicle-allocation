@@ -26,12 +26,12 @@ export const storySkills: StorySkill[] = [
   },
   {
     command: "/vessel-allocation",
-    title: "1,800 台船次分车",
+    title: "2,500 台船次分车",
     description:
       "查看基本统计、门店订单和单/双港物流建议，再按门店销速与 WoS 注水分车",
     stage: "allocation",
     defaultPrompt:
-      "先展示截至2026-08-05的供需、销速和库存模拟基本统计；供给=1800 直营WoS=3 授权WoS=4，继续按丰田门店数据演示订单优先分车与注水过程。",
+      "先展示截至2026-08-05的供需、销速和库存模拟基本统计，再展示订单分车与门店补库；总量=2500 预留比例=10% 基准WoS=4 级差=30%。",
   },
   {
     command: "/delivery-plan",

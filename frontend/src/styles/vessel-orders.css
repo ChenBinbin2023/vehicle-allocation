@@ -1,55 +1,60 @@
 .vessel-orders {
-  --voa-ink: #293d54;
-  --voa-muted: #728297;
-  --voa-border: #e1e8f0;
-  --voa-blue: #6488b3;
+  --voa-ink: #283c32;
+  --voa-muted: #7b8981;
+  --voa-border: #e1e8e3;
+  --voa-green: #4e755f;
   color: var(--voa-ink);
   min-width: 0;
   container-type: inline-size;
+  font-size: 12px;
+  line-height: 1.55;
 }
 .voa-heading {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   gap: 16px;
-  margin: 4px 0 22px;
+  margin: 3px 0 18px;
 }
 .voa-heading small {
-  color: #7c8da2;
-  font-size: 11px;
-  letter-spacing: 1.3px;
+  color: #5a7b67;
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 1.2px;
 }
 .voa-heading h2 {
   margin: 5px 0 7px;
-  font-size: 24px;
+  font-size: 23px;
   font-weight: 650;
   letter-spacing: -0.6px;
 }
 .voa-heading p {
   margin: 0;
   color: var(--voa-muted);
-  font-size: 13px;
+  font-size: 12px;
 }
 .voa-heading > span {
   flex: none;
-  background: #eef2f9;
-  color: #65759f;
+  background: #f1f6f3;
+  color: #64816e;
   font-size: 11px;
-  border: 1px solid #e0e6f3;
+  border: 1px solid #e4efe9;
   padding: 6px 10px;
   border-radius: 16px;
 }
 .voa-kpis {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
-  margin: 0 0 18px;
+  gap: 1px;
+  margin: 0;
+  background: var(--voa-border);
+  border-radius: 0 0 12px 12px;
+  overflow: hidden;
 }
 .voa-kpis article {
   min-width: 0;
-  border: 1px solid var(--voa-border);
-  border-radius: 10px;
-  padding: 15px 14px;
+  border: 0;
+  padding: 17px 20px;
   background: white;
 }
 .voa-kpis article > span {
@@ -62,12 +67,12 @@
   font-size: 25px;
   font-weight: 650;
   margin: 7px 0;
-  color: #36577e;
+  color: #355744;
   font-variant-numeric: tabular-nums;
 }
 .voa-kpis small {
   font-size: 10.5px;
-  color: #8391a2;
+  color: #899c91;
   line-height: 1.6;
   display: block;
 }
@@ -93,7 +98,7 @@
   padding: 7px 8px;
   border: 1px solid var(--voa-border);
   border-radius: 6px;
-  font-size: 12px;
+  font-size: 11px;
 }
 .voa-search-wrap {
   flex: 1;
@@ -105,14 +110,21 @@
   background: #fff;
   border-radius: 6px;
   padding: 7px 9px;
+  height: 38px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
 }
 .voa-search input {
   width: 100%;
   min-width: 0;
+  min-height: 0;
+  height: auto;
+  padding: 0;
   border: 0;
   outline: none;
   background: transparent;
-  font-size: 12px;
+  font-size: 11px;
   color: var(--voa-ink);
 }
 .voa-search-popup {
@@ -126,7 +138,7 @@
   border: 1px solid var(--voa-border);
   border-radius: 8px;
   background: #fff;
-  box-shadow: 0 8px 26px #293d5420;
+  box-shadow: 0 8px 26px #283c3220;
   overflow: hidden;
 }
 .voa-search-popup.above {
@@ -150,12 +162,12 @@
   background: #fff;
   padding: 10px 8px;
   text-align: left;
-  color: #6383a7;
+  color: #709a81;
   cursor: pointer;
 }
 .voa-search-options button:hover,
 .voa-search-options button[aria-selected="true"] {
-  background: #edf3fa;
+  background: #f1f6f3;
 }
 .voa-search-options button > svg {
   flex: none;
@@ -170,7 +182,7 @@
   align-items: baseline;
 }
 .voa-search-options small {
-  color: #8a9caf;
+  color: #91a89b;
   font-size: 10px;
   white-space: nowrap;
 }
@@ -184,15 +196,15 @@
   display: block;
   font-size: 10px;
   line-height: 1.6;
-  color: #8a9caf;
+  color: #91a89b;
   margin-top: 3px;
   overflow-wrap: anywhere;
 }
 .voa-search-popup footer {
   flex: none;
   padding: 8px 12px;
-  border-top: 1px solid #edf1f6;
-  color: #94a2b3;
+  border-top: 1px solid #eff4f1;
+  color: #9aada2;
   font-size: 10px;
   line-height: 1.6;
 }
@@ -205,7 +217,7 @@
 }
 .voa-filters > button {
   border: 0;
-  color: #527aa6;
+  color: #629678;
   background: transparent;
   cursor: pointer;
   font-size: 12px;
@@ -241,7 +253,7 @@
   display: flex;
   padding: 3px;
   border-radius: 7px;
-  background: #f1f4f8;
+  background: #f2f7f4;
   gap: 3px;
 }
 .voa-layer-toggle button {
@@ -249,18 +261,18 @@
   align-items: center;
   gap: 5px;
   border: 0;
-  padding: 7px 9px;
+  padding: 6px 10px;
   border-radius: 5px;
   background: transparent;
   font-size: 12px;
-  color: #7a8ba0;
+  color: #81998b;
   cursor: pointer;
   white-space: nowrap;
 }
 .voa-layer-toggle button[aria-pressed="true"] {
   background: #fff;
-  color: #4b709c;
-  box-shadow: 0 1px 3px #1b3a6120;
+  color: #5a8d6f;
+  box-shadow: 0 1px 3px #2e4e3b20;
   font-weight: 600;
 }
 .voa-port-toggle {
@@ -279,9 +291,9 @@
   cursor: pointer;
 }
 .voa-port-toggle button[aria-pressed="true"] {
-  background: #edf3fa;
-  color: #496f9b;
-  border-color: #b9cce1;
+  background: #f1f6f3;
+  color: #598b6e;
+  border-color: #c1d9cb;
 }
 .voa-map {
   display: block;
@@ -290,12 +302,12 @@
   min-height: 340px;
 }
 .voa-country {
-  fill: #b4bec0;
+  fill: #b6beb9;
   font-size: 22px;
   letter-spacing: 6px;
 }
 .voa-sea {
-  fill: #a1b5c1;
+  fill: #a7bbaf;
   font-size: 14px;
   letter-spacing: 4px;
 }
@@ -305,12 +317,12 @@
 }
 .voa-bubble:hover circle:last-of-type,
 .voa-bubble:focus-visible circle:last-of-type {
-  stroke: #294e7a;
+  stroke: #3c674e;
   stroke-width: 3;
   fill-opacity: 1;
 }
 .voa-city-label {
-  fill: #667e8b;
+  fill: #6d8477;
   font-size: 11px;
   font-weight: 550;
   paint-order: stroke;
@@ -318,20 +330,20 @@
   stroke-width: 3px;
 }
 .voa-port-label {
-  fill: #3d607c;
+  fill: #497059;
   font-size: 12px;
   font-weight: 600;
   paint-order: stroke;
-  stroke: #edf4f7;
+  stroke: #eff5f1;
   stroke-width: 3px;
 }
 .voa-stop-label {
-  fill: #375570;
+  fill: #426551;
   font-size: 14px;
   font-weight: 600;
 }
 .voa-stop-value {
-  fill: #728297;
+  fill: #7b8981;
   font-size: 13px;
 }
 .voa-map-legend {
@@ -341,8 +353,8 @@
   align-items: center;
   padding: 14px 16px;
   font-size: 10.5px;
-  color: #7c8da0;
-  border-top: 1px solid #edf1f6;
+  color: #83998c;
+  border-top: 1px solid #eff4f1;
 }
 .voa-map-legend span {
   display: flex;
@@ -353,20 +365,20 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #6d91bb;
+  background: #577c66;
 }
 .voa-map-legend .authorized {
-  background: #61a799;
+  background: #a3bdad;
 }
 .voa-map-note {
   padding: 0 16px 12px;
   font-size: 10px;
-  color: #96a2b0;
+  color: #9baba2;
   line-height: 1.7;
   margin: 0;
 }
 .voa-map-note a {
-  color: #7e93ac;
+  color: #87a393;
 }
 .voa-map-trip-summary {
   display: flex;
@@ -376,13 +388,13 @@
   padding: 12px 14px;
   margin: 0 12px 12px;
   border-radius: 6px;
-  background: #f3f6fa;
+  background: #f4f9f6;
   font-size: 11px;
-  color: #63809e;
+  color: #6e937d;
 }
 .voa-map-trip-summary > strong {
   margin-left: auto;
-  color: #3d628b;
+  color: #4c7c60;
   font-size: 16px;
   font-variant-numeric: tabular-nums;
 }
@@ -399,13 +411,13 @@
 }
 .voa-store-heading {
   padding: 16px;
-  border-bottom: 1px solid #edf1f6;
+  border-bottom: 1px solid #eff4f1;
 }
 .voa-store-heading > span {
   display: flex;
   align-items: center;
   gap: 6px;
-  color: #6b8db0;
+  color: #78a38a;
   font-size: 11px;
   margin-bottom: 10px;
 }
@@ -420,13 +432,13 @@
 }
 .voa-store-heading p {
   font-size: 10.5px;
-  color: #8a98a8;
+  color: #90a297;
   margin: 0;
 }
 .voa-store-heading > strong {
   display: block;
   font-size: 25px;
-  color: #456c99;
+  color: #55896b;
   margin-top: 12px;
   font-weight: 650;
 }
@@ -439,7 +451,7 @@
   padding: 17px 16px 13px;
 }
 .voa-chart + .voa-chart {
-  border-top: 1px solid #edf1f6;
+  border-top: 1px solid #eff4f1;
 }
 .voa-chart header {
   display: flex;
@@ -456,7 +468,7 @@
 }
 .voa-chart header span {
   font-size: 9.5px;
-  color: #8b9bae;
+  color: #92a79b;
 }
 .voa-bars {
   max-height: 270px;
@@ -472,7 +484,7 @@
 }
 .voa-bar-row > span {
   font-size: 10px;
-  color: #667a90;
+  color: #6e8879;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -480,7 +492,7 @@
 .voa-bar-track {
   height: 12px;
   position: relative;
-  background: #f5f7fa;
+  background: #f6f9f7;
   border-radius: 3px;
 }
 .voa-bar-track i {
@@ -494,13 +506,13 @@
 .voa-bar-track b {
   display: block;
   height: 100%;
-  background: #7496c0;
+  background: #577c66;
 }
 .voa-bar-row > strong {
   text-align: right;
   font-size: 10.5px;
   font-weight: 550;
-  color: #527299;
+  color: #5f8c72;
   font-variant-numeric: tabular-nums;
 }
 .voa-chart footer {
@@ -508,21 +520,21 @@
   align-items: center;
   gap: 6px;
   font-size: 9.5px;
-  color: #92a0b2;
+  color: #98aca0;
   padding-top: 12px;
 }
 .voa-chart footer i {
   width: 7px;
   height: 7px;
   border-radius: 2px;
-  background: #7496c0;
+  background: #577c66;
 }
 .voa-chart footer .gap {
   background: #e9bf88;
   margin-left: 6px;
 }
 .voa-empty {
-  color: #8a98a8;
+  color: #90a297;
   font-size: 12px;
   line-height: 1.8;
   padding: 16px 0;
@@ -543,15 +555,15 @@
 }
 .voa-trip-list h3 small {
   font-size: 10px;
-  color: #6d8dae;
-  background: #edf3fa;
+  color: #79a28a;
+  background: #f1f6f3;
   padding: 2px 6px;
   border-radius: 8px;
   margin-left: 4px;
 }
 .voa-trip-list header p {
   font-size: 10px;
-  color: #91a0b2;
+  color: #97aca0;
   margin: 5px 0 0;
 }
 .voa-trip-items {
@@ -572,12 +584,12 @@
   cursor: pointer;
 }
 .voa-trip-items > button[aria-pressed="true"] {
-  border-color: #94b0d0;
-  background: #f1f6fc;
-  box-shadow: inset 3px 0 #6c8fba;
+  border-color: #9fc5af;
+  background: #f4f9f6;
+  box-shadow: inset 3px 0 #7bab8f;
 }
 .voa-trip-items > button:hover {
-  border-color: #a9bfd8;
+  border-color: #b2cfbe;
 }
 .voa-trip-items > button > span:first-child {
   display: flex;
@@ -587,17 +599,17 @@
 }
 .voa-trip-items > button > span:first-child small {
   font-size: 9px;
-  color: #90a0b4;
+  color: #97ada0;
 }
 .voa-trip-items > button > span:first-child strong {
   margin-left: auto;
-  color: #50749e;
+  color: #5f8f73;
   font-size: 12px;
 }
 .voa-trip-route {
   display: block;
   font-size: 10px;
-  color: #718297;
+  color: #789082;
   line-height: 1.7;
   margin: 6px 0;
   overflow-wrap: anywhere;
@@ -611,11 +623,11 @@
 }
 .voa-trip-cost > span {
   font-size: 11px;
-  color: #54779f;
+  color: #629176;
   font-variant-numeric: tabular-nums;
 }
 .voa-trip-cost small {
-  color: #93a1b2;
+  color: #99aca1;
   font-size: 9px;
 }
 .voa-trip-list > footer {
@@ -633,7 +645,7 @@
   background: #fff;
   padding: 5px 8px;
   font-size: 10px;
-  color: #6081a5;
+  color: #6d987f;
   cursor: pointer;
 }
 .voa-trip-list > footer button:disabled {
@@ -649,7 +661,7 @@
   justify-content: space-between;
   gap: 8px;
   font-size: 10px;
-  color: #7091b5;
+  color: #7da88f;
 }
 .voa-trip-detail > header span {
   display: flex;
@@ -675,19 +687,19 @@
 }
 .voa-trip-metrics dt {
   font-size: 10px;
-  color: #8b9aac;
+  color: #91a69a;
   margin-bottom: 5px;
 }
 .voa-trip-metrics dd {
   margin: 0;
   font-size: 19px;
-  color: #466e9b;
+  color: #568b6c;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 .voa-trip-metrics dd small {
   font-size: 10px;
-  color: #8d9bae;
+  color: #93a89c;
   font-weight: 400;
 }
 .voa-origin {
@@ -696,12 +708,12 @@
   align-items: center;
   flex-wrap: wrap;
   font-size: 11px;
-  color: #6383a7;
+  color: #709a81;
   margin-bottom: 14px;
 }
 .voa-origin span {
   margin-left: auto;
-  color: #90a0b3;
+  color: #97aca0;
   font-size: 10px;
 }
 .voa-stops article {
@@ -718,7 +730,7 @@
   top: 23px;
   bottom: 2px;
   width: 1px;
-  background: #d6e0ec;
+  background: #dae8e0;
 }
 .voa-stop-number {
   display: grid;
@@ -727,8 +739,8 @@
   width: 21px;
   height: 21px;
   border-radius: 50%;
-  background: #edf3fa;
-  color: #6c8cae;
+  background: #f1f6f3;
+  color: #79a18a;
   font-size: 10px;
 }
 .voa-stops article > div {
@@ -737,7 +749,7 @@
 }
 .voa-stops article small {
   font-size: 9px;
-  color: #8298b1;
+  color: #8ba897;
 }
 .voa-stops h4 {
   font-size: 11px;
@@ -747,19 +759,19 @@
 }
 .voa-stops article p {
   margin: 0 0 8px;
-  color: #8394a9;
+  color: #8aa294;
   font-size: 10px;
   line-height: 1.7;
 }
 .voa-stops article p b {
   font-weight: 500;
-  color: #5f7e9e;
+  color: #6b927b;
 }
 .voa-stops ul {
   list-style: none;
   margin: 0;
   padding: 6px 8px;
-  background: #f6f8fb;
+  background: #f7faf8;
   border-radius: 5px;
 }
 .voa-stops li {
@@ -769,41 +781,22 @@
   gap: 4px;
   margin: 4px 0;
   font-size: 10px;
-  color: #7f92a9;
+  color: #87a192;
 }
 .voa-stops code {
   font-size: 10px;
-  color: #6786ab;
+  color: #749e85;
 }
 .voa-trip-detail > footer {
   font-size: 9.5px;
-  color: #94a2b3;
+  color: #9aada2;
   line-height: 1.8;
-  border-top: 1px solid #edf1f6;
+  border-top: 1px solid #eff4f1;
   padding-top: 10px;
 }
 .voa-logistics-costs {
-  margin-top: 24px;
+  margin-top: 0;
   min-width: 0;
-}
-.voa-cost-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-bottom: 14px;
-}
-.voa-cost-heading h3 {
-  margin: 0 0 5px;
-  font-size: 17px;
-  font-weight: 600;
-}
-.voa-cost-heading p,
-.voa-cost-heading > span {
-  margin: 0;
-  font-size: 11px;
-  color: var(--voa-muted);
 }
 .voa-store-cost-row-scroll {
   overflow-x: auto;
@@ -875,7 +868,7 @@
   margin: 11px 5px 0 0;
   text-align: right;
   font-size: 9px;
-  color: #8a99aa;
+  color: #90a498;
   font-variant-numeric: tabular-nums;
 }
 .voa-cost-scroll,
@@ -884,7 +877,7 @@
   min-width: 0;
   overflow-x: auto;
   scrollbar-width: thin;
-  scrollbar-color: #d0dbe7 transparent;
+  scrollbar-color: #d4e3da transparent;
 }
 .voa-cost-scroll {
   flex: 1;
@@ -894,17 +887,17 @@
   max-width: none;
 }
 .voa-cost-gridline {
-  stroke: #edf1f5;
+  stroke: #eff3f1;
   stroke-width: 1;
 }
 .voa-cost-store-label,
 .voa-cost-tick {
-  fill: #8a99aa;
+  fill: #90a498;
   font-size: 9px;
 }
 .voa-cost-store-detail {
   margin: 6px 0 0;
-  border-top: 1px solid #edf1f5;
+  border-top: 1px solid #eff3f1;
   padding-top: 8px;
   font-size: 10px;
   line-height: 1.65;
@@ -922,7 +915,7 @@
   font-weight: 550;
 }
 .voa-cost-chart-guide {
-  color: #8391a2;
+  color: #899c91;
   font-size: 10px;
   line-height: 1.6;
   margin: 7px 0 16px;
@@ -944,7 +937,7 @@
 .voa-cost-table-scroll td {
   padding: 10px 7px;
   text-align: right;
-  border-bottom: 1px solid #edf1f5;
+  border-bottom: 1px solid #eff3f1;
 }
 .voa-cost-table-scroll th:first-child {
   text-align: left;
@@ -953,10 +946,10 @@
   font-size: 10px;
   font-weight: 500;
   color: var(--voa-muted);
-  background: #f8fafc;
+  background: #f9fbfa;
 }
 .voa-cost-table-scroll thead .single {
-  color: #597ea8;
+  color: #68997c;
 }
 .voa-cost-table-scroll thead .dual {
   color: #4a8d7e;
@@ -965,7 +958,7 @@
   font-weight: 500;
 }
 .voa-cost-table-scroll tfoot {
-  background: #f5f8fb;
+  background: #f6faf8;
   font-weight: 600;
 }
 .voa-region-cost-table > p {
@@ -1006,26 +999,26 @@
   font-size: 11px;
 }
 .voa-cost-bar-value {
-  fill: #698096;
+  fill: #728d7d;
   font-size: 9px;
   font-variant-numeric: tabular-nums;
 }
 .voa-cost-change {
   margin: 16px 0 8px;
-  border: 1px solid #dce6ef;
+  border: 1px solid #e0ebe5;
   border-radius: 8px;
-  background: #f1f6fb;
+  background: #f4f8f6;
   padding: 12px 14px;
-  font-size: 18px;
-  font-weight: 700;
+  font-size: 12px;
+  font-weight: 600;
   line-height: 1.8;
-  color: #466888;
+  color: #537b64;
 }
 .voa-cost-basis {
   margin: 0;
   font-size: 10px;
   line-height: 1.8;
-  color: #8391a2;
+  color: #899c91;
 }
 .voa-cost-chart-empty {
   min-height: 180px;
@@ -1046,23 +1039,23 @@
 }
 .voa-assumptions {
   margin: 18px 0;
-  border: 1px solid #e2e8ef;
+  border: 1px solid #e1e8e3;
   border-radius: 8px;
   padding: 12px 14px;
   background: #fff;
   font-size: 11px;
-  color: #8493a6;
+  color: #8aa093;
 }
 .voa-assumptions summary {
   cursor: pointer;
-  color: #6c819b;
+  color: #759281;
 }
 .voa-assumptions p {
   font-size: 11px;
   line-height: 1.9;
 }
 .vessel-orders :is(button, select, input):focus-visible {
-  outline: 2px solid #668fbd;
+  outline: 2px solid #77ac8d;
   outline-offset: 3px;
 }
 @container (max-width: 680px) {
@@ -1090,7 +1083,7 @@
     font-size: 21px;
   }
   .voa-kpis {
-    gap: 8px;
+    gap: 1px;
   }
   .voa-kpis article {
     padding: 11px;
@@ -1104,4 +1097,16 @@
   .voa-search-wrap {
     flex-basis: 100%;
   }
+}
+
+.voa-search:focus-within {
+  border-color: #72947e;
+  box-shadow: 0 0 0 2px #72947e20;
+}
+.voa-cost-scroll:focus-visible,
+.voa-region-cost-scroll:focus-visible,
+.voa-cost-table-scroll:focus-visible,
+.voa-store-cost-row-scroll:focus-visible {
+  outline: 2px solid #72947e;
+  outline-offset: 3px;
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import VesselSectionHeading from "./VesselSectionHeading";
 import type { OrderPortMode } from "@/lib/story/vessel-orders";
 import type {
   OrderLogisticsSummary,
@@ -10,7 +11,7 @@ import type {
 const fmt = (value: number, digits = 0) =>
   value.toLocaleString("en-US", { maximumFractionDigits: digits });
 const price = (value: number | null) => (value === null ? "—" : fmt(value, 1));
-const colors = { single: "#7395bd", dual: "#62a999" };
+const colors = { single: "#577c66", dual: "#a3bdad" };
 
 function chartMax(value: number) {
   if (!value) return 1;
@@ -345,47 +346,46 @@ export default function OrderLogisticsCosts({
       : `双港改为单港后，物流总成本由 ${fmt(summary.dual.totalCost)} SAR 变为 ${fmt(summary.single.totalCost)} SAR，${amount > 0 ? "增加" : amount < 0 ? "减少" : "变化"} ${fmt(Math.abs(amount))} SAR${percent === null ? "（双港费用为 0，无法计算变化比例）" : `（${amount > 0 ? "增加" : amount < 0 ? "减少" : "变化"} ${fmt(Math.abs(percent), 2)}%，以双港为基准）`}。`;
   return (
     <section
-      className="voa-logistics-costs"
+      className="voa-section voa-logistics-costs"
       data-testid="order-logistics-costs"
       aria-label="当前订单物流费用统计"
     >
-      <header className="voa-cost-heading">
-        <div>
-          <h3>当前订单物流费用</h3>
-          <p>
-            {summary.stores.length} 家门店 · 运送 {fmt(summary.single.quantity)}{" "}
-            台 · 单港、双港对比
-          </p>
+      <VesselSectionHeading
+        number="03"
+        english="LOGISTICS COST COMPARISON"
+        title="物流费用对比"
+        note={`${summary.stores.length} 家门店 · 运送 ${fmt(summary.single.quantity)} 台 · 跟随门店、渠道与品牌筛选`}
+      />
+      <div className="voa-section-body">
+        <div className="voa-store-cost-row-scroll">
+          <div className="voa-store-cost-row">
+            {(["single", "dual"] as const).flatMap((mode) =>
+              (["totalCost", "unitCost"] as const).map((metric) => (
+                <StoreCostChart
+                  key={`${mode}-${metric}`}
+                  summary={summary}
+                  mode={mode}
+                  metric={metric}
+                  activeStore={activeStore}
+                  onStore={setActiveStoreId}
+                />
+              )),
+            )}
+          </div>
         </div>
-        <span>跟随门店、渠道与品牌筛选</span>
-      </header>
-      <div className="voa-store-cost-row-scroll">
-        <div className="voa-store-cost-row">
-          {(["single", "dual"] as const).flatMap((mode) =>
-            (["totalCost", "unitCost"] as const).map((metric) => (
-              <StoreCostChart
-                key={`${mode}-${metric}`}
-                summary={summary}
-                mode={mode}
-                metric={metric}
-                activeStore={activeStore}
-                onStore={setActiveStoreId}
-              />
-            )),
-          )}
-        </div>
+        <p className="voa-cost-chart-guide">
+          四图使用相同门店顺序，按单港总费用降序排列；横向滚动查看全部门店，悬停柱子查看费用。
+        </p>
+        <RegionCosts summary={summary} />
+        <p className="voa-cost-change" data-testid="order-cost-change">
+          {changeText}
+        </p>
+        <p className="voa-cost-basis">
+          仅统计当前订单已分配的运输车辆；单车指订单车辆，平均成本 = 物流总费用
+          ÷
+          运送台数。合车费用沿用车次卸货点分摊，品牌筛选再按订单台数归集，不重新计算整车报价。费用包含整趟运输、额外卸货、港口处理与整备。
+        </p>
       </div>
-      <p className="voa-cost-chart-guide">
-        四图使用相同门店顺序，按单港总费用降序排列；横向滚动查看全部门店，悬停柱子查看费用。
-      </p>
-      <RegionCosts summary={summary} />
-      <p className="voa-cost-change" data-testid="order-cost-change">
-        {changeText}
-      </p>
-      <p className="voa-cost-basis">
-        仅统计当前订单已分配的运输车辆；单车指订单车辆，平均成本 = 物流总费用 ÷
-        运送台数。合车费用沿用车次卸货点分摊，品牌筛选再按订单台数归集，不重新计算整车报价。费用包含整趟运输、额外卸货、港口处理与整备。
-      </p>
     </section>
   );
 }

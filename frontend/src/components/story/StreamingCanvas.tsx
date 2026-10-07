@@ -1,4 +1,5 @@
 "use client";
+import type { SaveVesselScenario } from "@/lib/story/vessel-scenario";
 
 import { useEffect, useRef, useState } from "react";
 import {
@@ -60,8 +61,10 @@ export default function StreamingCanvas({
   onToggleSidebar,
   busy,
   onRunPlanning,
+  onSaveScenario,
   onRunProfit,
 }: {
+  onSaveScenario?: SaveVesselScenario;
   onRunProfit: (
     input: ProfitScenario | undefined,
     deliveryRunId: string,
@@ -280,6 +283,7 @@ export default function StreamingCanvas({
                 focusRevision={focusRevision}
                 busy={busy}
                 onRunPlanning={onRunPlanning}
+                onSaveScenario={onSaveScenario}
                 onRunProfit={onRunProfit}
               />
             ) : run.command === "/smart-query" ? (

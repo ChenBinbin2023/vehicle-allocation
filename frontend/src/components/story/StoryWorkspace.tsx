@@ -1,4 +1,9 @@
 "use client";
+import {
+  hydrateVesselScenario,
+  reviseVesselScenario,
+  selectVesselScenarioVersion,
+} from "@/lib/story/vessel-scenario";
 
 import { useEffect, useLayoutEffect, useState } from "react";
 import { MessageSquare } from "lucide-react";
@@ -32,7 +37,10 @@ export default function StoryWorkspace({
   onSelectSession: (id: string) => void;
   onNewSession: () => void;
 }) {
-  const [campaign, setCampaign] = useState(snapshot.campaign);
+  const [campaign, setCampaign] = useState(() => ({
+    ...snapshot.campaign,
+    runs: snapshot.campaign.runs.map(hydrateVesselScenario),
+  }));
   const [messages, setMessages] = useState<StoryMessage[]>(snapshot.messages);
   const [draft, setDraft] = useState(snapshot.draft);
   const [activeStage, setActiveStage] = useState<StoryStage | "welcome">(
@@ -148,7 +156,7 @@ export default function StoryWorkspace({
           skill.command === "/smart-query"
             ? "我会从本地数据读取销量、库存和路线费用，逐步生成三个分析视图。思考、规划与工具调用均为演示记录，可点击查看对应结果。"
             : skill.command === "/vessel-allocation"
-              ? "我会先生成截至 2026-08-05 的模拟基本统计，展示本船车型、订单缺口和全网销速库存。工作台可切换分车图谱、注水演示与门店结果；点击过程记录可返回基本统计。"
+              ? "我会先生成截至 2026-08-05 的模拟基本统计，展示本船车型、订单缺口和全网销速库存。工作台可切换分车图谱、分车计划模拟与门店结果；点击过程记录可返回基本统计。"
               : "我会读取业务快照，展示采用的规则、候选方案与校验结果。点击过程记录可以查看画布中的对应依据。",
         storyRunId: run.id,
       },
@@ -263,10 +271,29 @@ export default function StoryWorkspace({
             { profitInput, deliveryRunId },
           )
         }
+        onSaveScenario={(runId, action) => {
+          setCampaign((current) => ({
+            ...current,
+            runs: current.runs.map((run) => {
+              if (run.id !== runId || run.status !== "complete") return run;
+              return action.versionId
+                ? selectVesselScenarioVersion(run, action.versionId)
+                : action.parameters
+                  ? reviseVesselScenario(
+                      run,
+                      action.parameters,
+                      action.reason ?? "参数调整",
+                    )
+                  : run;
+            }),
+          }));
+        }}
         onRunPlanning={(command, input, allocationRunId) => {
           const detail =
             "supply" in input
-              ? `供给=${input.supply} 直营WoS=${input.targetDirect} 授权WoS=${input.targetAuthorized}；按当前门店快照模拟。`
+              ? input.replenishment
+                ? `门店补库 总量=${input.replenishment.supply} 预留比例=${input.replenishment.reserveRatio * 100}% 级差=${input.replenishment.channelGap * 100}%；按当前参数重跑。`
+                : `供给=${input.supply} 直营WoS=${input.targetDirect} 授权WoS=${input.targetAuthorized}；按当前门店快照模拟。`
               : `${input.mode === "single" ? "单港" : "双港"}到店模拟；D2接车=${input.stores.find((s) => s.id === "D2")?.firstCapacity ?? 0}；按当前接车和 VPC 容量重算。`;
           submit(command + " " + detail, { input, allocationRunId });
         }}

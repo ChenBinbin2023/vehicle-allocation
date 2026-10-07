@@ -28,6 +28,7 @@ export type PlanningStore = {
   salesBasis?: string;
 };
 export type AllocationScenario = {
+  replenishment?: import("./vessel-replenishment").ReplenishmentParameters;
   supply: number;
   targetDirect: number;
   targetAuthorized: number;
@@ -144,7 +145,14 @@ export type StoreDelivery = {
   vpcStock: { qty: number; cost: number; batches: StoreBatch[] };
 };
 export type PlanningSnapshot =
-  | { kind: "allocation"; result: StoreAllocation }
+  | {
+      kind: "allocation";
+      result: StoreAllocation;
+      replenishment?: import("./vessel-replenishment").VesselReplenishment;
+      commercial?: import("./vessel-commercial").CommercialResult;
+      versionId?: string;
+      versions?: import("./vessel-scenario").VesselScenarioVersion[];
+    }
   | {
       kind: "delivery";
       allocationRunId: string;
@@ -624,9 +632,11 @@ function dataDeliveryScenario(allocation: StoreAllocation): DeliveryScenario {
       DMM: allocation.input.supply,
     },
     stores: allocation.rows.map((store) => {
-      const physical = planningData.stock
-        .filter((s) => s.store === store.id)
-        .reduce((s, r) => s + (r.physical ?? 0), 0);
+      const physical = allocation.input.replenishment
+        ? (store.physicalStock ?? store.availableStock)
+        : planningData.stock
+            .filter((s) => s.store === store.id)
+            .reduce((s, r) => s + (r.physical ?? 0), 0);
       const parking = Math.max(0, (store.parkingCapacity ?? 0) - physical);
       const daily = Math.max(1, Math.ceil(store.weeklySales / 2));
       return {

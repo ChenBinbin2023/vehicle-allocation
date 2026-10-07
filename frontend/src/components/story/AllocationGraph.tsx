@@ -198,7 +198,7 @@ export default function AllocationGraph({
       x: 1015,
       y: 485,
       kind: "output",
-      detail: `整车注水已分 ${fmt(s.replenishment)} 台，距目标仍缺 ${fmt(s.replenishmentGap)} 台。点击“注水演示”逐步观察水位与分配过程。`,
+      detail: `整车注水已分 ${fmt(s.replenishment)} 台，距目标仍缺 ${fmt(s.replenishmentGap)} 台。点击“分车计划模拟”逐步观察水位与分配过程。`,
     },
     {
       id: "B9",

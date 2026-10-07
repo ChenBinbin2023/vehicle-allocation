@@ -76,7 +76,7 @@ export default function WaterfillPlayer({
     >
       <header>
         <h2>
-          注水演示{" "}
+          分车计划模拟{" "}
           <span className="water-stage" data-testid="water-stage">
             {stage}
           </span>

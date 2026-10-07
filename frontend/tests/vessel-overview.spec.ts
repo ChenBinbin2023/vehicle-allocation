@@ -25,10 +25,10 @@ test("allocation opens the eleven-chart overview and CUI can return to it", asyn
   await expect(overview).toContainText("霍尔木兹");
   await expect(overview).toContainText("模拟");
   const coverage = page.getByTestId("overview-sellable-weeks");
-  await expect(coverage.locator("strong")).toHaveText("3.4周");
-  await expect(coverage).toContainText("7,665");
+  await expect(coverage.locator("strong")).toHaveText("3.7周");
+  await expect(coverage).toContainText("8,365");
   await expect(coverage.locator(".vo-coverage-models")).toHaveText(
-    "Camry3.8 周Yaris3.8 周Hilux3.6 周",
+    "Camry4.4 周Yaris4.3 周Hilux3.9 周",
   );
   const kpiTops = await overview
     .locator(".vo-kpis article")

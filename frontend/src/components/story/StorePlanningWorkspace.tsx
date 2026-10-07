@@ -1,4 +1,5 @@
 "use client";
+import type { SaveVesselScenario } from "@/lib/story/vessel-scenario";
 
 import { useEffect, useState, useRef, type ReactNode } from "react";
 import {
@@ -72,6 +73,7 @@ function DeliveryPlanningWorkspace({
   onRunPlanning,
   onRunProfit,
 }: {
+  onSaveScenario?: SaveVesselScenario;
   onRunProfit: (
     input: ProfitScenario | undefined,
     deliveryRunId: string,

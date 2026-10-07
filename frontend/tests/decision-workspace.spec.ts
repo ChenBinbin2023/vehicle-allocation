@@ -1,6 +1,12 @@
 import { expect, test, type Page } from "@playwright/test";
 async function runSkill(page: Page, command: string) {
-  await page.getByTestId("story-command").fill(command + " 模拟");
+  await page
+    .getByTestId("story-command")
+    .fill(
+      command === "/vessel-allocation"
+        ? command + " 供给=1800 直营WoS=3 授权WoS=4"
+        : command + " 模拟",
+    );
   await page.getByTestId("story-command").press("Enter");
   await page.clock.runFor(8000);
 }

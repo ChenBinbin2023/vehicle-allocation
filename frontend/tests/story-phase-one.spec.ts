@@ -1,10 +1,16 @@
 import { expect, test, type Page } from "@playwright/test";
 async function runSkill(page: Page, command: string) {
-  await page.getByTestId("story-command").fill(command + " 模拟");
+  await page
+    .getByTestId("story-command")
+    .fill(
+      command === "/vessel-allocation"
+        ? command + " 供给=1800 直营WoS=3 授权WoS=4"
+        : command + " 模拟",
+    );
   await page.getByTestId("story-command").press("Enter");
   await page.clock.runFor(8000);
   if (command === "/vessel-allocation")
-    await page.getByRole("tab", { name: "注水演示", exact: true }).click();
+    await page.getByRole("tab", { name: "分车计划模拟", exact: true }).click();
 }
 test("store simulation preserves all assigned cars and cannot fabricate arrival execution", async ({
   page,
@@ -38,7 +44,7 @@ test("store simulation preserves all assigned cars and cannot fabricate arrival 
       '[data-testid="canvas-history-item"][data-run-command="/vessel-allocation"]',
     )
     .click();
-  await page.getByRole("tab", { name: "注水演示", exact: true }).click();
+  await page.getByRole("tab", { name: "分车计划模拟", exact: true }).click();
   await page.getByRole("tab", { name: "订单分车", exact: true }).click();
   await page.getByText("品牌注水情景 · 原分车图谱", { exact: true }).click();
   await expect(page.getByTestId("allocation-graph")).toBeVisible();
@@ -53,7 +59,7 @@ test("channel targets alter waterfill while the old canvas retains its own param
   await page.getByLabel("授权目标 WoS", { exact: true }).fill("3");
   await page.getByRole("button", { name: "模拟重跑", exact: true }).click();
   await page.clock.runFor(8000);
-  await page.getByRole("tab", { name: "注水演示", exact: true }).click();
+  await page.getByRole("tab", { name: "分车计划模拟", exact: true }).click();
   await page.locator(".allocation-parameters summary").click();
   await expect(page.getByLabel("授权目标 WoS", { exact: true })).toHaveValue(
     "3",
@@ -65,7 +71,7 @@ test("channel targets alter waterfill while the old canvas retains its own param
     )
     .last()
     .click();
-  await page.getByRole("tab", { name: "注水演示", exact: true }).click();
+  await page.getByRole("tab", { name: "分车计划模拟", exact: true }).click();
   await expect(page.getByLabel("授权目标 WoS", { exact: true })).toHaveValue(
     "4",
   );

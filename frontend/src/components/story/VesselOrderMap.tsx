@@ -107,7 +107,7 @@ export default function VesselOrderMap({
             <path
               d="M40 0H0V40"
               fill="none"
-              stroke="#cfdee7"
+              stroke="#dce6df"
               strokeWidth=".6"
             />
           </pattern>
@@ -120,17 +120,17 @@ export default function VesselOrderMap({
             markerHeight="4"
             orient="auto"
           >
-            <path d="M0 0L10 5L0 10Z" fill="#567da7" />
+            <path d="M0 0L10 5L0 10Z" fill="#577c66" />
           </marker>
         </defs>
-        <rect width="760" height="550" fill="#eef4f7" />
+        <rect width="760" height="550" fill="#f0f5f1" />
         <rect width="760" height="550" fill="url(#voa-map-grid)" />
         {arabianCountries.map((c) => (
           <path
             key={c.id}
             d={c.path}
-            fill={c.id === "SAU" ? "#fcfcf8" : "#e4eaeb"}
-            stroke="#cbd6d9"
+            fill={c.id === "SAU" ? "#fcfcf8" : "#e6ebe7"}
+            stroke="#ccd8cf"
             strokeWidth="1"
           />
         ))}
@@ -153,7 +153,7 @@ export default function VesselOrderMap({
                   .map((p) => `${p.x},${p.y}`)
                   .join(" ")}
                 fill="none"
-                stroke={t.portId === "P-W" ? "#759bbc" : "#78ab9c"}
+                stroke={t.portId === "P-W" ? "#8ba997" : "#bba06e"}
                 strokeWidth="1.2"
                 opacity=".13"
               />
@@ -195,7 +195,7 @@ export default function VesselOrderMap({
                     cy={p.y}
                     r={radius + 5}
                     fill="none"
-                    stroke="#385f8a"
+                    stroke="#355744"
                     strokeWidth="1.5"
                   />
                 )}
@@ -203,7 +203,7 @@ export default function VesselOrderMap({
                   cx={p.x}
                   cy={p.y}
                   r={radius}
-                  fill={store.channel === "直营" ? "#6d91bb" : "#61a799"}
+                  fill={store.channel === "直营" ? "#577c66" : "#a3bdad"}
                   fillOpacity={active ? 1 : 0.65}
                   stroke="white"
                   strokeWidth="1.6"
@@ -228,7 +228,7 @@ export default function VesselOrderMap({
             {stores.map((store) => {
               const p = points.get(store.id)!;
               return (
-                <circle key={store.id} cx={p.x} cy={p.y} r="3" fill="#a5b8c2" />
+                <circle key={store.id} cx={p.x} cy={p.y} r="3" fill="#aebeb3" />
               );
             })}
             {trip && (
@@ -238,7 +238,7 @@ export default function VesselOrderMap({
                     .map((p) => `${p.x},${p.y}`)
                     .join(" ")}
                   fill="none"
-                  stroke="#567da7"
+                  stroke="#577c66"
                   strokeWidth="3.5"
                   strokeLinejoin="round"
                   markerMid="url(#voa-map-arrow)"
@@ -254,7 +254,7 @@ export default function VesselOrderMap({
                         cx={p.x}
                         cy={p.y}
                         r="9"
-                        fill="#567da7"
+                        fill="#577c66"
                         stroke="#fff"
                         strokeWidth="2"
                       />
@@ -269,7 +269,7 @@ export default function VesselOrderMap({
                       </text>
                       <path
                         d={`M${p.x + 7} ${p.y}L${labelX} ${labelY + 24}`}
-                        stroke="#a6b8ca"
+                        stroke="#a9bfb1"
                         fill="none"
                       />
                       <rect
@@ -279,7 +279,7 @@ export default function VesselOrderMap({
                         height="48"
                         rx="6"
                         fill="white"
-                        stroke="#d4e0eb"
+                        stroke="#dce6df"
                       />
                       <text
                         x={labelX + 8}
@@ -323,7 +323,7 @@ export default function VesselOrderMap({
                     width="16"
                     height="16"
                     rx="3"
-                    fill={id === "P-W" ? "#365f87" : "#3d8a79"}
+                    fill={id === "P-W" ? "#355744" : "#947a49"}
                     stroke="white"
                     strokeWidth="2"
                   />

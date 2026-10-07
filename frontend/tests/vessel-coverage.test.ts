@@ -7,16 +7,16 @@ import {
 
 test("sellable weeks include the vessel, stores and VPC once and rank the three highest-demand models", () => {
   const result = calculateVesselCoverage(vesselOverview);
-  assert.equal(result.available, 7665);
+  assert.equal(result.available, 8365);
   assert.equal(result.weeklyDemand, 2280.25);
-  assert.ok(Math.abs(result.weeks! - 3.36147352264) < 1e-9);
+  assert.ok(Math.abs(result.weeks! - 3.66845740599) < 1e-9);
   assert.deepEqual(
     result.models.slice(0, 3).map((model) => model.model),
     ["Camry", "Yaris", "Hilux"],
   );
   assert.deepEqual(
     result.models.slice(0, 3).map((model) => Number(model.weeks!.toFixed(1))),
-    [3.8, 3.8, 3.6],
+    [4.4, 4.3, 3.9],
   );
   assert.equal(
     result.models.reduce((sum, model) => sum + model.vpcStock, 0),

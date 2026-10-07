@@ -8,6 +8,8 @@ async function run(page: Page, command: string) {
     .getByTestId("story-skill-option")
     .filter({ has: page.getByText(command, { exact: true }) })
     .click();
+  if (command === "/vessel-allocation")
+    await input.fill(command + " 供给=1800 直营WoS=3 授权WoS=4");
   await input.press("Enter");
   await page.clock.runFor(14_000);
 }
@@ -26,7 +28,7 @@ test("store water levels and route splits stay readable on desktop and mobile", 
   await page
     .getByTestId("allocation-graph")
     .screenshot({ path: "docs/visual-allocation-graph.png" });
-  await page.getByRole("tab", { name: "注水演示", exact: true }).click();
+  await page.getByRole("tab", { name: "分车计划模拟", exact: true }).click();
   await page.getByRole("button", { name: "查看最终水位", exact: true }).click();
   await expect(page.getByTestId("water-assigned")).toHaveText("1,800");
   await page
