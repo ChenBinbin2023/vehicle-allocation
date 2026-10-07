@@ -1,4 +1,5 @@
 "use client";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
 
 import { useEffect, useRef } from "react";
 import { LayoutPanelLeft, Sparkles, X } from "lucide-react";
@@ -40,6 +41,8 @@ export default function StoryChat({
   onOpenCanvas: () => void;
   dispatchRunId?: string;
 }) {
+  const { t: translateText } = useI18n();
+
   const bodyRef = useRef<HTMLDivElement>(null);
   const following = useRef(true);
   const currentRun = campaign.runs.find(
@@ -67,7 +70,7 @@ export default function StoryChat({
             </span>
             <div>
               <strong>ATLAS Agent</strong>
-              <small>CUI · Skill 驱动</small>
+              <small>{translateText("CUI · Skill 驱动")}</small>
             </div>
             <span className="story-online">
               <i /> ONLINE
@@ -75,24 +78,26 @@ export default function StoryChat({
           </>
         )}
         {fullWidth && (
-          <span className="cui-session-label">{empty ? "" : "任务对话"}</span>
+          <span className="cui-session-label">
+            {translateText(empty ? "" : "任务对话")}
+          </span>
         )}
         {campaign.runs.length > 0 && fullWidth && (
           <button
             type="button"
             className="cui-canvas-toggle"
-            aria-label="打开 GUI 画布"
+            aria-label={translateText("打开 GUI 画布")}
             onClick={onOpenCanvas}
           >
             <LayoutPanelLeft size={16} />
-            画布
+            {translateText("画布")}
           </button>
         )}
         {!fullWidth && (
           <button
             type="button"
             className="story-chat-close"
-            aria-label="关闭 CUI"
+            aria-label={translateText("关闭 CUI")}
             onClick={onClose}
           >
             <X size={15} />
@@ -114,8 +119,12 @@ export default function StoryChat({
             <span>
               <Sparkles size={21} />
             </span>
-            <h1>我们该处理什么工作?</h1>
-            <p>输入第一句话，或键入 / 使用内置 Skill 开始任务。</p>
+            <h1>{translateText("我们该处理什么工作?")}</h1>
+            <p>
+              {translateText(
+                "输入第一句话，或键入 / 使用内置 Skill 开始任务。",
+              )}
+            </p>
           </div>
         ) : (
           messages.map((message) => {
@@ -132,8 +141,18 @@ export default function StoryChat({
                     : "story-agent-message"
                 }
               >
-                {message.title && <strong>{message.title}</strong>}
-                {message.text && <p>{message.text}</p>}
+                {translateText(
+                  message.title && (
+                    <strong>{translateText(message.title)}</strong>
+                  ),
+                )}
+                {message.text && (
+                  <p>
+                    {message.role === "user"
+                      ? message.text
+                      : translateText(message.text)}
+                  </p>
+                )}
                 {run && (
                   <StoryRunResponse
                     run={run}

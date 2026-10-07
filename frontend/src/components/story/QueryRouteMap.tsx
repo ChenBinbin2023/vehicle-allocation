@@ -1,4 +1,5 @@
 "use client";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
 
 import { useState } from "react";
 import { ArrowRight, MapPin, Truck } from "lucide-react";
@@ -68,6 +69,8 @@ function locate(route: Route) {
 }
 
 export default function QueryRouteMap({ routes }: { routes: Route[] }) {
+  const { t: translateText } = useI18n();
+
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const located = routes.map(locate).filter((route) => route !== null);
   const selected =
@@ -89,21 +92,22 @@ export default function QueryRouteMap({ routes }: { routes: Route[] }) {
         {hubs.map(([id, hub]) => (
           <span key={id}>
             <i style={{ backgroundColor: hub.color }} />
-            {hub.label}始发
+            {translateText(hub.label)}
+            {translateText("始发")}
           </span>
         ))}
         <span>
           <i className="gap" />
-          虚线：运力缺口
+          {translateText("虚线：运力缺口")}
         </span>
-        <small>线越粗，周运力越大</small>
+        <small>{translateText("线越粗，周运力越大")}</small>
       </div>
       <div className="query-route-map-layout">
         <div className="query-route-map-stage">
           <svg
             viewBox="0 0 760 550"
             role="group"
-            aria-label="沙特陆路运输路线地图"
+            aria-label={translateText("沙特陆路运输路线地图")}
           >
             <rect width="760" height="550" className="query-map-sea" />
             {countries.map((country) => (
@@ -140,28 +144,28 @@ export default function QueryRouteMap({ routes }: { routes: Route[] }) {
             </g>
             <g className="query-map-geography-labels" aria-hidden="true">
               <text x="480" y="385" className="query-map-country-title">
-                沙特阿拉伯
+                {translateText("沙特阿拉伯")}
               </text>
               <text x="480" y="405">
                 SAUDI ARABIA
               </text>
               <text x="340" y="67">
-                伊拉克
+                {translateText("伊拉克")}
               </text>
               <text x="105" y="62">
-                约旦
+                {translateText("约旦")}
               </text>
               <text x="590" y="142">
-                科威特
+                {translateText("科威特")}
               </text>
               <text x="666" y="285">
-                阿联酋
+                {translateText("阿联酋")}
               </text>
               <text x="692" y="398">
-                阿曼
+                {translateText("阿曼")}
               </text>
               <text x="344" y="531">
-                也门
+                {translateText("也门")}
               </text>
               <text
                 x="77"
@@ -169,10 +173,10 @@ export default function QueryRouteMap({ routes }: { routes: Route[] }) {
                 transform="rotate(-58 77 348)"
                 className="query-map-water-label"
               >
-                红 海
+                {translateText("红 海")}
               </text>
               <text x="625" y="189" className="query-map-water-label">
-                波斯湾
+                {translateText("波斯湾")}
               </text>
               <path d="M710 83V47m-6 9 6-9 6 9" />
               <text x="710" y="38">
@@ -185,7 +189,9 @@ export default function QueryRouteMap({ routes }: { routes: Route[] }) {
                 data-route-id={route.id}
                 role="button"
                 tabIndex={0}
-                aria-label={`路线 ${route.id}：${route.origin.label} → ${route.city}`}
+                aria-label={translateText(
+                  `路线 ${route.id}：${route.origin.label} → ${route.city}`,
+                )}
                 aria-pressed={selected?.id === route.id}
                 className={`query-map-route ${selected?.id === route.id ? "selected" : ""}`}
                 onClick={() => setSelectedId(route.id)}
@@ -197,9 +203,16 @@ export default function QueryRouteMap({ routes }: { routes: Route[] }) {
                 }}
               >
                 <title>
-                  {route.origin.label} → {route.city} · {fmt(route.km)} km ·{" "}
-                  {fmt(route.cost)} SAR · 周运力 {fmt(route.capacity)} 台
-                  {route.gap ? ` · 缺口 ${fmt(route.gap)} 台` : ""}
+                  {translateText(route.origin.label)} →{" "}
+                  {translateText(route.city)} · {translateText(fmt(route.km))}{" "}
+                  km ·{translateText(" ")}
+                  {translateText(fmt(route.cost))}
+                  {translateText(" SAR · 周运力 ")}
+                  {translateText(fmt(route.capacity))}
+                  {translateText(" 台")}
+                  {translateText(
+                    route.gap ? ` · 缺口 ${fmt(route.gap)} 台` : "",
+                  )}
                 </title>
                 <path
                   d={route.path}
@@ -250,7 +263,7 @@ export default function QueryRouteMap({ routes }: { routes: Route[] }) {
                     y={point.y + offset[1]}
                     textAnchor={offset[0] < 0 ? "end" : "start"}
                   >
-                    {city}
+                    {translateText(city)}
                   </text>
                 </g>
               );
@@ -289,7 +302,8 @@ export default function QueryRouteMap({ routes }: { routes: Route[] }) {
                     textAnchor={offset[0] < 0 ? "end" : "start"}
                     fill={hub.color}
                   >
-                    {hub.label}港 / VPC
+                    {translateText(hub.label)}
+                    {translateText("港 / VPC")}
                   </text>
                 </g>
               );
@@ -303,15 +317,16 @@ export default function QueryRouteMap({ routes }: { routes: Route[] }) {
             aria-live="polite"
           >
             <label>
-              地图路线
+              {translateText("地图路线")}
               <select
-                aria-label="地图路线"
+                aria-label={translateText("地图路线")}
                 value={selected.id}
                 onChange={(event) => setSelectedId(event.target.value)}
               >
                 {located.map((route) => (
                   <option key={route.id} value={route.id}>
-                    {route.origin.label} → {route.city}
+                    {translateText(route.origin.label)} →{" "}
+                    {translateText(route.city)}
                   </option>
                 ))}
               </select>
@@ -319,43 +334,55 @@ export default function QueryRouteMap({ routes }: { routes: Route[] }) {
             <div className="query-map-detail-heading">
               <span>
                 <MapPin size={12} />
-                {selected.local ? "同城接驳" : "城市运输路线"}
+                {translateText(selected.local ? "同城接驳" : "城市运输路线")}
               </span>
               <h3>
-                {selected.origin.label}
+                {translateText(selected.origin.label)}
                 <ArrowRight size={15} />
-                {selected.city}
+                {translateText(selected.city)}
               </h3>
-              <small>{selected.id}</small>
+              <small>{translateText(selected.id)}</small>
             </div>
             <strong className="query-map-quote">
-              {fmt(selected.cost)}
-              <small>SAR / 整趟</small>
+              {translateText(fmt(selected.cost))}
+              <small>{translateText("SAR / 整趟")}</small>
             </strong>
             <dl>
               <div>
-                <dt>陆路距离</dt>
-                <dd>{fmt(selected.km)} km</dd>
+                <dt>{translateText("陆路距离")}</dt>
+                <dd>{translateText(fmt(selected.km))} km</dd>
               </div>
               <div>
-                <dt>参考时长</dt>
-                <dd>{fmt(selected.hours, 1)} 小时</dd>
+                <dt>{translateText("参考时长")}</dt>
+                <dd>
+                  {translateText(fmt(selected.hours, 1))}
+                  {translateText(" 小时")}
+                </dd>
               </div>
               <div>
-                <dt>满载单台费</dt>
-                <dd>{fmt(selected.unitCost, 1)} SAR</dd>
+                <dt>{translateText("满载单台费")}</dt>
+                <dd>{translateText(fmt(selected.unitCost, 1))} SAR</dd>
               </div>
               <div>
-                <dt>周可用车次</dt>
-                <dd>{fmt(selected.trucks)} 次</dd>
+                <dt>{translateText("周可用车次")}</dt>
+                <dd>
+                  {translateText(fmt(selected.trucks))}
+                  {translateText(" 次")}
+                </dd>
               </div>
               <div>
-                <dt>有效周运力</dt>
-                <dd>{fmt(selected.capacity)} 台</dd>
+                <dt>{translateText("有效周运力")}</dt>
+                <dd>
+                  {translateText(fmt(selected.capacity))}
+                  {translateText(" 台")}
+                </dd>
               </div>
               <div>
-                <dt>参考周需求</dt>
-                <dd>{fmt(selected.demand, 1)} 台</dd>
+                <dt>{translateText("参考周需求")}</dt>
+                <dd>
+                  {translateText(fmt(selected.demand, 1))}
+                  {translateText(" 台")}
+                </dd>
               </div>
             </dl>
             <div
@@ -363,34 +390,41 @@ export default function QueryRouteMap({ routes }: { routes: Route[] }) {
               data-testid="query-map-gap"
             >
               <Truck size={14} />
-              {selected.gap
-                ? `运力缺口 ${fmt(selected.gap)} 台 / 周`
-                : "当前路线无运力缺口"}
+              {translateText(
+                selected.gap
+                  ? `运力缺口 ${fmt(selected.gap)} 台 / 周`
+                  : "当前路线无运力缺口",
+              )}
             </div>
           </aside>
         )}
       </div>
       {located.length !== routes.length && (
         <p className="query-map-unlocated">
-          {routes.length - located.length}{" "}
-          条路线缺少城市定位，可在下方明细中查看。
+          {routes.length - located.length}
+          {translateText(" ")}
+          {translateText("条路线缺少城市定位，可在下方明细中查看。")}
         </p>
       )}
       <footer className="query-map-footer">
         <span>
-          城市中心连线示意 · 同城接驳以环线表示 · 运力快照{" "}
-          {queryMetadata.capacityWeek}
+          {translateText("城市中心连线示意 · 同城接驳以环线表示 · 运力快照")}
+          {translateText(" ")}
+          {translateText(queryMetadata.capacityWeek)}
         </span>
         <span>
-          底图{" "}
+          {translateText("底图")}
+          {translateText(" ")}
           <a
             href="https://www.naturalearthdata.com/"
             target="_blank"
             rel="noreferrer"
           >
             Natural Earth
-          </a>{" "}
-          · 城市{" "}
+          </a>
+          {translateText(" ")}
+          {translateText("· 城市")}
+          {translateText(" ")}
           <a href="https://www.geonames.org/" target="_blank" rel="noreferrer">
             GeoNames
           </a>

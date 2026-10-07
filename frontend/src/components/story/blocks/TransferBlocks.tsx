@@ -1,4 +1,5 @@
 "use client";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
 
 import {
   AlertTriangle,
@@ -9,13 +10,18 @@ import {
   Store,
   Truck,
 } from "lucide-react";
-import type {
-  CampaignState,
-  DailyPlan,
-  StoryBlock,
-} from "@/lib/story/types";
-import { transferDualImpact, transferException } from "@/lib/story/daily-transfer-run";
-import { FactCard, MetricGrid, MiniBar, SectionGrid, StatusPill } from "../shared";
+import type { CampaignState, DailyPlan, StoryBlock } from "@/lib/story/types";
+import {
+  transferDualImpact,
+  transferException,
+} from "@/lib/story/daily-transfer-run";
+import {
+  FactCard,
+  MetricGrid,
+  MiniBar,
+  SectionGrid,
+  StatusPill,
+} from "../shared";
 
 function currentPlan(
   block: StoryBlock,
@@ -40,6 +46,8 @@ export default function TransferBlocks({
   onApprove: (decisionId: string) => void;
   canApprove?: boolean;
 }) {
+  const { t: translateText } = useI18n();
+
   const plan = currentPlan(block, campaign);
   const dualImpact =
     (block.data.dualImpact as typeof transferDualImpact | undefined) ??
@@ -67,23 +75,27 @@ export default function TransferBlocks({
       remote: "偏远地区",
     } as const;
     return (
-      <div className="story-data-table daily" data-testid="transfer-demand-pool">
+      <div
+        className="story-data-table daily"
+        data-testid="transfer-demand-pool"
+      >
         <div>
-          <span>订单</span>
-          <span>优先级</span>
-          <span>需求</span>
-          <span>覆盖状态</span>
+          <span>{translateText("订单")}</span>
+          <span>{translateText("优先级")}</span>
+          <span>{translateText("需求")}</span>
+          <span>{translateText("覆盖状态")}</span>
         </div>
         {(plan?.orders ?? []).map((order) => (
           <article key={order.id}>
-            <strong>{order.id}</strong>
+            <strong>{translateText(order.id)}</strong>
             <span>
-              {priorityLabel[order.type]} · {typeLabel[order.type]}
+              {translateText(priorityLabel[order.type])} ·{" "}
+              {translateText(typeLabel[order.type])}
             </span>
             <span>
-              {order.quantity} × {order.model}
+              {order.quantity} × {translateText(order.model)}
             </span>
-            <span>{statusLabel[order.type]}</span>
+            <span>{translateText(statusLabel[order.type])}</span>
           </article>
         ))}
       </div>
@@ -91,8 +103,18 @@ export default function TransferBlocks({
   }
   if (block.type === "transfer-dual-impact") {
     const stores = [
-      { key: "nearby", label: "最近车源", data: dualImpact.nearby, exception: true },
-      { key: "farther", label: "稍远车源 · 推荐", data: dualImpact.farther, exception: false },
+      {
+        key: "nearby",
+        label: "最近车源",
+        data: dualImpact.nearby,
+        exception: true,
+      },
+      {
+        key: "farther",
+        label: "稍远车源 · 推荐",
+        data: dualImpact.farther,
+        exception: false,
+      },
     ];
     return (
       <div className="story-dual-impact" data-testid="transfer-dual-impact">
@@ -100,37 +122,48 @@ export default function TransferBlocks({
           <article key={item.key} className={item.exception ? "exception" : ""}>
             <header>
               <Store size={17} />
-              <strong>{item.data.store}</strong>
+              <strong>{translateText(item.data.store)}</strong>
               <StatusPill tone={item.exception ? "red" : "green"}>
-                {item.exception ? "例外 · 待供应链负责人确认" : item.label}
+                {translateText(
+                  item.exception ? "例外 · 待供应链负责人确认" : item.label,
+                )}
               </StatusPill>
             </header>
             <dl>
               <div>
-                <dt>同配置自由库存</dt>
-                <dd>{item.data.freeStock} 台</dd>
-              </div>
-              <div>
-                <dt>有效订单 / 销速</dt>
+                <dt>{translateText("同配置自由库存")}</dt>
                 <dd>
-                  {item.data.activeOrders} 笔 · {item.data.weeklySales}
+                  {item.data.freeStock}
+                  {translateText(" 台")}
                 </dd>
               </div>
               <div>
-                <dt>调出前 → 调出后覆盖</dt>
+                <dt>{translateText("有效订单 / 销速")}</dt>
                 <dd>
-                  {item.data.coverBefore} → {item.data.coverAfter}
+                  {item.data.activeOrders}
+                  {translateText(" 笔 · ")}
+                  {translateText(item.data.weeklySales)}
                 </dd>
               </div>
               <div>
-                <dt>下一批确认到货</dt>
-                <dd>{item.data.nextArrival}</dd>
+                <dt>{translateText("调出前 → 调出后覆盖")}</dt>
+                <dd>
+                  {translateText(item.data.coverBefore)} →{" "}
+                  {translateText(item.data.coverAfter)}
+                </dd>
+              </div>
+              <div>
+                <dt>{translateText("下一批确认到货")}</dt>
+                <dd>{translateText(item.data.nextArrival)}</dd>
               </div>
             </dl>
             {item.exception && (
               <p>
-                调出后跌破 {dualImpact.safetyWeeks} 周安全线，不调出；改用
-                {dualImpact.farther.store}车源。
+                {translateText("调出后跌破 ")}
+                {dualImpact.safetyWeeks}
+                {translateText(" 周安全线，不调出；改用")}
+                {translateText(dualImpact.farther.store)}
+                {translateText("车源。")}
               </p>
             )}
           </article>
@@ -140,26 +173,42 @@ export default function TransferBlocks({
   }
   if (block.type === "transfer-exception-replan")
     return (
-      <div className="story-exception-replan" data-testid="transfer-exception-replan">
+      <div
+        className="story-exception-replan"
+        data-testid="transfer-exception-replan"
+      >
         <div>
           <AlertTriangle size={22} />
           <strong>
-            异常：{exception.event}（VIN {exception.vin}）
+            {translateText("异常：")}
+            {translateText(exception.event)}（VIN {translateText(exception.vin)}
+            ）
           </strong>
-          <p>{exception.withdrawn}，失效建议已撤回。</p>
+          <p>
+            {translateText(exception.withdrawn)}
+            {translateText("，失效建议已撤回。")}
+          </p>
         </div>
         <div>
           <FileCheck2 size={22} />
-          <strong>重新匹配：{exception.replacement} 补位</strong>
+          <strong>
+            {translateText("重新匹配：")}
+            {translateText(exception.replacement)}
+            {translateText(" 补位")}
+          </strong>
           <p>
-            {exception.arrivalShift} · {exception.costDelta} ·{" "}
-            {exception.pending}。{exception.retained}。
+            {translateText(exception.arrivalShift)} ·{" "}
+            {translateText(exception.costDelta)} ·{translateText(" ")}
+            {translateText(exception.pending)}。
+            {translateText(exception.retained)}。
           </p>
         </div>
       </div>
     );
-  if (!plan) return <p>正在建立今日调拨方案…</p>;
-  const enterpriseOrder = plan.orders.find((item) => item.type === "enterprise");
+  if (!plan) return <p>{translateText("正在建立今日调拨方案…")}</p>;
+  const enterpriseOrder = plan.orders.find(
+    (item) => item.type === "enterprise",
+  );
   const premiumOrder = plan.orders.find((item) => item.type === "premium");
   const enterprise = plan.decisions.find(
     (item) => item.orderId === enterpriseOrder?.id,
@@ -181,26 +230,37 @@ export default function TransferBlocks({
           {enterpriseSources.map((source, index) => (
             <span className="story-assembly-part" key={source.id}>
               <article>
-                <span>{source.location}</span>
+                <span>{translateText(source.location)}</span>
                 <strong>{source.vehicleIds.length}</strong>
                 <small>
-                  {source.leadDays} 天 · {source.cost.toLocaleString()} SAR
+                  {source.leadDays}
+                  {translateText(" 天 · ")}
+                  {translateText(source.cost.toLocaleString())} SAR
                 </small>
               </article>
               {index < enterpriseSources.length - 1 && <b>+</b>}
             </span>
           ))}
-          <em>= {enterpriseOrder?.quantity ?? 0} 台</em>
+          <em>
+            = {enterpriseOrder?.quantity ?? 0}
+            {translateText(" 台")}
+          </em>
         </div>
         <div className="story-decision-list">
           <p>
-            <CheckCircle2 size={16} /> 可按期交付 {assembled} /{" "}
-            {enterpriseOrder?.quantity ?? 0} 台，剩余缺口 0；组合后来源覆盖仍为
-            18 / 17 / 10 天。
+            <CheckCircle2 size={16} />
+            {translateText(" 可按期交付 ")}
+            {assembled} /{translateText(" ")}
+            {enterpriseOrder?.quantity ?? 0}
+            {translateText(
+              " 台，剩余缺口 0；组合后来源覆盖仍为 18 / 17 / 10 天。",
+            )}
           </p>
           <p>
-            <AlertTriangle size={16} /> 受影响原计划：DMM VPC 安全水位以上 16
-            台调出后由下一船补回；授权车商回购候选待商务财务确认，未计入方案。
+            <AlertTriangle size={16} />
+            {translateText(
+              " 受影响原计划：DMM VPC 安全水位以上 16 台调出后由下一船补回；授权车商回购候选待商务财务确认，未计入方案。",
+            )}
           </p>
         </div>
       </div>
@@ -210,27 +270,43 @@ export default function TransferBlocks({
     return (
       <div className="story-tradeoff" data-testid="transfer-tradeoff">
         <article className="recommended">
-          <StatusPill>推荐 · 同城调拨</StatusPill>
-          <strong>高价值急单 · 1 台 Lexus LX</strong>
-          <p>利雅得旗舰店 → 客户，48 小时内到店，调出后仍有 3 天覆盖。</p>
-          <MiniBar label="增量运费" value={2_800} total={46_000} color="amber" />
+          <StatusPill>{translateText("推荐 · 同城调拨")}</StatusPill>
+          <strong>{translateText("高价值急单 · 1 台 Lexus LX")}</strong>
+          <p>
+            {translateText(
+              "利雅得旗舰店 → 客户，48 小时内到店，调出后仍有 3 天覆盖。",
+            )}
+          </p>
+          <MiniBar
+            label="增量运费"
+            value={2_800}
+            total={46_000}
+            color="amber"
+          />
           <MiniBar label="保住订单毛利" value={46_000} total={46_000} />
         </article>
         <article>
-          <StatusPill tone="slate">普通订单 · 三选一</StatusPill>
-          <strong>1 台 Camry · 达曼</strong>
+          <StatusPill tone="slate">
+            {translateText("普通订单 · 三选一")}
+          </StatusPill>
+          <strong>{translateText("1 台 Camry · 达曼")}</strong>
           <ul>
             <li>
-              <Truck size={13} /> 既有班次拼载 · 到店 +1 天 · 950 SAR（建议）
+              <Truck size={13} />
+              {translateText(" 既有班次拼载 · 到店 +1 天 · 950 SAR（建议）")}
             </li>
             <li>
-              <ArrowLeftRight size={13} /> 替代配置协商 · 到店当天 · 0 SAR
+              <ArrowLeftRight size={13} />
+              {translateText(" 替代配置协商 · 到店当天 · 0 SAR")}
             </li>
             <li>
-              <CheckCircle2 size={13} /> 等待已确认到货 · 到店 +4 天 · 0 SAR
+              <CheckCircle2 size={13} />
+              {translateText(" 等待已确认到货 · 到店 +4 天 · 0 SAR")}
             </li>
           </ul>
-          <small>跨区专车 4,100 SAR 超过订单毛利，不建议。</small>
+          <small>
+            {translateText("跨区专车 4,100 SAR 超过订单毛利，不建议。")}
+          </small>
         </article>
       </div>
     );
@@ -242,17 +318,31 @@ export default function TransferBlocks({
     return (
       <div data-testid="transfer-execution-docs">
         <SectionGrid columns={3}>
-          <FactCard eyebrow="TRANSFER ORDER" title="调拨单">
-            <p>RUH 40 + JED 24 + DMM 16 → 企业客户交付点，关联 80 台 VIN。</p>
-          </FactCard>
-          <FactCard eyebrow="BUYBACK ORDER" title="回购单" tone="amber">
-            <p>授权车商 1 台 LX：报价、权属与结算待商务财务确认。</p>
-          </FactCard>
-          <FactCard eyebrow="TRANSPORT TASKS" title="运输任务">
+          <FactCard eyebrow="TRANSFER ORDER" title={translateText("调拨单")}>
             <p>
-              {plan.executionTasks.length
-                ? `${plan.executionTasks.length} 个任务已释放 · ${locked} 台已锁定`
-                : "批准后生成运输任务并锁定库存。"}
+              {translateText(
+                "RUH 40 + JED 24 + DMM 16 → 企业客户交付点，关联 80 台 VIN。",
+              )}
+            </p>
+          </FactCard>
+          <FactCard
+            eyebrow="BUYBACK ORDER"
+            title={translateText("回购单")}
+            tone="amber"
+          >
+            <p>
+              {translateText(
+                "授权车商 1 台 LX：报价、权属与结算待商务财务确认。",
+              )}
+            </p>
+          </FactCard>
+          <FactCard eyebrow="TRANSPORT TASKS" title={translateText("运输任务")}>
+            <p>
+              {translateText(
+                plan.executionTasks.length
+                  ? `${plan.executionTasks.length} 个任务已释放 · ${locked} 台已锁定`
+                  : "批准后生成运输任务并锁定库存。",
+              )}
             </p>
           </FactCard>
         </SectionGrid>
@@ -262,12 +352,13 @@ export default function TransferBlocks({
             .map((decision) => (
               <article key={decision.id}>
                 <div>
-                  <span>{decision.orderId}</span>
-                  <strong>{decision.rationale}</strong>
+                  <span>{translateText(decision.orderId)}</span>
+                  <strong>{translateText(decision.rationale)}</strong>
                 </div>
                 {decision.status === "approved" ? (
                   <StatusPill>
-                    <CheckCircle2 size={12} /> 已批准
+                    <CheckCircle2 size={12} />
+                    {translateText(" 已批准")}
                   </StatusPill>
                 ) : decision.status === "approval_required" && canApprove ? (
                   <button
@@ -281,27 +372,39 @@ export default function TransferBlocks({
                     }
                     onClick={() => onApprove(decision.id)}
                   >
-                    批准方案
+                    {translateText("批准方案")}
                   </button>
                 ) : (
-                  <StatusPill tone="slate">历史方案 · 只读</StatusPill>
+                  <StatusPill tone="slate">
+                    {translateText("历史方案 · 只读")}
+                  </StatusPill>
                 )}
               </article>
             ))}
           <article>
             <div>
               <span>BUYBACK</span>
-              <strong>授权车商回购：确认车辆权属 · 确认回购价格 · 完成付款授权</strong>
+              <strong>
+                {translateText(
+                  "授权车商回购：确认车辆权属 · 确认回购价格 · 完成付款授权",
+                )}
+              </strong>
             </div>
-            <button type="button" disabled data-testid="transfer-buyback-disabled">
-              待商务财务确认
+            <button
+              type="button"
+              disabled
+              data-testid="transfer-buyback-disabled"
+            >
+              {translateText("待商务财务确认")}
             </button>
           </article>
         </div>
         {plan.executionTasks.length > 0 && (
           <p className="story-inline-note">
-            <LockKeyhole size={14} /> 库存已从 available 更新为
-            locked，同一车辆不会被重复占用。
+            <LockKeyhole size={14} />
+            {translateText(
+              " 库存已从 available 更新为 locked，同一车辆不会被重复占用。",
+            )}
           </p>
         )}
       </div>
@@ -337,8 +440,11 @@ export default function TransferBlocks({
         ]}
       />
       <p className="story-inline-note">
-        <LockKeyhole size={14} />{" "}
-        回购候选未确认前不计入履约结果；所有数量与费用可追溯到订单、车辆与方案版本。
+        <LockKeyhole size={14} />
+        {translateText(" ")}
+        {translateText(
+          "回购候选未确认前不计入履约结果；所有数量与费用可追溯到订单、车辆与方案版本。",
+        )}
       </p>
     </div>
   );

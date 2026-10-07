@@ -1,4 +1,6 @@
 "use client";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
+
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { Play, SlidersHorizontal } from "lucide-react";
 import {
@@ -39,13 +41,15 @@ function SectionHeading({
   title: string;
   note: string;
 }) {
+  const { t: translateText } = useI18n();
+
   return (
     <header className="vs-section-heading">
-      <span className="vs-section-number">{number}</span>
+      <span className="vs-section-number">{translateText(number)}</span>
       <div>
-        <small>{english}</small>
-        <h2>{title}</h2>
-        <p>{note}</p>
+        <small>{translateText(english)}</small>
+        <h2>{translateText(title)}</h2>
+        <p>{translateText(note)}</p>
       </div>
     </header>
   );
@@ -61,11 +65,13 @@ function MiniTabs({
   value: string;
   onChange: (id: string) => void;
 }) {
+  const { t: translateText } = useI18n();
+
   return (
     <nav
       className="vc-mini-tabs vs-section-tabs"
       role="tablist"
-      aria-label={label}
+      aria-label={translateText(label)}
     >
       {items.map(([id, name]) => (
         <button
@@ -75,7 +81,7 @@ function MiniTabs({
           aria-selected={value === id}
           onClick={() => onChange(id)}
         >
-          {name}
+          {translateText(name)}
         </button>
       ))}
     </nav>
@@ -100,6 +106,8 @@ export default function VesselReplenishmentWorkspace({
   onSave: (p: ReplenishmentParameters, reason: string) => void;
   onSelectVersion: (id: string) => void;
 }) {
+  const { t: translateText } = useI18n();
+
   const [parameters, setParameters] = useState(() =>
     normalized(savedResult.parameters),
   );
@@ -247,28 +255,31 @@ export default function VesselReplenishmentWorkspace({
     return (
       <div className="vc-context-selectors">
         <label>
-          门店
+          {translateText("门店")}
           <select
-            aria-label={scope + "门店"}
+            aria-label={translateText(scope + "门店")}
             value={store.id}
             onChange={(e) => setSelected(e.target.value)}
           >
             {result.stores.map((s) => (
               <option key={s.id} value={s.id}>
-                {s.shortName} · {s.name} · {s.channel}
+                {translateText(s.shortName)} · {translateText(s.name)} ·{" "}
+                {translateText(s.channel)}
               </option>
             ))}
           </select>
         </label>
         <label>
-          车型
+          {translateText("车型")}
           <select
-            aria-label={scope + "车型"}
+            aria-label={translateText(scope + "车型")}
             value={model}
             onChange={(e) => chooseModel(e.target.value)}
           >
             {store.models.map((m) => (
-              <option key={m.model}>{m.model}</option>
+              <option key={m.model} value={m.model}>
+                {translateText(m.model)}
+              </option>
             ))}
           </select>
         </label>
@@ -290,31 +301,41 @@ export default function VesselReplenishmentWorkspace({
       <div className="vs-intro">
         <div>
           <small>ALLOCATION PLANNING SIMULATOR</small>
-          <h2>分车计划模拟</h2>
-          <p>调整补库、物流与价格，查看同一份计划的经营结果。</p>
+          <h2>{translateText("分车计划模拟")}</h2>
+          <p>
+            {translateText("调整补库、物流与价格，查看同一份计划的经营结果。")}
+          </p>
         </div>
-        <span>订单优先 · 补库经营测算</span>
+        <span>{translateText("订单优先 · 补库经营测算")}</span>
       </div>
       <div className="vc-version-bar">
         <label>
-          情景版本{" "}
+          {translateText("情景版本")}
+          {translateText(" ")}
           <select
-            aria-label="情景版本"
+            aria-label={translateText("情景版本")}
             value={versionId}
             disabled={busy}
             onChange={(e) => onSelectVersion(e.target.value)}
           >
             {(versions ?? [{ id: "V1", reason: "初始情景" }]).map((v) => (
               <option key={v.id} value={v.id}>
-                {v.id} · {v.reason}
+                {translateText(v.id)} · {translateText(v.reason)}
               </option>
             ))}
           </select>
         </label>
-        <strong data-testid="scenario-version">{versionId}</strong>
-        <span>运行模拟后保存版本 · 可从历史版本继续调整</span>
+        <strong data-testid="scenario-version">
+          {translateText(versionId)}
+        </strong>
+        <span>
+          {translateText("运行模拟后保存版本 · 可从历史版本继续调整")}
+        </span>
         <details>
-          <summary>版本记录 ({versions?.length ?? 1})</summary>
+          <summary>
+            {translateText("版本记录 (")}
+            {versions?.length ?? 1})
+          </summary>
           <ol>
             {(versions ?? []).map((v) => (
               <li key={v.id}>
@@ -323,13 +344,17 @@ export default function VesselReplenishmentWorkspace({
                   disabled={busy}
                   onClick={() => onSelectVersion(v.id)}
                 >
-                  {v.id}
+                  {translateText(v.id)}
                 </button>
                 <span>
-                  {v.reason} · {v.parentId ? "基于 " + v.parentId : "初始"} ·{" "}
-                  {new Date(v.createdAt).toLocaleString("zh-CN", {
-                    hour12: false,
-                  })}
+                  {translateText(v.reason)} ·{" "}
+                  {translateText(v.parentId ? "基于 " + v.parentId : "初始")} ·
+                  {translateText(" ")}
+                  {translateText(
+                    new Date(v.createdAt).toLocaleString("zh-CN", {
+                      hour12: false,
+                    }),
+                  )}
                 </span>
               </li>
             ))}
@@ -338,11 +363,11 @@ export default function VesselReplenishmentWorkspace({
       </div>
 
       <StreamBlock name="simulation-global">
-        <section className="vs-section" aria-label="全局模拟">
+        <section className="vs-section" aria-label={translateText("全局模拟")}>
           <SectionHeading
             number="01"
             english="GLOBAL SCENARIO SIMULATION"
-            title="全局模拟"
+            title={translateText("全局模拟")}
             note="拖动滑杆，实时预览营收、利润与物流费用；点击运行模拟，统一更新下方计划并保存版本。"
           />
           <VesselGlobalSimulator
@@ -365,7 +390,7 @@ export default function VesselReplenishmentWorkspace({
               <details className="vs-advanced">
                 <summary>
                   <SlidersHorizontal size={14} />
-                  精细参数 · 供给、门店、车型与成本
+                  {translateText("精细参数 · 供给、门店、车型与成本")}
                 </summary>
                 <form
                   className="vr-parameters vr-panel"
@@ -389,19 +414,22 @@ export default function VesselReplenishmentWorkspace({
                     <div>
                       <small>DETAILED ASSUMPTIONS</small>
                       <h3>
-                        <SlidersHorizontal size={15} /> 精细参数
+                        <SlidersHorizontal size={15} />
+                        {translateText(" 精细参数")}
                       </h3>
                     </div>
                     <span>
-                      {edited
-                        ? "参数待运行 · 点击运行后更新计划"
-                        : "当前快照参数"}
+                      {translateText(
+                        edited
+                          ? "参数待运行 · 点击运行后更新计划"
+                          : "当前快照参数",
+                      )}
                     </span>
                   </header>
                   <nav
                     className="vc-mini-tabs vc-parameter-tabs"
                     role="tablist"
-                    aria-label="情景参数分类"
+                    aria-label={translateText("情景参数分类")}
                   >
                     {[
                       ["allocation", "分车参数"],
@@ -415,7 +443,7 @@ export default function VesselReplenishmentWorkspace({
                         key={id}
                         onClick={() => setParameterTab(id)}
                       >
-                        {label}
+                        {translateText(label)}
                       </button>
                     ))}
                   </nav>
@@ -424,10 +452,11 @@ export default function VesselReplenishmentWorkspace({
                       <div className="vr-parameter-grid">
                         <label>
                           <span>
-                            本船总量 <small>台</small>
+                            {translateText("本船总量 ")}
+                            <small>{translateText("台")}</small>
                           </span>
                           <input
-                            aria-label="本船总量"
+                            aria-label={translateText("本船总量")}
                             type="number"
                             min="0"
                             max="100000"
@@ -444,10 +473,11 @@ export default function VesselReplenishmentWorkspace({
                         </label>
                         <label>
                           <span>
-                            预留比例 <small>%</small>
+                            {translateText("预留比例 ")}
+                            <small>%</small>
                           </span>
                           <input
-                            aria-label="预留比例"
+                            aria-label={translateText("预留比例")}
                             type="number"
                             min="0"
                             max="100"
@@ -462,10 +492,11 @@ export default function VesselReplenishmentWorkspace({
                         </label>
                         <label>
                           <span>
-                            基准目标 WoS <small>周</small>
+                            {translateText("基准目标 WoS ")}
+                            <small>{translateText("周")}</small>
                           </span>
                           <input
-                            aria-label="精细 · 基准目标 WoS"
+                            aria-label={translateText("精细 · 基准目标 WoS")}
                             type="number"
                             min=".1"
                             max="52"
@@ -478,10 +509,11 @@ export default function VesselReplenishmentWorkspace({
                         </label>
                         <label>
                           <span>
-                            直营 / 授权级差 <small>百分点</small>
+                            {translateText("直营 / 授权级差 ")}
+                            <small>{translateText("百分点")}</small>
                           </span>
                           <input
-                            aria-label="直营与授权级差"
+                            aria-label={translateText("直营与授权级差")}
                             type="number"
                             min="0"
                             max="100"
@@ -496,10 +528,13 @@ export default function VesselReplenishmentWorkspace({
                         </label>
                         <label>
                           <span>
-                            直营目标 WoS 系数 <small>×</small>
+                            {translateText("直营目标 WoS 系数 ")}
+                            <small>×</small>
                           </span>
                           <input
-                            aria-label="精细 · 直营目标 WoS 系数"
+                            aria-label={translateText(
+                              "精细 · 直营目标 WoS 系数",
+                            )}
                             type="number"
                             min=".1"
                             max="5"
@@ -514,10 +549,13 @@ export default function VesselReplenishmentWorkspace({
                         </label>
                         <label>
                           <span>
-                            绩效目标 WoS 系数 <small>×</small>
+                            {translateText("绩效目标 WoS 系数 ")}
+                            <small>×</small>
                           </span>
                           <input
-                            aria-label="精细 · 绩效目标 WoS 系数"
+                            aria-label={translateText(
+                              "精细 · 绩效目标 WoS 系数",
+                            )}
                             type="number"
                             min=".1"
                             max="5"
@@ -532,11 +570,12 @@ export default function VesselReplenishmentWorkspace({
                         </label>
                         <label>
                           <span>
-                            畅销 / 滞销搭配 <small>台 : 台</small>
+                            {translateText("畅销 / 滞销搭配 ")}
+                            <small>{translateText("台 : 台")}</small>
                           </span>
                           <div className="vr-pair-input">
                             <input
-                              aria-label="畅销滞销搭配比例"
+                              aria-label={translateText("畅销滞销搭配比例")}
                               type="number"
                               min="1"
                               max="100"
@@ -552,10 +591,11 @@ export default function VesselReplenishmentWorkspace({
                         </label>
                         <label>
                           <span>
-                            当前门店销速系数 <small>×</small>
+                            {translateText("当前门店销速系数 ")}
+                            <small>×</small>
                           </span>
                           <input
-                            aria-label="门店销速系数"
+                            aria-label={translateText("门店销速系数")}
                             type="number"
                             min=".1"
                             max="5"
@@ -570,10 +610,11 @@ export default function VesselReplenishmentWorkspace({
                         </label>
                         <label>
                           <span>
-                            补库直送比例 <small>%</small>
+                            {translateText("补库直送比例 ")}
+                            <small>%</small>
                           </span>
                           <input
-                            aria-label="补库直送比例"
+                            aria-label={translateText("补库直送比例")}
                             type="number"
                             min="0"
                             max="100"
@@ -589,10 +630,11 @@ export default function VesselReplenishmentWorkspace({
                         </label>
                         <label>
                           <span>
-                            板车容量 <small>台 / 车</small>
+                            {translateText("板车容量 ")}
+                            <small>{translateText("台 / 车")}</small>
                           </span>
                           <select
-                            aria-label="补库板车容量"
+                            aria-label={translateText("补库板车容量")}
                             value={parameters.truckCapacity}
                             onChange={(e) =>
                               patch({ truckCapacity: Number(e.target.value) })
@@ -600,7 +642,8 @@ export default function VesselReplenishmentWorkspace({
                           >
                             {[8, 9, 10].map((n) => (
                               <option key={n} value={n}>
-                                {n} 台
+                                {n}
+                                {translateText(" 台")}
                               </option>
                             ))}
                           </select>
@@ -608,15 +651,17 @@ export default function VesselReplenishmentWorkspace({
                       </div>
                       <div className="vr-store-settings">
                         <label>
-                          配置门店{" "}
+                          {translateText("配置门店")}
+                          {translateText(" ")}
                           <select
-                            aria-label="系数配置门店"
+                            aria-label={translateText("系数配置门店")}
                             value={store.id}
                             onChange={(e) => setSelected(e.target.value)}
                           >
                             {result.stores.map((s) => (
                               <option key={s.id} value={s.id}>
-                                {s.shortName} · {s.name}
+                                {translateText(s.shortName)} ·{" "}
+                                {translateText(s.name)}
                               </option>
                             ))}
                           </select>
@@ -624,7 +669,7 @@ export default function VesselReplenishmentWorkspace({
                         <label className="vr-check">
                           <input
                             type="checkbox"
-                            aria-label="本店绩效加成"
+                            aria-label={translateText("本店绩效加成")}
                             checked={factor.performance}
                             onChange={(e) =>
                               patchStore(
@@ -633,18 +678,18 @@ export default function VesselReplenishmentWorkspace({
                               )
                             }
                           />
-                          本店参与绩效加成
+                          {translateText("本店参与绩效加成")}
                         </label>
                         <label className="vr-check">
                           <input
                             type="checkbox"
-                            aria-label="启用车型搭配"
+                            aria-label={translateText("启用车型搭配")}
                             checked={parameters.pairingEnabled}
                             onChange={(e) =>
                               patch({ pairingEnabled: e.target.checked })
                             }
                           />
-                          启用车型搭配
+                          {translateText("启用车型搭配")}
                         </label>
                       </div>
                     </fieldset>
@@ -664,11 +709,13 @@ export default function VesselReplenishmentWorkspace({
                   )}
                   <div className="vr-parameter-bottom">
                     <p>
-                      目标 WoS = 基准 × 直营系数 × 绩效系数；库存 WoS = 库存 ÷
-                      加成后周销速。
+                      {translateText(
+                        "目标 WoS = 基准 × 直营系数 × 绩效系数；库存 WoS = 库存 ÷ 加成后周销速。",
+                      )}
                       <br />
-                      级差 30 表示直营领先 30 个百分点；设为 100
-                      时先补直营至目标。
+                      {translateText(
+                        "级差 30 表示直营领先 30 个百分点；设为 100 时先补直营至目标。",
+                      )}
                     </p>
                     <button
                       type="submit"
@@ -676,7 +723,7 @@ export default function VesselReplenishmentWorkspace({
                       disabled={busy || !!error || !edited}
                     >
                       <Play size={14} />
-                      应用并运行
+                      {translateText("应用并运行")}
                     </button>
                   </div>
                 </form>
@@ -690,39 +737,54 @@ export default function VesselReplenishmentWorkspace({
         role="status"
         data-testid="simulation-application-status"
       >
-        <strong>{edited ? "预览参数尚未运行" : "计划已更新"}</strong>
+        <strong>
+          {translateText(edited ? "预览参数尚未运行" : "计划已更新")}
+        </strong>
         <span>
-          {edited
-            ? `02–04 仍显示 ${versionId}，点击「运行模拟」后统一更新。`
-            : `02–04 已同步 ${versionId} · 分车、物流与利润使用同一版本。`}
+          {translateText(
+            edited
+              ? `02–04 仍显示 ${versionId}，点击「运行模拟」后统一更新。`
+              : `02–04 已同步 ${versionId} · 分车、物流与利润使用同一版本。`,
+          )}
         </span>
       </div>
       <StreamBlock name="simulation-plan">
-        <section className="vs-section" aria-label="分车计划">
+        <section className="vs-section" aria-label={translateText("分车计划")}>
           <SectionHeading
             number="02"
             english="ALLOCATION PLAN"
-            title="分车计划"
+            title={translateText("分车计划")}
             note="从计算关系到门店库存水位，查看车辆如何分配。门店与车型选择会联动利润明细。"
           />
           <div className="vs-section-body">
             <div className="vs-allocation-strip">
               <span>
-                本船 <b>{fmt(s.supply)}</b> 台
+                {translateText("本船 ")}
+                <b>{translateText(fmt(s.supply))}</b>
+                {translateText(" 台")}
               </span>
               <span>
-                预留{" "}
-                <b data-testid="replenishment-reserved">{fmt(s.reserved)}</b>
+                {translateText("预留")}
+                {translateText(" ")}
+                <b data-testid="replenishment-reserved">
+                  {translateText(fmt(s.reserved))}
+                </b>
               </span>
               <span>
-                订单已分 <b>{fmt(s.orders)}</b>
+                {translateText("订单已分 ")}
+                <b>{translateText(fmt(s.orders))}</b>
               </span>
               <span>
-                可补库 <b data-testid="replenishment-budget">{fmt(s.budget)}</b>
+                {translateText("可补库 ")}
+                <b data-testid="replenishment-budget">
+                  {translateText(fmt(s.budget))}
+                </b>
               </span>
               {channels.map((c) => (
                 <span key={c.channel}>
-                  {c.channel}获配{" "}
+                  {translateText(c.channel)}
+                  {translateText("获配")}
+                  {translateText(" ")}
                   <b
                     data-testid={
                       c.channel === "授权"
@@ -730,7 +792,7 @@ export default function VesselReplenishmentWorkspace({
                         : "direct-allocated"
                     }
                   >
-                    {fmt(c.quantity)}
+                    {translateText(fmt(c.quantity))}
                   </b>
                 </span>
               ))}
@@ -763,10 +825,14 @@ export default function VesselReplenishmentWorkspace({
                     data-testid="authorized-water-explanation"
                   >
                     <div>
-                      <strong>授权店本轮尚未获配</strong>
+                      <strong>{translateText("授权店本轮尚未获配")}</strong>
                       <p>
-                        当前级差 {fmt(result.parameters.channelGap * 100)}{" "}
-                        个百分点；在渠道优先顺序、库存目标、可用车型与搭配规则的共同约束下，授权店尚未获配。有可用车型时，降低级差可让授权店更早参与。
+                        {translateText("当前级差 ")}
+                        {translateText(fmt(result.parameters.channelGap * 100))}
+                        {translateText(" ")}
+                        {translateText(
+                          "个百分点；在渠道优先顺序、库存目标、可用车型与搭配规则的共同约束下，授权店尚未获配。有可用车型时，降低级差可让授权店更早参与。",
+                        )}
                       </p>
                     </div>
                     {result.parameters.channelGap > 0.1 && s.budget > 0 && (
@@ -774,9 +840,11 @@ export default function VesselReplenishmentWorkspace({
                         type="button"
                         onClick={balanced}
                         disabled={busy}
-                        title="预览渠道级差 10 个百分点的方案，点击运行模拟后生效"
+                        title={translateText(
+                          "预览渠道级差 10 个百分点的方案，点击运行模拟后生效",
+                        )}
                       >
-                        均衡补库
+                        {translateText("均衡补库")}
                       </button>
                     )}
                   </div>
@@ -797,38 +865,62 @@ export default function VesselReplenishmentWorkspace({
             )}
             <div className="vs-plan-destination">
               <span>
-                直送门店 <b>{fmt(s.direct)} 台</b>
+                {translateText("直送门店 ")}
+                <b>
+                  {translateText(fmt(s.direct))}
+                  {translateText(" 台")}
+                </b>
               </span>
               <span>
-                先入 VPC / 中转中心 <b>{fmt(s.vpc)} 台</b>
+                {translateText("先入 VPC / 中转中心 ")}
+                <b>
+                  {translateText(fmt(s.vpc))}
+                  {translateText(" 台")}
+                </b>
               </span>
               <span>
-                未分配留仓 <b>{fmt(s.retained)} 台</b>
+                {translateText("未分配留仓 ")}
+                <b>
+                  {translateText(fmt(s.retained))}
+                  {translateText(" 台")}
+                </b>
               </span>
             </div>
             <div
               className="vr-conservation"
               data-testid="replenishment-conservation"
             >
-              {fmt(s.orders)} 订单 + {fmt(s.reserved)} 预留 +{" "}
-              {fmt(s.replenishment)} 补库 + {fmt(s.retained)} 未分配 ={" "}
-              <strong>{fmt(s.supply)} 台</strong>
+              {translateText(fmt(s.orders))}
+              {translateText(" 订单 + ")}
+              {translateText(fmt(s.reserved))}
+              {translateText(" 预留 +")}
+              {translateText(" ")}
+              {translateText(fmt(s.replenishment))}
+              {translateText(" 补库 + ")}
+              {translateText(fmt(s.retained))}
+              {translateText(" 未分配 =")}
+              {translateText(" ")}
+              <strong>
+                {translateText(fmt(s.supply))}
+                {translateText(" 台")}
+              </strong>
             </div>
             <details className="vr-details vr-panel">
               <summary>
-                全部门店系数与补庫结果 <span>79 家 · 每店独立配置</span>
+                {translateText("全部门店系数与补庫结果 ")}
+                <span>{translateText("79 家 · 每店独立配置")}</span>
               </summary>
               <div className="vr-table-scroll">
                 <table>
                   <thead>
                     <tr>
-                      <th>门店</th>
-                      <th>销速系数</th>
-                      <th>绩效加成</th>
-                      <th>目标 WoS</th>
-                      <th>满足率 前 → 后</th>
-                      <th>补库</th>
-                      <th>直送 / VPC</th>
+                      <th>{translateText("门店")}</th>
+                      <th>{translateText("销速系数")}</th>
+                      <th>{translateText("绩效加成")}</th>
+                      <th>{translateText("目标 WoS")}</th>
+                      <th>{translateText("满足率 前 → 后")}</th>
+                      <th>{translateText("补库")}</th>
+                      <th>{translateText("直送 / VPC")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -841,12 +933,13 @@ export default function VesselReplenishmentWorkspace({
                         <tr key={s.id}>
                           <td>
                             <button onClick={() => setSelected(s.id)}>
-                              {s.shortName} · {s.name}
+                              {translateText(s.shortName)} ·{" "}
+                              {translateText(s.name)}
                             </button>
                           </td>
                           <td>
                             <input
-                              aria-label={`${s.id} 销速系数`}
+                              aria-label={translateText(`${s.id} 销速系数`)}
                               type="number"
                               min=".1"
                               max="5"
@@ -870,7 +963,7 @@ export default function VesselReplenishmentWorkspace({
                           <td>
                             <input
                               disabled={busy}
-                              aria-label={`${s.id} 绩效加成`}
+                              aria-label={translateText(`${s.id} 绩效加成`)}
                               type="checkbox"
                               checked={f.performance}
                               onChange={(e) =>
@@ -881,10 +974,16 @@ export default function VesselReplenishmentWorkspace({
                               }
                             />
                           </td>
-                          <td>{fmt(s.targetWeeks, 2)}</td>
+                          <td>{translateText(fmt(s.targetWeeks, 2))}</td>
                           <td>
-                            {fmt((s.beforeSatisfaction ?? 0) * 100, 1)}% →{" "}
-                            {fmt((s.afterSatisfaction ?? 0) * 100, 1)}%
+                            {translateText(
+                              fmt((s.beforeSatisfaction ?? 0) * 100, 1),
+                            )}
+                            % →{translateText(" ")}
+                            {translateText(
+                              fmt((s.afterSatisfaction ?? 0) * 100, 1),
+                            )}
+                            %
                           </td>
                           <td>{s.replenishment}</td>
                           <td>
@@ -898,29 +997,28 @@ export default function VesselReplenishmentWorkspace({
               </div>
             </details>
             <details className="vr-details vr-panel">
-              <summary>车型余量与模拟口径</summary>
+              <summary>{translateText("车型余量与模拟口径")}</summary>
               <p className="vr-footnote">
-                沿用 Tab1 / Tab2 的门店库存与订单。门店 ×
-                车型销速、库存按可销售品牌及车型权重模拟分摊；绩效加成默认未勾选。Fortuner、Highlander、Lexus
-                RX 350h 暂设为滞销搭配车型，属于演示假设。VPC
-                原有库存另计，不用于本次补库。
+                {translateText(
+                  "沿用 Tab1 / Tab2 的门店库存与订单。门店 × 车型销速、库存按可销售品牌及车型权重模拟分摊；绩效加成默认未勾选。Fortuner、Highlander、Lexus RX 350h 暂设为滞销搭配车型，属于演示假设。VPC 原有库存另计，不用于本次补库。",
+                )}
               </p>
               <div className="vr-table-scroll">
                 <table>
                   <thead>
                     <tr>
-                      <th>车型</th>
-                      <th>本船供给</th>
-                      <th>订单已分</th>
-                      <th>预留</th>
-                      <th>补库</th>
-                      <th>未分配</th>
+                      <th>{translateText("车型")}</th>
+                      <th>{translateText("本船供给")}</th>
+                      <th>{translateText("订单已分")}</th>
+                      <th>{translateText("预留")}</th>
+                      <th>{translateText("补库")}</th>
+                      <th>{translateText("未分配")}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {result.models.map((m) => (
                       <tr key={m.model}>
-                        <td>{m.model}</td>
+                        <td>{translateText(m.model)}</td>
                         <td>{m.supply}</td>
                         <td>{m.orders}</td>
                         <td>{m.reserved}</td>
@@ -936,11 +1034,11 @@ export default function VesselReplenishmentWorkspace({
         </section>
       </StreamBlock>
       <StreamBlock name="simulation-logistics">
-        <section className="vs-section" aria-label="物流方案">
+        <section className="vs-section" aria-label={translateText("物流方案")}>
           <SectionHeading
             number="03"
             english="LOGISTICS PLAN"
-            title="物流方案"
+            title={translateText("物流方案")}
             note="吉达单港发运；库存可直送门店或先入暂存中心，再由订单触发末端调拨。"
           />
           <div className="vs-section-body">
@@ -964,11 +1062,14 @@ export default function VesselReplenishmentWorkspace({
         </section>
       </StreamBlock>
       <StreamBlock name="simulation-profit">
-        <section className="vs-section vs-profit-section" aria-label="利润计算">
+        <section
+          className="vs-section vs-profit-section"
+          aria-label={translateText("利润计算")}
+        >
           <SectionHeading
             number="04"
             english="PROFIT BREAKDOWN"
-            title="利润计算"
+            title={translateText("利润计算")}
             note="直营按零售价格、授权按批发价格测算；固定费用仅计入直营店。"
           />
           <div className="vs-section-body">
@@ -984,13 +1085,13 @@ export default function VesselReplenishmentWorkspace({
             />
             <div
               role="tabpanel"
-              aria-label={
+              aria-label={translateText(
                 profitTab === "unit"
                   ? "单车利润"
                   : profitTab === "models"
                     ? "车型利润"
-                    : "门店利润"
-              }
+                    : "门店利润",
+              )}
             >
               {selectors("利润")}
               <CommercialProfitView

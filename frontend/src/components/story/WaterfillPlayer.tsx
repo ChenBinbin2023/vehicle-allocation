@@ -1,4 +1,6 @@
 "use client";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
+
 import { useState, useMemo, useEffect } from "react";
 import { Play, Pause, RotateCcw, SkipBack, SkipForward } from "lucide-react";
 import {
@@ -12,6 +14,8 @@ export default function WaterfillPlayer({
 }: {
   result: StoreAllocation;
 }) {
+  const { t: translateText } = useI18n();
+
   const [progress, setProgress] = useState(0),
     [playing, setPlaying] = useState(false),
     [speed, setSpeed] = useState(1),
@@ -76,19 +80,26 @@ export default function WaterfillPlayer({
     >
       <header>
         <h2>
-          分车计划模拟{" "}
+          {translateText("分车计划模拟")}
+          {translateText(" ")}
           <span className="water-stage" data-testid="water-stage">
-            {stage}
+            {translateText(stage)}
           </span>
         </h2>
         <p>
-          订单先分配 {fmt(result.summary.orders)} 台，剩余 {fmt(budget)}{" "}
-          台进入补库池。每一帧重新计算最低相对水位与整车分配。
+          {translateText("订单先分配 ")}
+          {translateText(fmt(result.summary.orders))}
+          {translateText(" 台，剩余 ")}
+          {translateText(fmt(budget))}
+          {translateText(" ")}
+          {translateText(
+            "台进入补库池。每一帧重新计算最低相对水位与整车分配。",
+          )}
         </p>
       </header>
       <div className="water-controls">
         <button
-          aria-label="重新演示"
+          aria-label={translateText("重新演示")}
           onClick={() => {
             setPlaying(false);
             setProgress(0);
@@ -97,7 +108,7 @@ export default function WaterfillPlayer({
           <RotateCcw size={14} />
         </button>
         <button
-          aria-label="上一步注水"
+          aria-label={translateText("上一步注水")}
           onClick={() => {
             setPlaying(false);
             setProgress((p) => Math.max(0, p - step));
@@ -112,13 +123,14 @@ export default function WaterfillPlayer({
             setPlaying(!playing);
           }}
           disabled={!budget}
-          aria-label={playing ? "暂停注水" : "播放注水"}
+          aria-label={translateText(playing ? "暂停注水" : "播放注水")}
         >
-          {playing ? <Pause size={14} /> : <Play size={14} />}{" "}
-          {playing ? "暂停" : "播放"}
+          {playing ? <Pause size={14} /> : <Play size={14} />}
+          {translateText(" ")}
+          {translateText(playing ? "暂停" : "播放")}
         </button>
         <button
-          aria-label="下一步注水"
+          aria-label={translateText("下一步注水")}
           onClick={() => {
             setPlaying(false);
             setProgress((p) => Math.min(budget, p + step));
@@ -127,9 +139,10 @@ export default function WaterfillPlayer({
           <SkipForward size={14} />
         </button>
         <label>
-          播放速度{" "}
+          {translateText("播放速度")}
+          {translateText(" ")}
           <select
-            aria-label="注水播放速度"
+            aria-label={translateText("注水播放速度")}
             value={speed}
             onChange={(e) => setSpeed(Number(e.target.value))}
           >
@@ -145,19 +158,21 @@ export default function WaterfillPlayer({
             setProgress(budget);
           }}
         >
-          查看最终水位
+          {translateText("查看最终水位")}
         </button>
       </div>
       <div className="water-progress">
         <label htmlFor="water-budget">
-          当前注入供给{" "}
+          {translateText("当前注入供给")}
+          {translateText(" ")}
           <strong data-testid="water-progress">
-            {fmt(progress)} / {fmt(budget)} 台
+            {translateText(fmt(progress))} / {translateText(fmt(budget))}
+            {translateText(" 台")}
           </strong>
         </label>
         <input
           id="water-budget"
-          aria-label="注水进度"
+          aria-label={translateText("注水进度")}
           type="range"
           min="0"
           max={budget}
@@ -170,46 +185,56 @@ export default function WaterfillPlayer({
         />
         <div>
           <span>
-            已分补库{" "}
+            {translateText("已分补库")}
+            {translateText(" ")}
             <b data-testid="water-assigned">
-              {fmt(frame.summary.replenishment)}
-            </b>{" "}
-            台
+              {translateText(fmt(frame.summary.replenishment))}
+            </b>
+            {translateText(" ")}
+            {translateText("台")}
           </span>
           <span>
-            未注入 {fmt(budget - progress)} 台 · 当前留仓{" "}
-            {fmt(frame.summary.retained)} 台
+            {translateText("未注入 ")}
+            {translateText(fmt(budget - progress))}
+            {translateText(" 台 · 当前留仓")}
+            {translateText(" ")}
+            {translateText(fmt(frame.summary.retained))}
+            {translateText(" 台")}
           </span>
-          <span>共用水位 {fmt(frame.waterLevel * 100, 1)}%</span>
+          <span>
+            {translateText("共用水位 ")}
+            {translateText(fmt(frame.waterLevel * 100, 1))}%
+          </span>
         </div>
       </div>
       <div className="water-legend">
         <span>
           <i className="water-existing" />
-          有效库存 E
+          {translateText("有效库存 E")}
         </span>
         <span>
           <i className="water-added" />
-          本轮补库
+          {translateText("本轮补库")}
         </span>
         <span>
           <i className="water-level-key" />
-          当前渠道水位
+          {translateText("当前渠道水位")}
         </span>
         <span>
           <i className="water-target-key" />
-          目标 100%
+          {translateText("目标 100%")}
         </span>
         <label>
-          渠道{" "}
+          {translateText("渠道")}
+          {translateText(" ")}
           <select
-            aria-label="注水渠道"
+            aria-label={translateText("注水渠道")}
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
           >
-            <option>全部</option>
-            <option>直营</option>
-            <option>授权</option>
+            <option value={"全部"}>{translateText("全部")}</option>
+            <option value={"直营"}>{translateText("直营")}</option>
+            <option value={"授权"}>{translateText("授权")}</option>
           </select>
         </label>
       </div>
@@ -228,11 +253,19 @@ export default function WaterfillPlayer({
               <article className="water-channel" key={ch}>
                 <header>
                   <h3>
-                    {ch} <small>{group.length} 家门店</small>
+                    {translateText(ch)}{" "}
+                    <small>
+                      {group.length}
+                      {translateText(" 家门店")}
+                    </small>
                   </h3>
                   <span>
-                    偏移 {fmt(offset * 100)}% · 本轮已补{" "}
-                    {fmt(channelTotals(ch))} 台
+                    {translateText("偏移 ")}
+                    {translateText(fmt(offset * 100))}
+                    {translateText("% · 本轮已补")}
+                    {translateText(" ")}
+                    {translateText(fmt(channelTotals(ch)))}
+                    {translateText(" 台")}
                   </span>
                 </header>
                 <div className="water-chart-scroll">
@@ -240,7 +273,7 @@ export default function WaterfillPlayer({
                     width={width}
                     height="305"
                     role="group"
-                    aria-label={`${ch}门店注水水位图`}
+                    aria-label={translateText(`${ch}门店注水水位图`)}
                   >
                     {[0, 0.5, 1, Math.ceil(ymax * 2) / 2]
                       .filter((v) => v <= ymax)
@@ -261,12 +294,12 @@ export default function WaterfillPlayer({
                             fontSize="10"
                             fill="#869c94"
                           >
-                            {fmt(tick * 100)}%
+                            {translateText(fmt(tick * 100))}%
                           </text>
                         </g>
                       ))}
                     <text x="9" y="16" fontSize="10" fill="#869c94">
-                      相对 WoS
+                      {translateText("相对 WoS")}
                     </text>
                     {group.map((r, i) => {
                       const x = 62 + i * 24,
@@ -277,7 +310,9 @@ export default function WaterfillPlayer({
                           key={r.id}
                           role="button"
                           tabIndex={0}
-                          aria-label={`${r.id} 注水 ${r.replenishment} 台`}
+                          aria-label={translateText(
+                            `${r.id} 注水 ${r.replenishment} 台`,
+                          )}
                           onClick={() => setSelected(r.id)}
                           onKeyDown={(e) => {
                             if (e.key === "Enter" || e.key === " ") {
@@ -316,12 +351,17 @@ export default function WaterfillPlayer({
                             textAnchor="end"
                             transform={`rotate(-50 ${x + 2} 261)`}
                           >
-                            {r.id.replace("MOCK-", "")}
+                            {translateText(r.id.replace("MOCK-", ""))}
                           </text>
                           <title>
-                            {r.name}：{fmt(r.beforeWos ?? 0, 2)} →{" "}
-                            {fmt(r.afterWos ?? 0, 2)} 周，补 {r.replenishment}{" "}
-                            台
+                            {translateText(r.name)}：
+                            {translateText(fmt(r.beforeWos ?? 0, 2))} →
+                            {translateText(" ")}
+                            {translateText(fmt(r.afterWos ?? 0, 2))}
+                            {translateText(" 周，补 ")}
+                            {r.replenishment}
+                            {translateText(" ")}
+                            {translateText("台")}
                           </title>
                         </g>
                       );
@@ -343,7 +383,8 @@ export default function WaterfillPlayer({
                           fontSize="10"
                           fill="#23879a"
                         >
-                          水位 {fmt(level * 100, 1)}%
+                          {translateText("水位 ")}
+                          {translateText(fmt(level * 100, 1))}%
                         </text>
                       </>
                     )}
@@ -356,32 +397,39 @@ export default function WaterfillPlayer({
       {chosen && (
         <aside className="water-store-detail">
           <div>
-            <strong>{chosen.name}</strong>
+            <strong>{translateText(chosen.name)}</strong>
             <small>
-              {chosen.id} · {chosen.city} · {chosen.channel}
+              {translateText(chosen.id)} · {translateText(chosen.city)} ·{" "}
+              {translateText(chosen.channel)}
             </small>
           </div>
           <span>
-            周销速 <b>{fmt(chosen.weeklySales, 2)}</b>
+            {translateText("周销速 ")}
+            <b>{translateText(fmt(chosen.weeklySales, 2))}</b>
           </span>
           <span>
-            有效库存 <b>{fmt(chosen.effectiveStock)}</b>
+            {translateText("有效库存 ")}
+            <b>{translateText(fmt(chosen.effectiveStock))}</b>
           </span>
           <span>
-            本轮补库 <b>{fmt(chosen.replenishment)}</b>
+            {translateText("本轮补库 ")}
+            <b>{translateText(fmt(chosen.replenishment))}</b>
           </span>
           <span>
-            WoS{" "}
+            WoS{translateText(" ")}
             <b>
-              {fmt(chosen.beforeWos ?? 0, 2)} → {fmt(chosen.afterWos ?? 0, 2)}
-            </b>{" "}
-            / {chosen.targetWeeks} 周
+              {translateText(fmt(chosen.beforeWos ?? 0, 2))} →{" "}
+              {translateText(fmt(chosen.afterWos ?? 0, 2))}
+            </b>
+            {translateText(" ")}/ {chosen.targetWeeks}
+            {translateText(" 周")}
           </span>
         </aside>
       )}
       <p className="planning-footnote">
-        柱高 =（有效库存 + 本轮补库）÷（周销速 × 目标
-        WoS）。已有高库存门店保持原水位，不强行注水。订单车单列；播放仅查看本轮快照，调整规则后需模拟重跑。
+        {translateText(
+          "柱高 =（有效库存 + 本轮补库）÷（周销速 × 目标 WoS）。已有高库存门店保持原水位，不强行注水。订单车单列；播放仅查看本轮快照，调整规则后需模拟重跑。",
+        )}
       </p>
     </section>
   );

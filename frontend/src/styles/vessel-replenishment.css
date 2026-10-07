@@ -805,6 +805,40 @@
   border-radius: 7px;
   margin: 14px 0;
 }
+.vc-dispatch-policy {
+  display: grid;
+  gap: 5px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  border: 1px solid #d6e3d8;
+  border-radius: 7px;
+  background: #f3f8f4;
+  color: #456551;
+  font-size: 12px;
+}
+.vc-dispatch-policy small {
+  color: #617466;
+}
+.vc-dispatch-status {
+  color: #456d53;
+  font-size: 11px;
+}
+.vc-dispatch-status[data-status="awaiting-load"] {
+  color: #90601f;
+}
+.vc-dispatch-status[data-status="awaiting-order"] {
+  color: #68768a;
+}
+.vc-pool-label {
+  display: block;
+  margin-top: 4px;
+  color: #617466;
+}
+.vc-dispatch-note {
+  display: grid;
+  gap: 5px;
+  margin: 12px 0 0;
+}
 .vc-trip-inspector label {
   display: grid;
   grid-template-columns: 70px minmax(0, 1fr);
@@ -1387,6 +1421,7 @@
 .vs-financials {
   padding: 20px;
   min-width: 0;
+  container: vs-financials / inline-size;
 }
 .vs-financial-bars {
   display: grid;
@@ -1408,7 +1443,7 @@
   font-weight: 750;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.6px;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 .vs-financial-bars strong small {
   font-size: 11px;
@@ -1417,15 +1452,27 @@
 }
 .vs-metric-delta {
   display: block;
-  font-size: 9px;
-  color: #7e9185;
-  margin: 5px 0 26px;
+  font-size: 11px;
+  color: #62786b;
+  margin: 5px 0 8px;
+  min-height: 34px;
   font-variant-numeric: tabular-nums;
 }
 .vs-metric-delta small {
   display: block;
-  font-size: 9px;
+  font-size: 10px;
   margin-top: 4px;
+  overflow-wrap: anywhere;
+}
+.vs-metric-reference {
+  display: block;
+  min-height: 28px;
+  margin-bottom: 8px;
+  padding-top: 7px;
+  border-top: 1px solid #edf1ed;
+  font-size: 10px;
+  line-height: 1.6;
+  color: #62786b;
   overflow-wrap: anywhere;
 }
 .vs-chart-toolbar button {
@@ -1458,23 +1505,15 @@
 }
 .vs-metric-scale {
   position: absolute;
-  inset: -18px 0;
+  inset: 0;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   pointer-events: none;
-  font-size: 9px;
-  color: #8c9d8e;
+  font-size: 10px;
+  line-height: 16px;
+  color: #647f6c;
   font-variant-numeric: tabular-nums;
-}
-.vs-chart-clipped {
-  position: absolute;
-  top: 2px;
-  left: 0;
-  right: 0;
-  font-size: 8px;
-  color: #ab8059;
-  background: #fffaf0;
 }
 .vs-live-plan {
   display: flex;
@@ -1492,8 +1531,12 @@
 }
 .vs-bar-area {
   height: 315px;
-  margin: 0 0 30px;
+  margin: 0;
   position: relative;
+}
+.vs-metric-plot {
+  position: absolute;
+  inset: 23px 0;
 }
 .vs-metric-track {
   position: absolute;
@@ -1534,8 +1577,8 @@
   pointer-events: none;
 }
 .vs-baseline-line span {
-  color: #8c9d8e;
-  font-size: 8px;
+  color: #647f6c;
+  font-size: 9px;
   display: block;
   text-align: right;
   padding-bottom: 2px;
@@ -1551,9 +1594,11 @@
   pointer-events: none;
 }
 .vs-financial-bars h4 {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 650;
-  margin: 0;
+  line-height: 1.5;
+  color: #52735f;
+  margin: 0 0 8px;
 }
 .vs-financial-bars .is-negative .vs-metric-track > div {
   background: #c58f6b;
@@ -1986,6 +2031,29 @@
   .vs-metric-track > div,
   .vs-metric-track > i {
     transition: none;
+  }
+}
+@container vs-financials (max-width: 560px) {
+  .vs-financial-bars {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .vs-financial-bars article {
+    padding: 12px 9px;
+  }
+  .vs-financial-bars strong {
+    font-size: 20px;
+  }
+  .vs-financial-bars h4 {
+    font-size: 12px;
+  }
+  .vs-bar-area {
+    height: 190px;
+  }
+}
+@container vs-financials (max-width: 320px) {
+  .vs-financial-bars strong {
+    font-size: 17px;
   }
 }
 .vessel-simulation .vs-input-incomplete {

@@ -1,4 +1,5 @@
 "use client";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
 
 import { useState } from "react";
 import {
@@ -16,6 +17,8 @@ import {
   Search,
 } from "lucide-react";
 import type { Folder, Session } from "@/lib/sessions";
+import AccountMenu from "./AccountMenu";
+import { localizedSessionTitle } from "@/lib/i18n/session-title";
 
 export type WorkspaceView = "task" | "overview" | "data" | "plugins";
 export default function WorkspaceSidebar({
@@ -41,16 +44,18 @@ export default function WorkspaceSidebar({
   onSelectSession: (id: string) => void;
   onNewSession: (folderId?: string) => void;
 }) {
+  const { t: translateText, locale } = useI18n();
+
   const [closed, setClosed] = useState<string[]>([]);
   const [moreOpen, setMoreOpen] = useState(false);
   return (
     <aside className="story-sidebar" data-testid="workspace-sidebar">
       <div className="story-brand">
         <ChartNoAxesColumnIncreasing size={24} strokeWidth={2.5} />
-        <strong>供应链决策智能</strong>
+        <strong>{translateText("供应链决策智能")}</strong>
         <button
           type="button"
-          aria-label={collapsed ? "展开导航" : "收起导航"}
+          aria-label={translateText(collapsed ? "展开导航" : "收起导航")}
           onClick={onToggle}
         >
           {collapsed ? (
@@ -60,32 +65,35 @@ export default function WorkspaceSidebar({
           )}
         </button>
       </div>
-      <nav className="workspace-quick-actions" aria-label="快捷操作">
+      <nav
+        className="workspace-quick-actions"
+        aria-label={translateText("快捷操作")}
+      >
         <button
           type="button"
           onClick={() => onNewSession("global")}
-          aria-label="新任务"
+          aria-label={translateText("新任务")}
         >
           <MessageSquare size={17} />
-          <span>新任务</span>
+          <span>{translateText("新任务")}</span>
         </button>
         <button
           type="button"
           onClick={() => onView("plugins")}
-          aria-label="插件"
+          aria-label={translateText("插件")}
         >
           <Puzzle size={17} />
-          <span>插件</span>
+          <span>{translateText("插件")}</span>
         </button>
         <div className="workspace-more">
           <button
             type="button"
             onClick={() => setMoreOpen(!moreOpen)}
             aria-expanded={moreOpen}
-            aria-label="更多"
+            aria-label={translateText("更多")}
           >
             <MoreHorizontal size={17} />
-            <span>更多</span>
+            <span>{translateText("更多")}</span>
           </button>
           {moreOpen && (
             <div className="workspace-more-menu">
@@ -96,7 +104,7 @@ export default function WorkspaceSidebar({
                   setMoreOpen(false);
                 }}
               >
-                数据与业务规则
+                {translateText("数据与业务规则")}
               </button>
               <button
                 type="button"
@@ -105,7 +113,7 @@ export default function WorkspaceSidebar({
                   setMoreOpen(false);
                 }}
               >
-                工作台总览
+                {translateText("工作台总览")}
               </button>
             </div>
           )}
@@ -113,26 +121,27 @@ export default function WorkspaceSidebar({
       </nav>
       <section className="workspace-sidebar-section">
         <div className="workspace-section-label">
-          工作空间 <Search size={13} />
+          {translateText("工作空间 ")}
+          <Search size={13} />
         </div>
-        <nav aria-label="工作空间">
+        <nav aria-label={translateText("工作空间")}>
           <button
             type="button"
             className={view === "overview" ? "active" : ""}
             onClick={() => onView("overview")}
-            aria-label="供应链工作台"
+            aria-label={translateText("供应链工作台")}
           >
             <LayoutDashboard size={16} />
-            <span>供应链工作台</span>
+            <span>{translateText("供应链工作台")}</span>
           </button>
           <button
             type="button"
             className={view === "data" ? "active" : ""}
             onClick={() => onView("data")}
-            aria-label="数据与业务规则"
+            aria-label={translateText("数据与业务规则")}
           >
             <FolderKanban size={16} />
-            <span>数据与业务规则</span>
+            <span>{translateText("数据与业务规则")}</span>
           </button>
         </nav>
       </section>
@@ -141,10 +150,11 @@ export default function WorkspaceSidebar({
         data-testid="workspace-project-tree"
       >
         <div className="workspace-section-label">
-          项目{" "}
+          {translateText("项目")}
+          {translateText(" ")}
           <button
             type="button"
-            aria-label="在分车计划中新建任务"
+            aria-label={translateText("在分车计划中新建任务")}
             onClick={() => onNewSession("single-port")}
           >
             <Plus size={14} />
@@ -164,7 +174,9 @@ export default function WorkspaceSidebar({
                 <button
                   type="button"
                   className="workspace-project-expand"
-                  aria-label={`${expanded ? "收起" : "展开"}${folder.name}`}
+                  aria-label={translateText(
+                    `${expanded ? "收起" : "展开"}${folder.name}`,
+                  )}
                   aria-expanded={expanded}
                   onClick={() =>
                     setClosed((current) =>
@@ -183,16 +195,16 @@ export default function WorkspaceSidebar({
                 <button
                   type="button"
                   className="workspace-project-title"
-                  aria-label={folder.name}
+                  aria-label={translateText(folder.name)}
                   onClick={() => onNewSession(folder.id)}
                 >
                   <FolderKanban size={15} />
-                  <strong>{folder.name}</strong>
+                  <strong>{translateText(folder.name)}</strong>
                 </button>
                 <button
                   type="button"
                   className="workspace-project-add"
-                  aria-label={`在${folder.name}中新建任务`}
+                  aria-label={translateText(`在${folder.name}中新建任务`)}
                   onClick={() => onNewSession(folder.id)}
                 >
                   <Plus size={14} />
@@ -218,7 +230,7 @@ export default function WorkspaceSidebar({
                         }}
                       >
                         <MessageSquare size={13} />
-                        <span>{session.title}</span>
+                        <span>{localizedSessionTitle(session, locale)}</span>
                         {session.snapshot.campaign.runs.some(
                           (run) => run.status === "running",
                         ) && <i />}
@@ -230,14 +242,7 @@ export default function WorkspaceSidebar({
           );
         })}
       </section>
-      <div className="workspace-account">
-        <span>OM</span>
-        <div>
-          <strong>Omar</strong>
-          <small>全国供应链负责人</small>
-        </div>
-        <ChevronDown size={13} />
-      </div>
+      <AccountMenu />
     </aside>
   );
 }

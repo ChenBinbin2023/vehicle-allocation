@@ -1,4 +1,8 @@
 "use client";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
+import { toBusinessPrompt } from "@/lib/i18n/translate";
+import { localizedSessionTitle } from "@/lib/i18n/session-title";
+
 import {
   hydrateVesselScenario,
   reviseVesselScenario,
@@ -50,6 +54,8 @@ export default function StoryWorkspace({
   onNewSession: (folderId?: string) => void;
   onProjectChange: (folderId: string) => void;
 }) {
+  const { t: translateText, locale } = useI18n();
+
   const [campaign, setCampaign] = useState(() => ({
     ...snapshot.campaign,
     runs: snapshot.campaign.runs.map(hydrateVesselScenario),
@@ -124,17 +130,27 @@ export default function StoryWorkspace({
       )
     )
       return;
+    const businessValue = toBusinessPrompt(value);
     const skill =
-      resolveStorySkill(value) ??
+      resolveStorySkill(businessValue) ??
       (!value.startsWith("/")
         ? resolveStorySkill(
-            /缺货/.test(value) && /选择|选定|已选|采购订单|采购单/.test(value)
+            /缺货|shortage/i.test(businessValue) &&
+              /选择|选定|已选|采购订单|采购单|selected|purchase order/i.test(
+                businessValue,
+              )
               ? "/shortage-fulfillment"
-              : /每日调拨|调度计划|今天.*订单|今日.*订单/.test(value)
+              : /每日调拨|调度计划|今天.*订单|今日.*订单|daily dispatch|dispatch plan|today.*orders/i.test(
+                    businessValue,
+                  )
                 ? "/daily-dispatch"
-                : /模拟|补库|WoS|预留比例|价格系数|物流系数/.test(value)
+                : /模拟|补库|WoS|预留比例|价格系数|物流系数|simulat|replenish/i.test(
+                      businessValue,
+                    )
                   ? "/vessel-allocation"
-                  : /订单分车|分配订单|订单物流/.test(value)
+                  : /订单分车|分配订单|订单物流|order allocation|allocate orders/i.test(
+                        businessValue,
+                      )
                     ? "/order-allocation"
                     : "/query",
           )
@@ -155,9 +171,9 @@ export default function StoryWorkspace({
       return;
     }
     const prompt =
-      (value.startsWith("/")
-        ? value.replace(/^\/[^\s，,]+[\s，,]*/, "")
-        : value) || skill.defaultPrompt;
+      (businessValue.startsWith("/")
+        ? businessValue.replace(/^\/[^\s，,]+[\s，,]*/, "")
+        : businessValue) || skill.defaultPrompt;
     const viewedDispatch = campaign.runs.find(
       (r) => r.id === viewedRunId && r.dispatch,
     );
@@ -263,7 +279,9 @@ export default function StoryWorkspace({
       };
     });
     setDraft(
-      `/vessel-allocation 按达曼 ${nextSafety} 台自由安全库存重新分车，保护 620 台已确认订单，并说明利雅得库存的变化。`,
+      translateText(
+        `/vessel-allocation 按达曼 ${nextSafety} 台自由安全库存重新分车，保护 620 台已确认订单，并说明利雅得库存的变化。`,
+      ),
     );
   }
 
@@ -308,7 +326,7 @@ export default function StoryWorkspace({
           focusedStep={focusedStep}
           focusRevision={focusRevision}
           workspaceView={workspaceView}
-          sessionTitle={session.title}
+          sessionTitle={localizedSessionTitle(session, locale)}
           sidebarCollapsed={sidebarCollapsed}
           onToggleSidebar={() => setSidebarCollapsed((value) => !value)}
           onCloseCanvas={() => {
@@ -333,13 +351,17 @@ export default function StoryWorkspace({
             }));
           }}
           onGenerateDispatch={(dispatchRunId) =>
-            submit(`/shortage-fulfillment ${dispatchFulfillmentPrompt}`, {
-              dispatchRunId,
-            })
+            submit(
+              `/shortage-fulfillment ${translateText(dispatchFulfillmentPrompt)}`,
+              {
+                dispatchRunId,
+              },
+            )
           }
           onRunProfit={(profitInput, deliveryRunId) =>
             submit(
-              "/profit-analysis 按已选物流快照和当前销售情景分析贡献利润。",
+              "/profit-analysis " +
+                translateText("按已选物流快照和当前销售情景分析贡献利润。"),
               { profitInput, deliveryRunId },
             )
           }
@@ -367,7 +389,10 @@ export default function StoryWorkspace({
                   ? `门店补库 总量=${input.replenishment.supply} 预留比例=${input.replenishment.reserveRatio * 100}% 级差=${input.replenishment.channelGap * 100}%；按当前参数重跑。`
                   : `供给=${input.supply} 直营WoS=${input.targetDirect} 授权WoS=${input.targetAuthorized}；按当前门店快照模拟。`
                 : `${input.mode === "single" ? "单港" : "双港"}到店模拟；D2接车=${input.stores.find((s) => s.id === "D2")?.firstCapacity ?? 0}；按当前接车和 VPC 容量重算。`;
-            submit(command + " " + detail, { input, allocationRunId });
+            submit(command + " " + translateText(detail), {
+              input,
+              allocationRunId,
+            });
           }}
           onApprove={(decisionId) =>
             setCampaign((current) => approveDailyDecision(current, decisionId))
@@ -378,7 +403,7 @@ export default function StoryWorkspace({
         type="button"
         className="story-mobile-chat-toggle"
         data-testid="mobile-chat-toggle"
-        aria-label="打开 Agent CUI"
+        aria-label={translateText("打开 Agent CUI")}
         onClick={() => setChatOpen(true)}
       >
         <MessageSquare size={17} />
@@ -412,18 +437,18 @@ export default function StoryWorkspace({
             className="workspace-plugin-dialog"
             role="dialog"
             aria-modal="true"
-            aria-label="插件与 Skills"
+            aria-label={translateText("插件与 Skills")}
             onClick={(event) => event.stopPropagation()}
           >
             <header>
               <div>
                 <small>BUILT-IN SKILLS</small>
-                <h2>插件与 Skills</h2>
-                <p>选择能力，在当前项目开始任务。</p>
+                <h2>{translateText("插件与 Skills")}</h2>
+                <p>{translateText("选择能力，在当前项目开始任务。")}</p>
               </div>
               <button
                 type="button"
-                aria-label="关闭插件"
+                aria-label={translateText("关闭插件")}
                 onClick={() => setWorkspaceView("task")}
               >
                 <X size={18} />
@@ -435,15 +460,17 @@ export default function StoryWorkspace({
                   type="button"
                   key={skill.command}
                   onClick={() => {
-                    setDraft(`${skill.command} ${skill.defaultPrompt}`);
+                    setDraft(
+                      `${skill.command} ${translateText(skill.defaultPrompt)}`,
+                    );
                     setWorkspaceView("task");
                     setChatOpen(true);
                   }}
                 >
                   <Sparkles size={18} />
-                  <strong>{skill.title}</strong>
-                  <code>{skill.command}</code>
-                  <p>{skill.description}</p>
+                  <strong>{translateText(skill.title)}</strong>
+                  <code>{translateText(skill.command)}</code>
+                  <p>{translateText(skill.description)}</p>
                 </button>
               ))}
             </div>

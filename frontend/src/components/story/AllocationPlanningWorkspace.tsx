@@ -1,4 +1,7 @@
 "use client";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
+import { matchesLocalizedText } from "@/lib/i18n/translate";
+
 import type { SaveVesselScenario } from "@/lib/story/vessel-scenario";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowRight, Download, Play, Database } from "lucide-react";
@@ -43,6 +46,8 @@ export default function AllocationPlanningWorkspace({
   onRunPlanning,
   onSaveScenario,
 }: Props) {
+  const { t: translateText } = useI18n();
+
   const snapshot = run.planning!;
   if (snapshot.kind !== "allocation") throw new Error("需要分车快照");
   const result = snapshot.result,
@@ -105,7 +110,11 @@ export default function AllocationPlanningWorkspace({
   const visible = result.rows.filter(
     (r) =>
       (channel === "全部" || r.channel === channel) &&
-      (!search || `${r.name} ${r.id} ${r.city} ${r.region}`.includes(search)),
+      (!search ||
+        matchesLocalizedText(
+          `${r.name} ${r.id} ${r.city} ${r.region}`,
+          search,
+        )),
   );
   const store = input.stores.find((r) => r.id === selected) ?? input.stores[0];
   function patchStore(patch: Partial<typeof store>) {
@@ -152,7 +161,11 @@ export default function AllocationPlanningWorkspace({
     URL.revokeObjectURL(url);
   }
   const tabs = (
-    <nav className="planning-tabs" role="tablist" aria-label="分车分析">
+    <nav
+      className="planning-tabs"
+      role="tablist"
+      aria-label={translateText("分车分析")}
+    >
       {[
         ["overview", "基本统计"],
         ["graph", "订单分车"],
@@ -186,7 +199,7 @@ export default function AllocationPlanningWorkspace({
               [next]?.focus();
           }}
         >
-          {label}
+          {translateText(label)}
         </button>
       ))}
     </nav>
@@ -204,40 +217,49 @@ export default function AllocationPlanningWorkspace({
         <header className="planning-heading">
           <div>
             <small>
-              VESSEL ALLOCATION ·{" "}
-              {tab === "overview"
-                ? "供需与库存"
-                : tab === "graph"
-                  ? "订单与物流"
-                  : "门店补库存"}
+              VESSEL ALLOCATION ·{translateText(" ")}
+              {translateText(
+                tab === "overview"
+                  ? "供需与库存"
+                  : tab === "graph"
+                    ? "订单与物流"
+                    : "门店补库存",
+              )}
             </small>
-            <h1>滚装船分车工作台</h1>
+            <h1>{translateText("滚装船分车工作台")}</h1>
             <p>
-              先看本船供给与全网需求，再按订单优先分车，将剩余车辆注水补库存。
+              {translateText(
+                "先看本船供给与全网需求，再按订单优先分车，将剩余车辆注水补库存。",
+              )}
             </p>
           </div>
           <span className="planning-status">
-            {run.status === "complete"
-              ? "模拟已完成"
-              : run.status === "paused"
-                ? "已暂停"
-                : "模拟中"}{" "}
-            · {Math.min(100, Math.round((run.elapsed / run.duration) * 100))}%
+            {translateText(
+              run.status === "complete"
+                ? "模拟已完成"
+                : run.status === "paused"
+                  ? "已暂停"
+                  : "模拟中",
+            )}
+            {translateText(" ")}·{" "}
+            {Math.min(100, Math.round((run.elapsed / run.duration) * 100))}%
           </span>
         </header>
         <div className="planning-context">
           <span>
             <Database size={14} />
-            2026-08-05 · 模拟统计快照
+            {translateText("2026-08-05 · 模拟统计快照")}
           </span>
-          <span>丰田 / 雷克萨斯 · 79 家门店</span>
+          <span>{translateText("丰田 / 雷克萨斯 · 79 家门店")}</span>
           <button disabled={run.status !== "complete"} onClick={download}>
             <Download size={13} />
-            {tab === "overview"
-              ? "导出统计快照"
-              : tab === "graph"
-                ? "导出订单与物流快照"
-                : "导出快照"}
+            {translateText(
+              tab === "overview"
+                ? "导出统计快照"
+                : tab === "graph"
+                  ? "导出订单与物流快照"
+                  : "导出快照",
+            )}
           </button>
         </div>
         <div ref={outputRef}>{tabs}</div>
@@ -281,7 +303,9 @@ export default function AllocationPlanningWorkspace({
                     event.operation !== "vessel.orders.read"
                   }
                 >
-                  <summary>品牌注水情景 · 原分车图谱</summary>
+                  <summary>
+                    {translateText("品牌注水情景 · 原分车图谱")}
+                  </summary>
                   <AllocationGraph
                     key={run.id + "-" + focusRevision}
                     result={result}
@@ -293,11 +317,13 @@ export default function AllocationPlanningWorkspace({
           ) : (
             <div className="planning-loading">
               <i />
-              {tab === "overview"
-                ? "正在汇总供给、订单、销速与库存…"
-                : tab === "water"
-                  ? "正在生成门店补库与注水快照…"
-                  : "正在生成门店订单与物流建议…"}
+              {translateText(
+                tab === "overview"
+                  ? "正在汇总供给、订单、销速与库存…"
+                  : tab === "water"
+                    ? "正在生成门店补库与注水快照…"
+                    : "正在生成门店订单与物流建议…",
+              )}
             </div>
           )}
         </section>
@@ -312,33 +338,44 @@ export default function AllocationPlanningWorkspace({
       <header className="planning-heading">
         <div>
           <small>STORE ALLOCATION · PRODUCT SKILL</small>
-          <h1>订单先行，库存按门店注水</h1>
-          <p>门店 × 品牌数据驱动分车，从本体依赖到每一步注水，都能查看依据。</p>
+          <h1>{translateText("订单先行，库存按门店注水")}</h1>
+          <p>
+            {translateText(
+              "门店 × 品牌数据驱动分车，从本体依赖到每一步注水，都能查看依据。",
+            )}
+          </p>
         </div>
         <span className="planning-status">
-          {run.status === "complete"
-            ? "模拟已完成"
-            : run.status === "paused"
-              ? "已暂停"
-              : "模拟中"}{" "}
-          · {Math.min(100, Math.round((run.elapsed / run.duration) * 100))}%
+          {translateText(
+            run.status === "complete"
+              ? "模拟已完成"
+              : run.status === "paused"
+                ? "已暂停"
+                : "模拟中",
+          )}
+          {translateText(" ")}·{" "}
+          {Math.min(100, Math.round((run.elapsed / run.duration) * 100))}%
         </span>
       </header>
       <div className="planning-context">
         <span>
           <Database size={14} />
-          {result.input.source?.snapshot ?? "历史情景"} ·{" "}
-          {result.input.source?.nature ?? "模拟数据"}
+          {translateText(result.input.source?.snapshot ?? "历史情景")} ·
+          {translateText(" ")}
+          {translateText(result.input.source?.nature ?? "模拟数据")}
         </span>
         <span>
-          {result.input.brand ?? "配置"} · {result.rows.length} 家门店
+          {translateText(result.input.brand ?? "配置")} · {result.rows.length}
+          {translateText(" 家门店")}
         </span>
         <span>
-          库存 {result.input.source?.stockDate ?? "情景快照"} · 未发布
+          {translateText("库存 ")}
+          {translateText(result.input.source?.stockDate ?? "情景快照")}
+          {translateText(" · 未发布")}
         </span>
         <button disabled={run.status !== "complete"} onClick={download}>
           <Download size={13} />
-          导出快照
+          {translateText("导出快照")}
         </button>
       </div>
       <div ref={outputRef}>{tabs}</div>
@@ -346,14 +383,27 @@ export default function AllocationPlanningWorkspace({
         className="planning-conclusion"
         data-testid="planning-conclusion"
       >
-        <small>本轮结论</small>
+        <small>{translateText("本轮结论")}</small>
         <p>
-          {fmt(result.input.supply)} 台供给，先分订单 <b>{fmt(s.orders)}</b>{" "}
-          台、补库存 <b>{fmt(s.replenishment)}</b> 台，留仓{" "}
-          <b>{fmt(s.retained)}</b> 台。订单缺口 {fmt(s.orderShortage)}{" "}
-          台，距目标 WoS 仍缺 {fmt(s.replenishmentGap)} 台。
-          {result.input.stores.every((r) => !r.orders) &&
-            " 当前没有未配订单源数据，订单默认为 0，可在情景参数中录入。"}
+          {translateText(fmt(result.input.supply))}
+          {translateText(" 台供给，先分订单 ")}
+          <b>{translateText(fmt(s.orders))}</b>
+          {translateText(" ")}
+          {translateText("台、补库存 ")}
+          <b>{translateText(fmt(s.replenishment))}</b>
+          {translateText(" 台，留仓")}
+          {translateText(" ")}
+          <b>{translateText(fmt(s.retained))}</b>
+          {translateText(" 台。订单缺口 ")}
+          {translateText(fmt(s.orderShortage))}
+          {translateText(" ")}
+          {translateText("台，距目标 WoS 仍缺 ")}
+          {translateText(fmt(s.replenishmentGap))}
+          {translateText(" 台。")}
+          {translateText(
+            result.input.stores.every((r) => !r.orders) &&
+              " 当前没有未配订单源数据，订单默认为 0，可在情景参数中录入。",
+          )}
         </p>
       </section>
       <div className="planning-metrics allocation-summary">
@@ -371,9 +421,9 @@ export default function AllocationPlanningWorkspace({
           ],
         ].map(([label, value, note]) => (
           <article className="planning-metric" key={label}>
-            <small>{label}</small>
-            <strong>{value}</strong>
-            <span>{note}</span>
+            <small>{translateText(label)}</small>
+            <strong>{translateText(value)}</strong>
+            <span>{translateText(note)}</span>
           </article>
         ))}
       </div>
@@ -382,24 +432,27 @@ export default function AllocationPlanningWorkspace({
         hidden={!!snapshot.replenishment}
       >
         <summary>
-          情景参数与未配订单{" "}
+          {translateText("情景参数与未配订单")}
+          {translateText(" ")}
           <span>
-            {edited
-              ? "已调整，需模拟重跑"
-              : "供给 " +
-                fmt(input.supply) +
-                " 台 · 直营 " +
-                input.targetDirect +
-                " 周 / 授权 " +
-                input.targetAuthorized +
-                " 周"}
+            {translateText(
+              edited
+                ? "已调整，需模拟重跑"
+                : "供给 " +
+                    fmt(input.supply) +
+                    " 台 · 直营 " +
+                    input.targetDirect +
+                    " 周 / 授权 " +
+                    input.targetAuthorized +
+                    " 周",
+            )}
           </span>
         </summary>
         <div className="planning-controls">
           <label>
-            品牌
+            {translateText("品牌")}
             <select
-              aria-label="分车品牌"
+              aria-label={translateText("分车品牌")}
               value={input.brand ?? "丰田"}
               onChange={(e) => {
                 const next = defaultAllocationScenario(e.target.value);
@@ -408,14 +461,14 @@ export default function AllocationPlanningWorkspace({
                 setSelected(next.stores[0].id);
               }}
             >
-              <option>丰田</option>
-              <option>雷克萨斯</option>
+              <option value={"丰田"}>{translateText("丰田")}</option>
+              <option value={"雷克萨斯"}>{translateText("雷克萨斯")}</option>
             </select>
           </label>
           <label>
-            本船供给（台）
+            {translateText("本船供给（台）")}
             <input
-              aria-label="供给数量"
+              aria-label={translateText("供给数量")}
               type="number"
               min="0"
               max="100000"
@@ -426,9 +479,9 @@ export default function AllocationPlanningWorkspace({
             />
           </label>
           <label>
-            直营目标 WoS
+            {translateText("直营目标 WoS")}
             <input
-              aria-label="直营目标 WoS"
+              aria-label={translateText("直营目标 WoS")}
               type="number"
               min=".1"
               step=".5"
@@ -439,9 +492,9 @@ export default function AllocationPlanningWorkspace({
             />
           </label>
           <label>
-            授权目标 WoS
+            {translateText("授权目标 WoS")}
             <input
-              aria-label="授权目标 WoS"
+              aria-label={translateText("授权目标 WoS")}
               type="number"
               min=".1"
               step=".5"
@@ -452,9 +505,9 @@ export default function AllocationPlanningWorkspace({
             />
           </label>
           <label>
-            直营偏移
+            {translateText("直营偏移")}
             <input
-              aria-label="直营注水偏移"
+              aria-label={translateText("直营注水偏移")}
               type="number"
               min="0"
               max="1"
@@ -466,9 +519,9 @@ export default function AllocationPlanningWorkspace({
             />
           </label>
           <label>
-            授权偏移
+            {translateText("授权偏移")}
             <input
-              aria-label="授权注水偏移"
+              aria-label={translateText("授权注水偏移")}
               type="number"
               min="0"
               max="1"
@@ -487,7 +540,7 @@ export default function AllocationPlanningWorkspace({
               setInput({ ...input, offsetDirect: 0, offsetAuthorized: 0 })
             }
           >
-            同步注水
+            {translateText("同步注水")}
           </button>
           <button
             aria-pressed={input.offsetAuthorized === 0.3 && !input.offsetDirect}
@@ -495,40 +548,40 @@ export default function AllocationPlanningWorkspace({
               setInput({ ...input, offsetDirect: 0, offsetAuthorized: 0.3 })
             }
           >
-            直营优先 · 授权偏移 30%
+            {translateText("直营优先 · 授权偏移 30%")}
           </button>
         </div>
         <label className="planning-check">
           <input
             type="checkbox"
-            aria-label="假设在途按期到店"
+            aria-label={translateText("假设在途按期到店")}
             checked={!!input.includeTransit}
             onChange={(e) =>
               setInput({ ...input, includeTransit: e.target.checked })
             }
           />
-          假设在途按期到店，计入有效库存（来源没有 ETA）
+          {translateText("假设在途按期到店，计入有效库存（来源没有 ETA）")}
         </label>
         {store && (
           <div className="allocation-order-editor">
             <label>
-              选择门店
+              {translateText("选择门店")}
               <select
-                aria-label="情景订单门店"
+                aria-label={translateText("情景订单门店")}
                 value={store.id}
                 onChange={(e) => setSelected(e.target.value)}
               >
                 {input.stores.map((s) => (
                   <option value={s.id} key={s.id}>
-                    {s.id} · {s.name}
+                    {translateText(s.id)} · {translateText(s.name)}
                   </option>
                 ))}
               </select>
             </label>
             <label>
-              未配订单（情景）
+              {translateText("未配订单（情景）")}
               <input
-                aria-label={store.id + " 未配订单"}
+                aria-label={translateText(store.id + " 未配订单")}
                 type="number"
                 min="0"
                 value={store.orders}
@@ -536,9 +589,9 @@ export default function AllocationPlanningWorkspace({
               />
             </label>
             <label>
-              订单交期 D+
+              {translateText("订单交期 D+")}
               <input
-                aria-label={store.id + " 订单交期"}
+                aria-label={translateText(store.id + " 订单交期")}
                 type="number"
                 min="0"
                 value={store.dueDay}
@@ -546,9 +599,9 @@ export default function AllocationPlanningWorkspace({
               />
             </label>
             <label>
-              分车上限（空白不限）
+              {translateText("分车上限（空白不限）")}
               <input
-                aria-label={store.id + " 分车上限"}
+                aria-label={translateText(store.id + " 分车上限")}
                 type="number"
                 min="0"
                 value={store.allocationCap ?? ""}
@@ -563,19 +616,26 @@ export default function AllocationPlanningWorkspace({
           </div>
         )}
         <p className="planning-footnote">
-          已锁库存不等于本船待分订单。未配订单需要独立输入，默认 0。无车型与 VIN
-          明细，本轮仅展示品牌级分车；品牌切换后分别计算。
+          {translateText(
+            "已锁库存不等于本船待分订单。未配订单需要独立输入，默认 0。无车型与 VIN 明细，本轮仅展示品牌级分车；品牌切换后分别计算。",
+          )}
         </p>
         <div className="planning-action-row">
           <button className="planning-primary" disabled={busy} onClick={rerun}>
             <Play size={14} />
-            模拟重跑
+            {translateText("模拟重跑")}
           </button>
-          <span>{edited ? "调整尚未进入当前快照" : "每轮保留独立快照"}</span>
-          {error && (
-            <p role="alert" className="planning-error">
-              {error}
-            </p>
+          <span>
+            {translateText(
+              edited ? "调整尚未进入当前快照" : "每轮保留独立快照",
+            )}
+          </span>
+          {translateText(
+            error && (
+              <p role="alert" className="planning-error">
+                {translateText(error)}
+              </p>
+            ),
           )}
         </div>
       </details>
@@ -588,40 +648,45 @@ export default function AllocationPlanningWorkspace({
         {!ready ? (
           <div className="planning-loading">
             <i />
-            正在读取数据和执行分车…
+            {translateText("正在读取数据和执行分车…")}
           </div>
         ) : tab === "water" ? (
           <WaterfillPlayer key={run.id} result={result} />
         ) : (
           <section className="planning-panel">
             <header>
-              <h2>门店分车结果</h2>
+              <h2>{translateText("门店分车结果")}</h2>
               <p>
-                全部 {result.rows.length}{" "}
-                家门店，来源数字与情景分配并列；点击门店可切换情景订单编辑对象。
+                {translateText("全部 ")}
+                {result.rows.length}
+                {translateText(" ")}
+                {translateText(
+                  "家门店，来源数字与情景分配并列；点击门店可切换情景订单编辑对象。",
+                )}
               </p>
             </header>
             <div className="allocation-filters">
               <input
-                aria-label="搜索分车门店"
-                placeholder="搜索门店、城市或编码"
+                aria-label={translateText("搜索分车门店")}
+                placeholder={translateText("搜索门店、城市或编码")}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
               <label>
-                渠道
+                {translateText("渠道")}
                 <select
-                  aria-label="分车渠道"
+                  aria-label={translateText("分车渠道")}
                   value={channel}
                   onChange={(e) => setChannel(e.target.value)}
                 >
-                  <option>全部</option>
-                  <option>直营</option>
-                  <option>授权</option>
+                  <option value={"全部"}>{translateText("全部")}</option>
+                  <option value={"直营"}>{translateText("直营")}</option>
+                  <option value={"授权"}>{translateText("授权")}</option>
                 </select>
               </label>
               <span>
-                {visible.length} / {result.rows.length} 家
+                {visible.length} / {result.rows.length}
+                {translateText(" 家")}
               </span>
             </div>
             <div className="planning-table-scroll allocation-result-table">
@@ -640,7 +705,7 @@ export default function AllocationPlanningWorkspace({
                       "WoS 前 → 后 / 目标",
                       "剩余缺口",
                     ].map((h) => (
-                      <th key={h}>{h}</th>
+                      <th key={h}>{translateText(h)}</th>
                     ))}
                   </tr>
                 </thead>
@@ -656,16 +721,17 @@ export default function AllocationPlanningWorkspace({
                             )!.open = true;
                           }}
                         >
-                          {r.name}
+                          {translateText(r.name)}
                         </button>
                         <small>
-                          {r.id} · {r.brand} · {r.city}
+                          {translateText(r.id)} · {translateText(r.brand)} ·{" "}
+                          {translateText(r.city)}
                         </small>
                       </td>
-                      <td>{r.channel}</td>
-                      <td>{fmt(r.weeklySales, 2)}</td>
-                      <td>{fmt(r.availableStock)}</td>
-                      <td>{fmt(r.transit ?? 0)}</td>
+                      <td>{translateText(r.channel)}</td>
+                      <td>{translateText(fmt(r.weeklySales, 2))}</td>
+                      <td>{translateText(fmt(r.availableStock))}</td>
+                      <td>{translateText(fmt(r.transit ?? 0))}</td>
                       <td>
                         {r.orders} → {r.orderAllocated}
                       </td>
@@ -674,7 +740,9 @@ export default function AllocationPlanningWorkspace({
                         <b>{r.total}</b>
                       </td>
                       <td>
-                        {fmt(r.beforeWos, 2)} → {fmt(r.afterWos, 2)} /{" "}
+                        {translateText(fmt(r.beforeWos, 2))} →{" "}
+                        {translateText(fmt(r.afterWos, 2))} /
+                        {translateText(" ")}
                         {r.targetWeeks}
                       </td>
                       <td>{r.gap}</td>
@@ -687,7 +755,11 @@ export default function AllocationPlanningWorkspace({
         )}
       </div>
       <div className="allocation-next">
-        <p>分车归属已到门店，接下来模拟首批直送、VPC 暂存和后续到店批次。</p>
+        <p>
+          {translateText(
+            "分车归属已到门店，接下来模拟首批直送、VPC 暂存和后续到店批次。",
+          )}
+        </p>
         <button
           className="planning-primary"
           disabled={busy || run.status !== "complete"}
@@ -699,38 +771,46 @@ export default function AllocationPlanningWorkspace({
             )
           }
         >
-          生成到店物流模拟
+          {translateText("生成到店物流模拟")}
           <ArrowRight size={14} />
         </button>
       </div>
       <details className="planning-input-details allocation-provenance">
-        <summary>数据来源与统计窗口</summary>
+        <summary>{translateText("数据来源与统计窗口")}</summary>
         {snapshot.replenishment ? (
           <>
             <p>
-              沿用本船基础统计与订单分车的 2026-08-05 模拟快照；八周销速窗口为
-              2026-06-08—08-02，门店库存与 VPC 原有库存分别统计。
+              {translateText(
+                "沿用本船基础统计与订单分车的 2026-08-05 模拟快照；八周销速窗口为 2026-06-08—08-02，门店库存与 VPC 原有库存分别统计。",
+              )}
             </p>
             <p>
-              门店 × 车型库存和销速为模拟分摊；本轮预留{" "}
-              {fmt(snapshot.replenishment.summary.reserved)} 台，未分配{" "}
-              {fmt(snapshot.replenishment.summary.retained)}{" "}
-              台。参数、分车结果与下游物流均保存到本轮快照。
+              {translateText("门店 × 车型库存和销速为模拟分摊；本轮预留")}
+              {translateText(" ")}
+              {translateText(fmt(snapshot.replenishment.summary.reserved))}
+              {translateText(" 台，未分配")}
+              {translateText(" ")}
+              {translateText(fmt(snapshot.replenishment.summary.retained))}
+              {translateText(" ")}
+              {translateText("台。参数、分车结果与下游物流均保存到本轮快照。")}
             </p>
           </>
         ) : (
           <>
             <p>
-              data/00_客户/门店主数据.csv · data/02_销速/销速汇总_门店.csv ·
-              data/03_库存/当前库存_门店.csv
+              {translateText(
+                "data/00_客户/门店主数据.csv · data/02_销速/销速汇总_门店.csv · data/03_库存/当前库存_门店.csv",
+              )}
             </p>
             <p>
-              直营销速：2026-06-01—07-26（8 周）；授权销速：2026-05-01—07-31（92
-              天折周）。库存快照：2026-09-29。销速与库存日期存在间隔，保留来源口径，不当作到店日预测。
+              {translateText(
+                "直营销速：2026-06-01—07-26（8 周）；授权销速：2026-05-01—07-31（92 天折周）。库存快照：2026-09-29。销速与库存日期存在间隔，保留来源口径，不当作到店日预测。",
+              )}
             </p>
             <p>
-              模拟数据 H_MOCK_20260929_V1；仅品牌级数据。1800
-              台船量、未配订单、在途按期与接车条件为情景输入。
+              {translateText(
+                "模拟数据 H_MOCK_20260929_V1；仅品牌级数据。1800 台船量、未配订单、在途按期与接车条件为情景输入。",
+              )}
             </p>
           </>
         )}

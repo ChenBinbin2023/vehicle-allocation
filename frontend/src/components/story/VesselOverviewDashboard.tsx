@@ -1,4 +1,5 @@
 "use client";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
 
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import VesselSectionHeading from "./VesselSectionHeading";
@@ -86,10 +87,12 @@ function Legend({
   items: LegendItem[];
   lines?: boolean;
 }) {
+  const { t: translateText } = useI18n();
+
   return (
     <ul
       className={`vo-legend${lines ? " vo-legend--lines" : ""}`}
-      aria-label="图例"
+      aria-label={translateText("图例")}
     >
       {items.map((item) => (
         <li key={item.label}>
@@ -108,7 +111,7 @@ function Legend({
           ) : (
             <i style={{ backgroundColor: item.color }} aria-hidden="true" />
           )}
-          <span>{item.label}</span>
+          <span>{translateText(item.label)}</span>
         </li>
       ))}
     </ul>
@@ -116,18 +119,21 @@ function Legend({
 }
 
 function Tooltip({ data }: { data: TooltipData | null }) {
+  const { t: translateText } = useI18n();
+
   if (!data) return null;
   return (
     <div className="vo-tooltip" role="tooltip">
-      <strong>{data.title}</strong>
+      <strong>{translateText(data.title)}</strong>
       {data.values.map((item) => (
         <div key={item.label}>
           <span>
             <i style={{ background: item.color }} />
-            {item.label}
+            {translateText(item.label)}
           </span>
           <b>
-            {fmt(item.value, data.decimals)} <small>{data.unit}</small>
+            {translateText(fmt(item.value, data.decimals))}{" "}
+            <small>{translateText(data.unit)}</small>
           </b>
         </div>
       ))}
@@ -152,6 +158,8 @@ function ChartCard({
   footer?: ReactNode;
   legend?: ReactNode;
 }) {
+  const { t: translateText } = useI18n();
+
   return (
     <article
       className="vo-chart"
@@ -159,12 +167,16 @@ function ChartCard({
       data-chart={type}
     >
       <header className="vo-chart-heading">
-        <h3>{title}</h3>
-        <p>{subtitle}</p>
+        <h3>{translateText(title)}</h3>
+        <p>{translateText(subtitle)}</p>
       </header>
-      {legend}
-      {children}
-      {footer && <footer className="vo-chart-footer">{footer}</footer>}
+      {translateText(legend)}
+      {translateText(children)}
+      {translateText(
+        footer && (
+          <footer className="vo-chart-footer">{translateText(footer)}</footer>
+        ),
+      )}
     </article>
   );
 }
@@ -182,6 +194,8 @@ function HorizontalBars({
   height?: number;
   labelWidth?: number;
 }) {
+  const { t: translateText } = useI18n();
+
   const { ref, width } = usePlotWidth();
   const svgId = useId();
   const [tooltip, setTooltip] = useState<TooltipData | null>(null);
@@ -206,10 +220,12 @@ function HorizontalBars({
         aria-labelledby={svgId}
       >
         <title id={svgId}>
-          {title}，单位：{unit}
+          {translateText(title)}
+          {translateText("，单位：")}
+          {translateText(unit)}
         </title>
         <text className="vo-unit" x={labelWidth} y="11">
-          {unit}
+          {translateText(unit)}
         </text>
         {[0, 1, 2, 3, 4].map((tick) => {
           const x = labelWidth + (plotWidth * tick) / 4;
@@ -228,7 +244,7 @@ function HorizontalBars({
                 y={height - 11}
                 textAnchor="middle"
               >
-                {axisLabel((maximum * tick) / 4)}
+                {translateText(axisLabel((maximum * tick) / 4))}
               </text>
             </g>
           );
@@ -251,7 +267,9 @@ function HorizontalBars({
               className="vo-datum"
               tabIndex={0}
               role="img"
-              aria-label={`${row.fullLabel ?? row.label}，${row.segments.map((segment) => `${segment.label} ${fmt(segment.value)} ${unit}`).join("，")}，合计 ${fmt(total)} ${unit}`}
+              aria-label={translateText(
+                `${row.fullLabel ?? row.label}，${row.segments.map((segment) => `${segment.label} ${fmt(segment.value)} ${unit}`).join("，")}，合计 ${fmt(total)} ${unit}`,
+              )}
               onMouseEnter={() => setTooltip(detail)}
               onMouseLeave={() => setTooltip(null)}
               onFocus={() => setTooltip(detail)}
@@ -272,7 +290,7 @@ function HorizontalBars({
                 y={center + 4}
                 textAnchor="end"
               >
-                {row.label}
+                {translateText(row.label)}
               </text>
               {row.segments.map((segment) => {
                 const x = labelWidth + (cumulative / maximum) * plotWidth;
@@ -295,7 +313,7 @@ function HorizontalBars({
                 y={center + 4}
                 textAnchor="end"
               >
-                {fmt(total)}
+                {translateText(fmt(total))}
               </text>
             </g>
           );
@@ -311,6 +329,8 @@ function SupplyHistoryChart({
 }: {
   history?: VesselOverviewData["supplyHistory"];
 }) {
+  const { t: translateText } = useI18n();
+
   const { ref, width } = usePlotWidth();
   const svgId = useId();
   const [tooltip, setTooltip] = useState<TooltipData | null>(null);
@@ -335,8 +355,9 @@ function SupplyHistoryChart({
         aria-labelledby={svgId}
       >
         <title id={svgId}>
-          历史 13
-          个月代表船次供给，丰田与雷克萨斯堆叠，单位：台。近期海峡影响为模拟假设。
+          {translateText(
+            "历史 13 个月代表船次供给，丰田与雷克萨斯堆叠，单位：台。近期海峡影响为模拟假设。",
+          )}
         </title>
         {recentIndex >= 0 && (
           <rect
@@ -349,7 +370,7 @@ function SupplyHistoryChart({
           />
         )}
         <text className="vo-unit" x={left} y="12">
-          台
+          {translateText("台")}
         </text>
         {recentIndex >= 0 && (
           <text
@@ -358,7 +379,7 @@ function SupplyHistoryChart({
             y="12"
             textAnchor="end"
           >
-            霍尔木兹情景假设
+            {translateText("霍尔木兹情景假设")}
           </text>
         )}
         {[0, 1, 2, 3, 4].map((tick) => {
@@ -373,7 +394,7 @@ function SupplyHistoryChart({
                 y2={y}
               />
               <text className="vo-axis" x={left - 8} y={y + 4} textAnchor="end">
-                {axisLabel((maximum * tick) / 4)}
+                {translateText(axisLabel((maximum * tick) / 4))}
               </text>
             </g>
           );
@@ -401,7 +422,9 @@ function SupplyHistoryChart({
               tabIndex={0}
               className="vo-datum"
               role="img"
-              aria-label={`${monthLabel(row.month)}，丰田 ${fmt(row.toyota)} 台，雷克萨斯 ${fmt(row.lexus)} 台，总供给 ${fmt(row.toyota + row.lexus)} 台`}
+              aria-label={translateText(
+                `${monthLabel(row.month)}，丰田 ${fmt(row.toyota)} 台，雷克萨斯 ${fmt(row.lexus)} 台，总供给 ${fmt(row.toyota + row.lexus)} 台`,
+              )}
               onMouseEnter={() => setTooltip(detail)}
               onMouseLeave={() => setTooltip(null)}
               onFocus={() => setTooltip(detail)}
@@ -439,7 +462,7 @@ function SupplyHistoryChart({
                   y={height - 13}
                   textAnchor="middle"
                 >
-                  {shortMonth(row.month)}
+                  {translateText(shortMonth(row.month))}
                 </text>
               )}
             </g>
@@ -452,6 +475,8 @@ function SupplyHistoryChart({
 }
 
 function SalesLines({ title, series }: { title: string; series: Series[] }) {
+  const { t: translateText } = useI18n();
+
   const { ref, width } = usePlotWidth();
   const svgId = useId();
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
@@ -490,10 +515,11 @@ function SalesLines({ title, series }: { title: string; series: Series[] }) {
         aria-labelledby={svgId}
       >
         <title id={svgId}>
-          {title}，13 个月历史销量折算周销速，单位：台 / 周
+          {translateText(title)}
+          {translateText("，13 个月历史销量折算周销速，单位：台 / 周")}
         </title>
         <text className="vo-unit" x={left} y="11">
-          台 / 周
+          {translateText("台 / 周")}
         </text>
         {[0, 1, 2, 3, 4].map((tick) => {
           const y = yAt((maximum * tick) / 4);
@@ -507,7 +533,7 @@ function SalesLines({ title, series }: { title: string; series: Series[] }) {
                 y2={y}
               />
               <text className="vo-axis" x={left - 8} y={y + 4} textAnchor="end">
-                {axisLabel((maximum * tick) / 4)}
+                {translateText(axisLabel((maximum * tick) / 4))}
               </text>
             </g>
           );
@@ -557,7 +583,7 @@ function SalesLines({ title, series }: { title: string; series: Series[] }) {
             tabIndex={0}
             role="img"
             className="vo-line-datum"
-            aria-label={`${monthLabel(month)}，${series.map((item) => `${item.label} ${fmt(item.values[index], 1)} 台每周`).join("，")}`}
+            aria-label={`${translateText(monthLabel(month))}, ${series.map((item) => translateText(`${item.label} ${fmt(item.values[index], 1)} 台每周`)).join(", ")}`}
             onMouseEnter={() => setActiveIndex(index)}
             onMouseLeave={() => setActiveIndex(null)}
             onFocus={() => setActiveIndex(index)}
@@ -579,7 +605,7 @@ function SalesLines({ title, series }: { title: string; series: Series[] }) {
                 y={height - 12}
                 textAnchor="middle"
               >
-                {shortMonth(month)}
+                {translateText(shortMonth(month))}
               </text>
             )}
           </g>
@@ -597,6 +623,8 @@ function StockBars({
   title: string;
   rows: { id: string; label: string; value: number; color: string }[];
 }) {
+  const { t: translateText } = useI18n();
+
   const { ref, width } = usePlotWidth();
   const svgId = useId();
   const [tooltip, setTooltip] = useState<TooltipData | null>(null);
@@ -619,9 +647,12 @@ function StockBars({
         role="group"
         aria-labelledby={svgId}
       >
-        <title id={svgId}>{title}，单位：台</title>
+        <title id={svgId}>
+          {translateText(title)}
+          {translateText("，单位：台")}
+        </title>
         <text className="vo-unit" x={left} y="11">
-          台
+          {translateText("台")}
         </text>
         {[0, 1, 2, 3, 4].map((tick) => {
           const y = top + plotHeight * (1 - tick / 4);
@@ -635,7 +666,7 @@ function StockBars({
                 y2={y}
               />
               <text className="vo-axis" x={left - 8} y={y + 4} textAnchor="end">
-                {axisLabel((maximum * tick) / 4)}
+                {translateText(axisLabel((maximum * tick) / 4))}
               </text>
             </g>
           );
@@ -654,7 +685,9 @@ function StockBars({
               tabIndex={0}
               className="vo-datum"
               role="img"
-              aria-label={`${row.label}，当前库存 ${fmt(row.value)} 台`}
+              aria-label={translateText(
+                `${row.label}，当前库存 ${fmt(row.value)} 台`,
+              )}
               onMouseEnter={() => setTooltip(detail)}
               onMouseLeave={() => setTooltip(null)}
               onFocus={() => setTooltip(detail)}
@@ -683,7 +716,7 @@ function StockBars({
                 y={top + plotHeight - barHeight - 8}
                 textAnchor="middle"
               >
-                {fmt(row.value)}
+                {translateText(fmt(row.value))}
               </text>
               <text
                 className="vo-axis"
@@ -691,7 +724,7 @@ function StockBars({
                 y={height - 12}
                 textAnchor="middle"
               >
-                {row.label}
+                {translateText(row.label)}
               </text>
             </g>
           );
@@ -703,6 +736,8 @@ function StockBars({
 }
 
 function StoreBars({ metric }: { metric: "weeklySales" | "stock" }) {
+  const { t: translateText } = useI18n();
+
   const [tooltip, setTooltip] = useState<TooltipData | null>(null);
   const svgId = useId();
   const rows = vesselOverview.stores;
@@ -724,7 +759,9 @@ function StoreBars({ metric }: { metric: "weeklySales" | "stock" }) {
         className="vo-chart-scroll"
         tabIndex={0}
         role="region"
-        aria-label={`${title}，${rows.length} 家门店，可横向滚动查看全部柱形`}
+        aria-label={translateText(
+          `${title}，${rows.length} 家门店，可横向滚动查看全部柱形`,
+        )}
       >
         <svg
           width={width}
@@ -734,10 +771,14 @@ function StoreBars({ metric }: { metric: "weeklySales" | "stock" }) {
           aria-labelledby={svgId}
         >
           <title id={svgId}>
-            {title}，共 {rows.length} 家门店，按周均销量降序，单位：{unit}
+            {translateText(title)}
+            {translateText("，共 ")}
+            {rows.length}
+            {translateText(" 家门店，按周均销量降序，单位：")}
+            {translateText(unit)}
           </title>
           <text className="vo-unit" x={left} y="11">
-            {unit}
+            {translateText(unit)}
           </text>
           {[0, 1, 2, 3, 4].map((tick) => {
             const y = top + plotHeight * (1 - tick / 4);
@@ -756,7 +797,7 @@ function StoreBars({ metric }: { metric: "weeklySales" | "stock" }) {
                   y={y + 4}
                   textAnchor="end"
                 >
-                  {axisLabel((maximum * tick) / 4)}
+                  {translateText(axisLabel((maximum * tick) / 4))}
                 </text>
               </g>
             );
@@ -785,7 +826,9 @@ function StoreBars({ metric }: { metric: "weeklySales" | "stock" }) {
                 className="vo-datum"
                 tabIndex={0}
                 role="img"
-                aria-label={`第 ${index + 1} 位，${row.name}，${row.channel}，${metric === "weeklySales" ? "近8周周均销量" : "当前库存"} ${fmt(row[metric], metric === "weeklySales" ? 1 : 0)} ${unit}`}
+                aria-label={translateText(
+                  `第 ${index + 1} 位，${row.name}，${row.channel}，${metric === "weeklySales" ? "近8周周均销量" : "当前库存"} ${fmt(row[metric], metric === "weeklySales" ? 1 : 0)} ${unit}`,
+                )}
                 onMouseEnter={() => setTooltip(detail)}
                 onMouseLeave={() => setTooltip(null)}
                 onFocus={() => setTooltip(detail)}
@@ -814,7 +857,7 @@ function StoreBars({ metric }: { metric: "weeklySales" | "stock" }) {
                   y={height - 18}
                   textAnchor="middle"
                 >
-                  {row.shortName}
+                  {translateText(row.shortName)}
                 </text>
               </g>
             );
@@ -841,17 +884,21 @@ function OverviewSection({
   columns?: 2 | 3;
   children: ReactNode;
 }) {
+  const { t: translateText } = useI18n();
+
   const headingId = useId();
   return (
     <section className="vo-section" aria-labelledby={headingId}>
       <VesselSectionHeading
         number={number}
         english={english}
-        title={title}
+        title={translateText(title)}
         note={note}
         headingId={headingId}
       />
-      <div className={`vo-grid vo-grid--${columns}`}>{children}</div>
+      <div className={`vo-grid vo-grid--${columns}`}>
+        {translateText(children)}
+      </div>
     </section>
   );
 }
@@ -859,6 +906,8 @@ function OverviewSection({
 export default function VesselOverviewDashboard({
   data = vesselOverview,
 }: { data?: VesselOverviewData } = {}) {
+  const { t: translateText } = useI18n();
+
   const summary = data.summary;
   const coverage = calculateVesselCoverage(data);
   const shortageRows = (metric: "order" | "replenishment"): Bar[] =>
@@ -921,21 +970,24 @@ export default function VesselOverviewDashboard({
       <header className="vo-heading">
         <div>
           <small>VESSEL ALLOCATION · OVERVIEW</small>
-          <h2>供需与库存总览</h2>
-          <p>从当船供给到仓店销速，查看本轮分车依据。</p>
+          <h2>{translateText("供需与库存总览")}</h2>
+          <p>{translateText("从当船供给到仓店销速，查看本轮分车依据。")}</p>
         </div>
         <div className="vo-snapshot">
-          <span>情景模拟</span>
-          <small>模拟快照 {data.snapshotDate}</small>
+          <span>{translateText("情景模拟")}</span>
+          <small>
+            {translateText("模拟快照 ")}
+            {translateText(data.snapshotDate)}
+          </small>
         </div>
       </header>
       <StreamBlock name="statistics-summary">
-        <div className="vo-kpis" aria-label="总览关键指标">
+        <div className="vo-kpis" aria-label={translateText("总览关键指标")}>
           <article>
-            <span>当船供给</span>
+            <span>{translateText("当船供给")}</span>
             <strong>
-              {fmt(summary.supply)}
-              <small>台</small>
+              {translateText(fmt(summary.supply))}
+              <small>{translateText("台")}</small>
             </strong>
             <p>
               <i
@@ -945,62 +997,92 @@ export default function VesselOverviewDashboard({
                     : "vo-delta-up"
                 }
               >
-                {supplyDelta}
-              </i>{" "}
-              较上月代表船次
+                {translateText(supplyDelta)}
+              </i>
+              {translateText(" ")}
+              {translateText("较上月代表船次")}
             </p>
             <small>
-              丰田 {fmt(summary.toyotaSupply)} · 雷克萨斯{" "}
-              {fmt(summary.lexusSupply)}
+              {translateText("丰田 ")}
+              {translateText(fmt(summary.toyotaSupply))}
+              {translateText(" · 雷克萨斯")}
+              {translateText(" ")}
+              {translateText(fmt(summary.lexusSupply))}
             </small>
           </article>
           <article>
-            <span>订单缺货</span>
+            <span>{translateText("订单缺货")}</span>
             <strong>
-              {fmt(summary.orderShortage)}
-              <small>台</small>
-            </strong>
-            <p>当前订单 {fmt(summary.orders)} 台</p>
-            <small>订单优先匹配 · 按车型计算缺口</small>
-          </article>
-          <article>
-            <span>4 周补库存缺货</span>
-            <strong>
-              {fmt(summary.replenishmentShortage)}
-              <small>台</small>
-            </strong>
-            <p>4 周需求 {fmt(summary.demand4Weeks)} 台</p>
-            <small>4 周销售需求包含当前订单</small>
-          </article>
-          <article>
-            <span>仓店当前库存</span>
-            <strong>
-              {fmt(summary.storeStock + summary.vpcStock)}
-              <small>台</small>
+              {translateText(fmt(summary.orderShortage))}
+              <small>{translateText("台")}</small>
             </strong>
             <p>
-              VPC {fmt(summary.vpcStock)} · 门店 {fmt(summary.storeStock)}
+              {translateText("当前订单 ")}
+              {translateText(fmt(summary.orders))}
+              {translateText(" 台")}
+            </p>
+            <small>{translateText("订单优先匹配 · 按车型计算缺口")}</small>
+          </article>
+          <article>
+            <span>{translateText("4 周补库存缺货")}</span>
+            <strong>
+              {translateText(fmt(summary.replenishmentShortage))}
+              <small>{translateText("台")}</small>
+            </strong>
+            <p>
+              {translateText("4 周需求 ")}
+              {translateText(fmt(summary.demand4Weeks))}
+              {translateText(" 台")}
+            </p>
+            <small>{translateText("4 周销售需求包含当前订单")}</small>
+          </article>
+          <article>
+            <span>{translateText("仓店当前库存")}</span>
+            <strong>
+              {translateText(fmt(summary.storeStock + summary.vpcStock))}
+              <small>{translateText("台")}</small>
+            </strong>
+            <p>
+              VPC {translateText(fmt(summary.vpcStock))}
+              {translateText(" · 门店 ")}
+              {translateText(fmt(summary.storeStock))}
             </p>
             <small>
-              {data.vpcs.length} 个 VPC · {data.regions.length} 个大区 ·{" "}
-              {data.stores.length} 家门店
+              {data.vpcs.length}
+              {translateText(" 个 VPC · ")}
+              {data.regions.length}
+              {translateText(" 个大区 ·")}
+              {translateText(" ")}
+              {data.stores.length}
+              {translateText(" 家门店")}
             </small>
           </article>
           <article
             className="vo-coverage"
             data-testid="overview-sellable-weeks"
           >
-            <span>整体预计可售卖周数</span>
+            <span>{translateText("整体预计可售卖周数")}</span>
             <strong>
-              {coverage.weeks === null ? "—" : fmt(coverage.weeks, 1)}
-              <small>周</small>
+              {translateText(
+                coverage.weeks === null ? "—" : fmt(coverage.weeks, 1),
+              )}
+              <small>{translateText("周")}</small>
             </strong>
-            <p>本船＋已有库存 {fmt(coverage.available)} 台</p>
+            <p>
+              {translateText("本船＋已有库存 ")}
+              {translateText(fmt(coverage.available))}
+              {translateText(" 台")}
+            </p>
             <small className="vo-coverage-models">
               {coverage.models.slice(0, 3).map((model) => (
                 <span key={model.model}>
-                  <span>{shortModel(model.model)}</span>
-                  <b>{model.weeks === null ? "—" : fmt(model.weeks, 1)} 周</b>
+                  <span>{translateText(shortModel(model.model))}</span>
+                  <b>
+                    {translateText(
+                      model.weeks === null ? "—" : fmt(model.weeks, 1),
+                    )}
+                    {translateText(" 周")}
+                  </b>
                 </span>
               ))}
             </small>
@@ -1012,12 +1094,12 @@ export default function VesselOverviewDashboard({
         <OverviewSection
           number="01"
           english="VESSEL SUPPLY"
-          title="供给情况"
+          title={translateText("供给情况")}
           note="品牌口径 · 当船与历史代表船次"
         >
           <ChartCard
             id="supply-models"
-            title="当船车型供给"
+            title={translateText("当船车型供给")}
             subtitle="本船各车型可分配数量"
             type="bar"
             legend={
@@ -1030,12 +1112,16 @@ export default function VesselOverviewDashboard({
             }
             footer={
               <span>
-                本船合计 <b>{fmt(summary.supply)} 台</b>
+                {translateText("本船合计 ")}
+                <b>
+                  {translateText(fmt(summary.supply))}
+                  {translateText(" 台")}
+                </b>
               </span>
             }
           >
             <HorizontalBars
-              title="当船车型供给"
+              title={translateText("当船车型供给")}
               rows={data.models.map((model) => ({
                 id: model.model,
                 label: shortModel(model.model),
@@ -1053,7 +1139,7 @@ export default function VesselOverviewDashboard({
           </ChartCard>
           <ChartCard
             id="supply-history"
-            title="历史 13 个月供给"
+            title={translateText("历史 13 个月供给")}
             subtitle="2025.07—2026.07 · 每月代表船次"
             type="stacked-bar"
             legend={
@@ -1066,7 +1152,8 @@ export default function VesselOverviewDashboard({
             }
             footer={
               <span>
-                2026.03 起丰田下降含霍尔木兹受扰假设；<b>船次为模拟</b>。
+                {translateText("2026.03 起丰田下降含霍尔木兹受扰假设；")}
+                <b>{translateText("船次为模拟")}</b>。
               </span>
             }
           >
@@ -1079,13 +1166,13 @@ export default function VesselOverviewDashboard({
         <OverviewSection
           number="02"
           english="ORDER & REPLENISHMENT DEMAND"
-          title="订单与补库缺货"
+          title={translateText("订单与补库缺货")}
           note="直营 / 授权 · 缺货按车型降序"
           columns={3}
         >
           <ChartCard
             id="orders"
-            title="订单情况"
+            title={translateText("订单情况")}
             subtitle="当前订单：已匹配与缺货"
             type="stacked-bar"
             legend={
@@ -1100,17 +1187,19 @@ export default function VesselOverviewDashboard({
             }
             footer={
               <div className="vo-demand-footer">
-                <span>4 周需求</span>
+                <span>{translateText("4 周需求")}</span>
                 {data.channels.map((channel) => (
                   <span key={channel.channel}>
-                    {channel.channel} <b>{fmt(channel.demand4Weeks)}</b> 台
+                    {translateText(channel.channel)}{" "}
+                    <b>{translateText(fmt(channel.demand4Weeks))}</b>
+                    {translateText(" 台")}
                   </span>
                 ))}
               </div>
             }
           >
             <HorizontalBars
-              title="直营与授权订单情况"
+              title={translateText("直营与授权订单情况")}
               labelWidth={42}
               rows={data.channels.map((channel) => ({
                 id: channel.channel,
@@ -1138,36 +1227,44 @@ export default function VesselOverviewDashboard({
           </ChartCard>
           <ChartCard
             id="order-shortage"
-            title="各车型订单缺货"
+            title={translateText("各车型订单缺货")}
             subtitle="按订单优先匹配后的缺口"
             type="stacked-bar"
             legend={<Legend items={channelLegend} />}
             footer={
               <span>
-                订单缺货合计 <b>{fmt(summary.orderShortage)} 台</b>
+                {translateText("订单缺货合计 ")}
+                <b>
+                  {translateText(fmt(summary.orderShortage))}
+                  {translateText(" 台")}
+                </b>
               </span>
             }
           >
             <HorizontalBars
-              title="各车型订单缺货"
+              title={translateText("各车型订单缺货")}
               rows={shortageRows("order")}
               labelWidth={68}
             />
           </ChartCard>
           <ChartCard
             id="replenishment-shortage"
-            title="各车型 4 周补库缺货"
+            title={translateText("各车型 4 周补库缺货")}
             subtitle="未来 4 周销售需求的未覆盖量"
             type="stacked-bar"
             legend={<Legend items={channelLegend} />}
             footer={
               <span>
-                补库缺货合计 <b>{fmt(summary.replenishmentShortage)} 台</b>
+                {translateText("补库缺货合计 ")}
+                <b>
+                  {translateText(fmt(summary.replenishmentShortage))}
+                  {translateText(" 台")}
+                </b>
               </span>
             }
           >
             <HorizontalBars
-              title="各车型4周补库存缺货"
+              title={translateText("各车型4周补库存缺货")}
               rows={shortageRows("replenishment")}
               labelWidth={68}
             />
@@ -1179,33 +1276,42 @@ export default function VesselOverviewDashboard({
         <OverviewSection
           number="03"
           english="VPC SALES & INVENTORY"
-          title="VPC 销速与库存"
+          title={translateText("VPC 销速与库存")}
           note={`${data.vpcs.length} 个车辆处理中心 · 共用同一配色`}
         >
           <ChartCard
             id="vpc-sales"
-            title="VPC 历史周销速"
+            title={translateText("VPC 历史周销速")}
             subtitle="2025.07—2026.07 · 月销量折算"
             type="line"
             legend={<Legend items={vpcSeries} lines />}
-            footer={<span>周销速 = 月销量 × 7 ÷ 当月天数</span>}
+            footer={
+              <span>{translateText("周销速 = 月销量 × 7 ÷ 当月天数")}</span>
+            }
           >
-            <SalesLines title="三个VPC历史周销速" series={vpcSeries} />
+            <SalesLines
+              title={translateText("三个VPC历史周销速")}
+              series={vpcSeries}
+            />
           </ChartCard>
           <ChartCard
             id="vpc-stock"
-            title="VPC 当前库存"
+            title={translateText("VPC 当前库存")}
             subtitle={`模拟快照 ${data.snapshotDate} · 台`}
             type="bar"
             legend={<Legend items={vpcSeries} />}
             footer={
               <span>
-                VPC 库存合计 <b>{fmt(summary.vpcStock)} 台</b>
+                {translateText("VPC 库存合计 ")}
+                <b>
+                  {translateText(fmt(summary.vpcStock))}
+                  {translateText(" 台")}
+                </b>
               </span>
             }
           >
             <StockBars
-              title="三个VPC当前库存"
+              title={translateText("三个VPC当前库存")}
               rows={data.vpcs.map((vpc, index) => ({
                 id: vpc.id,
                 label: vpc.id,
@@ -1221,29 +1327,34 @@ export default function VesselOverviewDashboard({
         <OverviewSection
           number="04"
           english="REGIONAL SALES & INVENTORY"
-          title="大区销速与库存"
+          title={translateText("大区销速与库存")}
           note={`${data.regions.length} 个大区 · 同色对应同一区域`}
         >
           <ChartCard
             id="region-sales"
-            title="大区历史周销速"
+            title={translateText("大区历史周销速")}
             subtitle="2025.07—2026.07 · 月销量折算"
             type="line"
             legend={<Legend items={regionSeries} lines />}
-            footer={<span>周销速 = 月销量 × 7 ÷ 当月天数</span>}
+            footer={
+              <span>{translateText("周销速 = 月销量 × 7 ÷ 当月天数")}</span>
+            }
           >
-            <SalesLines title="五个大区历史周销速" series={regionSeries} />
+            <SalesLines
+              title={translateText("五个大区历史周销速")}
+              series={regionSeries}
+            />
           </ChartCard>
           <ChartCard
             id="region-stock"
-            title="大区当前库存"
+            title={translateText("大区当前库存")}
             subtitle={`模拟快照 ${data.snapshotDate} · 台`}
             type="bar"
             legend={<Legend items={regionSeries} />}
-            footer={<span>大区库存按门店所属区域汇总</span>}
+            footer={<span>{translateText("大区库存按门店所属区域汇总")}</span>}
           >
             <StockBars
-              title="五个大区当前库存"
+              title={translateText("五个大区当前库存")}
               rows={data.regions.map((region, index) => ({
                 id: region.id,
                 label: region.name,
@@ -1259,19 +1370,22 @@ export default function VesselOverviewDashboard({
         <OverviewSection
           number="05"
           english="STORE SALES & INVENTORY"
-          title="门店销速与库存"
+          title={translateText("门店销速与库存")}
           note={`全部 ${data.stores.length} 家门店 · 两图按周均销量同序排列`}
         >
           <ChartCard
             id="store-sales"
-            title="门店近 8 周周均销量"
+            title={translateText("门店近 8 周周均销量")}
             subtitle={`${data.weeklyWindow.start}—${data.weeklyWindow.end} · 销量降序`}
             type="bar"
             legend={<Legend items={channelLegend} />}
             footer={
               <span>
-                周均销量 = 窗口销量 ÷ {data.weeklyWindow.weeks} 周 ·{" "}
-                <b>横向滚动查看全部门店 →</b>
+                {translateText("周均销量 = 窗口销量 ÷ ")}
+                {data.weeklyWindow.weeks}
+                {translateText(" 周 ·")}
+                {translateText(" ")}
+                <b>{translateText("横向滚动查看全部门店 →")}</b>
               </span>
             }
           >
@@ -1279,14 +1393,18 @@ export default function VesselOverviewDashboard({
           </ChartCard>
           <ChartCard
             id="store-stock"
-            title="门店当前库存"
+            title={translateText("门店当前库存")}
             subtitle={`模拟快照 ${data.snapshotDate} · 沿用左图门店顺序`}
             type="bar"
             legend={<Legend items={channelLegend} />}
             footer={
               <span>
-                门店期初库存 <b>{fmt(summary.storeStock)} 台</b> · 按 4
-                周目标，期初满足率 15%–35%
+                {translateText("门店期初库存 ")}
+                <b>
+                  {translateText(fmt(summary.storeStock))}
+                  {translateText(" 台")}
+                </b>
+                {translateText(" · 按 4 周目标，期初满足率 15%–35%")}
               </span>
             }
           >
@@ -1297,19 +1415,23 @@ export default function VesselOverviewDashboard({
 
       <details className="vo-provenance">
         <summary>
-          数据口径与模拟假设 <span>模拟快照 {data.snapshotDate}</span>
+          {translateText("数据口径与模拟假设 ")}
+          <span>
+            {translateText("模拟快照 ")}
+            {translateText(data.snapshotDate)}
+          </span>
         </summary>
         <div>
-          <h3>数据来源</h3>
+          <h3>{translateText("数据来源")}</h3>
           <ul>
             {data.sources.map((source) => (
-              <li key={source}>{source}</li>
+              <li key={source}>{translateText(source)}</li>
             ))}
           </ul>
-          <h3>模拟口径</h3>
+          <h3>{translateText("模拟口径")}</h3>
           <ul>
             {data.assumptions.map((assumption) => (
-              <li key={assumption}>{assumption}</li>
+              <li key={assumption}>{translateText(assumption)}</li>
             ))}
           </ul>
         </div>

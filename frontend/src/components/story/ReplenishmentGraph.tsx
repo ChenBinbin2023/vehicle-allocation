@@ -1,4 +1,6 @@
 "use client";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
+
 import { useEffect, useId, useRef, useState, type PointerEvent } from "react";
 import type { CommercialResult } from "@/lib/story/vessel-commercial";
 import { Maximize2, Minus, Plus, RotateCcw } from "lucide-react";
@@ -75,6 +77,8 @@ export default function ReplenishmentGraph({
   commercial: CommercialResult;
   model: string;
 }) {
+  const { t: translateText } = useI18n();
+
   const [positions, setPositions] = useState(initialPositions);
   const [view, setView] = useState({ x: 0, y: 0, scale: 1 });
   const [selected, setSelected] = useState("allocation");
@@ -379,27 +383,34 @@ export default function ReplenishmentGraph({
       <header className="vr-panel-heading">
         <div>
           <small>CALCULATION GRAPH</small>
-          <h3>分车、物流与利润计算图</h3>
+          <h3>{translateText("分车、物流与利润计算图")}</h3>
         </div>
         <span>
-          {store.shortName} · {model} · 拖动节点
+          {translateText(store.shortName)} · {translateText(model)}
+          {translateText(" · 拖动节点")}
         </span>
       </header>
       <div className="vr-graph-tools">
-        <button aria-label="放大计算图" onClick={() => zoom(1.25)}>
+        <button
+          aria-label={translateText("放大计算图")}
+          onClick={() => zoom(1.25)}
+        >
           <Plus size={14} />
         </button>
-        <button aria-label="缩小计算图" onClick={() => zoom(0.8)}>
+        <button
+          aria-label={translateText("缩小计算图")}
+          onClick={() => zoom(0.8)}
+        >
           <Minus size={14} />
         </button>
         <button
-          aria-label="适应画布"
+          aria-label={translateText("适应画布")}
           onClick={() => setView({ x: 0, y: 0, scale: 1 })}
         >
           <Maximize2 size={14} />
         </button>
         <button
-          aria-label="重置节点位置"
+          aria-label={translateText("重置节点位置")}
           onClick={() => {
             setPositions(initialPositions);
             setView({ x: 0, y: 0, scale: 1 });
@@ -407,13 +418,15 @@ export default function ReplenishmentGraph({
         >
           <RotateCcw size={14} />
         </button>
-        <span>黄色参数 · 蓝色价格 / 成本 · 点击查看公式</span>
+        <span>
+          {translateText("黄色参数 · 蓝色价格 / 成本 · 点击查看公式")}
+        </span>
       </div>
       <svg
         ref={svg}
         className="vr-graph-canvas"
         viewBox="0 0 2070 1354"
-        aria-label="门店补库存计算依赖图"
+        aria-label={translateText("门店补库存计算依赖图")}
         data-testid="replenishment-graph"
         onPointerDown={start}
         onPointerMove={move}
@@ -470,7 +483,7 @@ export default function ReplenishmentGraph({
               transform={`translate(${positions[n.id].x} ${positions[n.id].y})`}
               role="button"
               tabIndex={0}
-              aria-label={n.label.join("")}
+              aria-label={translateText(n.label.join(""))}
               aria-pressed={selected === n.id}
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
@@ -510,7 +523,7 @@ export default function ReplenishmentGraph({
                     x="0"
                     y={n.label.length === 1 ? -7 : -20 + i * 23}
                   >
-                    {line}
+                    {translateText(line)}
                   </tspan>
                 ))}
               </text>
@@ -521,7 +534,7 @@ export default function ReplenishmentGraph({
                 fontSize="13"
                 pointerEvents="none"
               >
-                {n.value}
+                {translateText(n.value)}
               </text>
             </g>
           ))}
@@ -529,9 +542,10 @@ export default function ReplenishmentGraph({
       </svg>
       <aside className="vr-graph-inspector" aria-live="polite">
         <strong>
-          {chosen.label.join("")} <span>{chosen.value}</span>
+          {translateText(chosen.label.join(""))}{" "}
+          <span>{translateText(chosen.value)}</span>
         </strong>
-        <p>{chosen.formula}</p>
+        <p>{translateText(chosen.formula)}</p>
       </aside>
     </section>
   );

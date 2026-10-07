@@ -1,4 +1,6 @@
 "use client";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
+
 import { useId, useState } from "react";
 import { AlertCircle, ArrowRight, FileText, Truck } from "lucide-react";
 import {
@@ -18,6 +20,8 @@ export default function DispatchFulfillmentPanel({
   disabled: boolean;
   onGenerate: () => void;
 }) {
+  const { t: translateText } = useI18n();
+
   const [tab, setTab] = useState<"dispatch" | "purchase">("dispatch");
   const id = useId();
   const result = data.fulfillment;
@@ -35,10 +39,12 @@ export default function DispatchFulfillmentPanel({
         <VesselSectionHeading
           number="04"
           english="DISPATCH & PURCHASE"
-          title="缺货调度与采购订单"
+          title={translateText("缺货调度与采购订单")}
           note="根据逐车已选方案生成 · 仅包含区域缺货车辆。"
         />
-        <span className="dd-document-status">待确认草案</span>
+        <span className="dd-document-status">
+          {translateText("待确认草案")}
+        </span>
       </div>
       {!current && (
         <div
@@ -47,38 +53,48 @@ export default function DispatchFulfillmentPanel({
           role="status"
         >
           <AlertCircle size={16} />
-          <span>方案选择已调整，以下保留上次生成结果。</span>
+          <span>{translateText("方案选择已调整，以下保留上次生成结果。")}</span>
           <button type="button" disabled={disabled} onClick={onGenerate}>
-            按新选择重新生成
+            {translateText("按新选择重新生成")}
           </button>
         </div>
       )}
       <div className="dd-document-summary">
         <span>
-          配送建议{" "}
+          {translateText("配送建议")}
+          {translateText(" ")}
           <strong>
             {result.instructions.length}
-            <small> 台</small>
+            <small>{translateText(" 台")}</small>
           </strong>
         </span>
         <span>
-          跨区调拨{" "}
+          {translateText("跨区调拨")}
+          {translateText(" ")}
           <strong>
             {result.instructions.length - local}
-            <small> 台</small>
+            <small>{translateText(" 台")}</small>
           </strong>
         </span>
         <span>
-          授权店采购{" "}
+          {translateText("授权店采购")}
+          {translateText(" ")}
           <strong>
             {local}
-            <small> 台 / {result.purchaseOrders.length} 张单</small>
+            <small>
+              {translateText(" 台 / ")}
+              {result.purchaseOrders.length}
+              {translateText(" 张单")}
+            </small>
           </strong>
         </span>
         <span>
-          采购金额{" "}
+          {translateText("采购金额")}
+          {translateText(" ")}
           <strong>
-            {fmt(result.purchaseOrders.reduce((n, po) => n + po.purchase, 0))}
+            {translateText(
+              fmt(result.purchaseOrders.reduce((n, po) => n + po.purchase, 0)),
+            )}
             <small> SAR</small>
           </strong>
         </span>
@@ -86,7 +102,7 @@ export default function DispatchFulfillmentPanel({
       <div
         className="dd-document-tabs"
         role="tablist"
-        aria-label="缺货调度与采购单据"
+        aria-label={translateText("缺货调度与采购单据")}
       >
         {(
           [
@@ -127,7 +143,7 @@ export default function DispatchFulfillmentPanel({
             }}
           >
             <Icon size={14} />
-            {label}
+            {translateText(label)}
             <small>{count}</small>
           </button>
         ))}
@@ -142,18 +158,20 @@ export default function DispatchFulfillmentPanel({
         {tab === "dispatch" ? (
           <>
             <p className="dd-document-caption">
-              逐车保留选定的来源与配送方式，授权店采购车辆先采购提车，再配送至需求门店。
+              {translateText(
+                "逐车保留选定的来源与配送方式，授权店采购车辆先采购提车，再配送至需求门店。",
+              )}
             </p>
             <div className="dd-table-wrap">
               <table>
                 <thead>
                   <tr>
-                    <th>订单 · 车辆</th>
-                    <th>车源 → 需求门店</th>
-                    <th>方案与配送方式</th>
-                    <th>物流费用</th>
-                    <th>预计到店</th>
-                    <th>贡献利润 / 状态</th>
+                    <th>{translateText("订单 · 车辆")}</th>
+                    <th>{translateText("车源 → 需求门店")}</th>
+                    <th>{translateText("方案与配送方式")}</th>
+                    <th>{translateText("物流费用")}</th>
+                    <th>{translateText("预计到店")}</th>
+                    <th>{translateText("贡献利润 / 状态")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -174,33 +192,49 @@ export default function DispatchFulfillmentPanel({
                       >
                         <td>
                           <b>
-                            {order.id} · 第{" "}
-                            {instruction.vehicleId.split("-CAR-")[1]} 辆
+                            {translateText(order.id)}
+                            {translateText(" · 第")}
+                            {translateText(" ")}
+                            {translateText(
+                              instruction.vehicleId.split("-CAR-")[1],
+                            )}
+                            {translateText(" 辆")}
                           </b>
                           <small>
-                            {order.model} · {order.trim} / {order.color}
+                            {translateText(order.model)} ·{" "}
+                            {translateText(order.trim)} /{" "}
+                            {translateText(order.color)}
                           </small>
-                          <small>{instruction.vin}</small>
+                          <small>{translateText(instruction.vin)}</small>
                         </td>
                         <td>
-                          <b>{source.name}</b>
-                          <small>→ {store.name}</small>
+                          <b>{translateText(source.name)}</b>
+                          <small>→ {translateText(store.name)}</small>
                         </td>
                         <td>
                           <b>
-                            {instruction.kind === "cross-region"
-                              ? "跨区域调拨"
-                              : "本区域授权店采购"}
+                            {translateText(
+                              instruction.kind === "cross-region"
+                                ? "跨区域调拨"
+                                : "本区域授权店采购",
+                            )}
                           </b>
-                          <small>{instruction.mode}</small>
-                          {instruction.purchaseOrderId && (
-                            <small>已关联采购单</small>
+                          <small>{translateText(instruction.mode)}</small>
+                          {translateText(
+                            instruction.purchaseOrderId && (
+                              <small>{translateText("已关联采购单")}</small>
+                            ),
                           )}
                         </td>
-                        <td>{fmt(instruction.logistics)} SAR</td>
+                        <td>{translateText(fmt(instruction.logistics))} SAR</td>
                         <td>
-                          {dispatchArrival(data, instruction.arrivalHours)}
-                          <small>{instruction.arrivalHours} 小时内</small>
+                          {translateText(
+                            dispatchArrival(data, instruction.arrivalHours),
+                          )}
+                          <small>
+                            {instruction.arrivalHours}
+                            {translateText(" 小时内")}
+                          </small>
                         </td>
                         <td>
                           <b
@@ -208,16 +242,18 @@ export default function DispatchFulfillmentPanel({
                               instruction.profit < 0 ? "dd-negative" : ""
                             }
                           >
-                            {fmt(instruction.profit)} SAR
+                            {translateText(fmt(instruction.profit))} SAR
                           </b>
                           <small
                             className={
                               instruction.requiresReview ? "dd-review" : ""
                             }
                           >
-                            {instruction.requiresReview
-                              ? "待复核 · 亏损或超期"
-                              : "待车源确认"}
+                            {translateText(
+                              instruction.requiresReview
+                                ? "待复核 · 亏损或超期"
+                                : "待车源确认",
+                            )}
                           </small>
                         </td>
                       </tr>
@@ -242,36 +278,49 @@ export default function DispatchFulfillmentPanel({
                 >
                   <header>
                     <div>
-                      <small>采购单 {String(index + 1).padStart(2, "0")}</small>
+                      <small>
+                        {translateText("采购单 ")}
+                        {translateText(String(index + 1).padStart(2, "0"))}
+                      </small>
                       <strong>
-                        {supplier.name}
+                        {translateText(supplier.name)}
                         <ArrowRight size={13} />
-                        {store.name}
+                        {translateText(store.name)}
                       </strong>
                     </div>
                     <span className={po.requiresReview ? "dd-review" : ""}>
-                      {po.requiresReview ? "待复核草案" : "待确认草案"}
+                      {translateText(
+                        po.requiresReview ? "待复核草案" : "待确认草案",
+                      )}
                     </span>
                   </header>
                   <div className="dd-purchase-metrics">
                     <span>
-                      数量 <b>{po.quantity} 台</b>
+                      {translateText("数量 ")}
+                      <b>
+                        {po.quantity}
+                        {translateText(" 台")}
+                      </b>
                     </span>
                     <span>
-                      采购金额 <b>{fmt(po.purchase)} SAR</b>
+                      {translateText("采购金额 ")}
+                      <b>{translateText(fmt(po.purchase))} SAR</b>
                     </span>
                     <span>
-                      最晚到店 <b>{dispatchArrival(data, po.arrivalHours)}</b>
+                      {translateText("最晚到店 ")}
+                      <b>
+                        {translateText(dispatchArrival(data, po.arrivalHours))}
+                      </b>
                     </span>
                   </div>
                   <div className="dd-table-wrap">
                     <table>
                       <thead>
                         <tr>
-                          <th>原订单 / 车辆</th>
-                          <th>车型 · 配置 / 颜色</th>
-                          <th>数量</th>
-                          <th>采购单价 SAR</th>
+                          <th>{translateText("原订单 / 车辆")}</th>
+                          <th>{translateText("车型 · 配置 / 颜色")}</th>
+                          <th>{translateText("数量")}</th>
+                          <th>{translateText("采购单价 SAR")}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -282,19 +331,25 @@ export default function DispatchFulfillmentPanel({
                           >
                             <td>
                               <b>
-                                {line.orderId} · 第{" "}
-                                {line.vehicleId.split("-CAR-")[1]} 辆
+                                {translateText(line.orderId)}
+                                {translateText(" · 第")}
+                                {translateText(" ")}
+                                {translateText(
+                                  line.vehicleId.split("-CAR-")[1],
+                                )}
+                                {translateText(" 辆")}
                               </b>
-                              <small>{line.vin}</small>
+                              <small>{translateText(line.vin)}</small>
                             </td>
                             <td>
-                              {line.model}
+                              {translateText(line.model)}
                               <small>
-                                {line.trim} / {line.color}
+                                {translateText(line.trim)} /{" "}
+                                {translateText(line.color)}
                               </small>
                             </td>
-                            <td>1 台</td>
-                            <td>{fmt(line.purchase)}</td>
+                            <td>{translateText("1 台")}</td>
+                            <td>{translateText(fmt(line.purchase))}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -302,10 +357,14 @@ export default function DispatchFulfillmentPanel({
                   </div>
                   <footer>
                     <span>
-                      物流 {fmt(po.logistics)} · 其他归属费用 {fmt(po.other)} ·
-                      总成本 {fmt(po.totalCost)} SAR
+                      {translateText("物流 ")}
+                      {translateText(fmt(po.logistics))}
+                      {translateText(" · 其他归属费用 ")}
+                      {translateText(fmt(po.other))}
+                      {translateText(" · 总成本 ")}
+                      {translateText(fmt(po.totalCost))} SAR
                     </span>
-                    <small>{po.id}</small>
+                    <small>{translateText(po.id)}</small>
                   </footer>
                 </article>
               );
@@ -313,12 +372,16 @@ export default function DispatchFulfillmentPanel({
           </div>
         ) : (
           <div className="dd-empty">
-            已选方案均为跨区调拨，本次无需生成授权店采购订单。
+            {translateText(
+              "已选方案均为跨区调拨，本次无需生成授权店采购订单。",
+            )}
           </div>
         )}
       </div>
       <p className="dd-document-note">
-        单据根据本次已选方案保存。采购金额为未税车辆采购价，物流与其他归属费用分别列示；候选车辆、报价和交付安排待确认。
+        {translateText(
+          "单据根据本次已选方案保存。采购金额为未税车辆采购价，物流与其他归属费用分别列示；候选车辆、报价和交付安排待确认。",
+        )}
       </p>
     </section>
   );

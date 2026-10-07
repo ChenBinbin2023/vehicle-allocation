@@ -1,4 +1,5 @@
 "use client";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
 
 import { useEffect, useRef, useState } from "react";
 import {
@@ -35,6 +36,8 @@ function withoutGuidance(text: string) {
 }
 
 function CuiText({ text, active = false }: { text: string; active?: boolean }) {
+  const { t: translateText, locale: interfaceLocale } = useI18n();
+
   text = withoutGuidance(text);
   const parts = text.split(/\n\s*\n/).filter(Boolean);
   return (
@@ -45,11 +48,13 @@ function CuiText({ text, active = false }: { text: string; active?: boolean }) {
         return bullet ? (
           <ul key={index}>
             {lines.map((line, lineIndex) => (
-              <li key={lineIndex}>{line.replace(/^(?:[-•]\s|\d+\.\s)/, "")}</li>
+              <li key={lineIndex}>
+                {translateText(line.replace(/^(?:[-•]\s|\d+\.\s)/, ""))}
+              </li>
             ))}
           </ul>
         ) : (
-          <p key={index}>{part}</p>
+          <p key={index}>{translateText(part)}</p>
         );
       })}
       {active && <i className="cui-stream-cursor" />}
@@ -66,6 +71,8 @@ function CuiStep({
   run: StoryRun;
   active: boolean;
 }) {
+  const { t: translateText, locale: interfaceLocale } = useI18n();
+
   const [expanded, setExpanded] = useState<boolean | null>(null);
   const thinking = event.role === "analysis" || event.role === "thinking";
   const note = event.role === "agent";
@@ -113,15 +120,19 @@ function CuiStep({
             aria-controls={`${event.id}-detail`}
             onClick={() => setExpanded(!open)}
           >
-            <span className="cui-step-kind">{label}</span>
-            <strong title={event.title}>{event.title}</strong>
+            <span className="cui-step-kind">{translateText(label)}</span>
+            <strong title={translateText(event.title)}>
+              {translateText(event.title)}
+            </strong>
             {!open && (
               <span className="cui-step-status">
-                {active
-                  ? run.status === "paused"
-                    ? "暂停"
-                    : "进行中"
-                  : "完成"}
+                {translateText(
+                  active
+                    ? run.status === "paused"
+                      ? "暂停"
+                      : "进行中"
+                    : "完成",
+                )}
               </span>
             )}
             {open ? <ChevronDown size={15} /> : <ChevronRight size={15} />}
@@ -129,20 +140,22 @@ function CuiStep({
           <div
             className="cui-step-detail"
             role="region"
-            aria-label={`${event.title}详情`}
+            aria-label={translateText(`${translateText(event.title)}详情`)}
             tabIndex={0}
             id={`${event.id}-detail`}
             hidden={!open}
           >
             <CuiText text={event.detail} active={active} />
-            {event.operation &&
-              !["思考", "规划", "阶段总结"].includes(event.operation) && (
-                <code>{event.operation}</code>
-              )}
+            {translateText(
+              event.operation &&
+                !["思考", "规划", "阶段总结"].includes(event.operation) && (
+                  <code>{translateText(event.operation)}</code>
+                ),
+            )}
             {!!event.sources?.length && (
               <footer>
                 {event.sources.map((source) => (
-                  <small key={source}>{source}</small>
+                  <small key={source}>{translateText(source)}</small>
                 ))}
               </footer>
             )}
@@ -164,6 +177,8 @@ function CuiAnswer({
   processOpen: boolean;
   onToggleProcess: () => void;
 }) {
+  const { t: translateText, locale: interfaceLocale } = useI18n();
+
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState(false);
   const [feedback, setFeedback] = useState<"up" | "down" | null>(null);
@@ -198,7 +213,7 @@ function CuiAnswer({
   const validTime =
     finishedAt && !Number.isNaN(finishedAt.getTime()) ? finishedAt : undefined;
   const time =
-    validTime?.toLocaleTimeString("zh-CN", {
+    validTime?.toLocaleTimeString(interfaceLocale, {
       hour: "2-digit",
       minute: "2-digit",
       hour12: false,
@@ -208,7 +223,7 @@ function CuiAnswer({
   );
   const copy = async () => {
     try {
-      await navigator.clipboard.writeText(answer);
+      await navigator.clipboard.writeText(translateText(answer));
       setCopied(true);
       setCopyError(false);
       if (copyTimer.current !== null) window.clearTimeout(copyTimer.current);
@@ -228,25 +243,29 @@ function CuiAnswer({
         aria-expanded={processOpen}
         onClick={onToggleProcess}
       >
-        用时 {duration}
+        {translateText("用时 ")}
+        {translateText(duration)}
         <ChevronRight size={15} />
       </button>
       <div className="cui-answer-content">
         <CuiText text={answer} />
       </div>
-      <footer className="cui-response-actions" aria-label="回复操作">
+      <footer
+        className="cui-response-actions"
+        aria-label={translateText("回复操作")}
+      >
         <button
           type="button"
-          aria-label={copied ? "已复制" : "复制回复"}
-          title={copied ? "已复制" : "复制回复"}
+          aria-label={translateText(copied ? "已复制" : "复制回复")}
+          title={translateText(copied ? "已复制" : "复制回复")}
           onClick={copy}
         >
           {copied ? <Check size={15} /> : <Copy size={15} />}
         </button>
         <button
           type="button"
-          aria-label="回复优秀"
-          title="回复优秀"
+          aria-label={translateText("回复优秀")}
+          title={translateText("回复优秀")}
           aria-pressed={feedback === "up"}
           onClick={() => setFeedback(feedback === "up" ? null : "up")}
         >
@@ -254,8 +273,8 @@ function CuiAnswer({
         </button>
         <button
           type="button"
-          aria-label="回复不佳"
-          title="回复不佳"
+          aria-label={translateText("回复不佳")}
+          title={translateText("回复不佳")}
           aria-pressed={feedback === "down"}
           onClick={() => setFeedback(feedback === "down" ? null : "down")}
         >
@@ -263,36 +282,38 @@ function CuiAnswer({
         </button>
         <button
           type="button"
-          aria-label="展开回复"
-          title="展开回复"
+          aria-label={translateText("展开回复")}
+          title={translateText("展开回复")}
           onClick={() => setExpanded(true)}
         >
           <Maximize2 size={15} />
         </button>
         <time
           dateTime={validTime?.toISOString()}
-          title={validTime?.toLocaleString("zh-CN")}
+          title={translateText(validTime?.toLocaleString(interfaceLocale))}
         >
-          {time}
+          {translateText(time)}
         </time>
         {copyError && (
-          <span role="status">复制失败，请展开回复后选择文字复制。</span>
+          <span role="status">
+            {translateText("复制失败，请展开回复后选择文字复制。")}
+          </span>
         )}
       </footer>
       <dialog
         ref={dialog}
         className="cui-answer-dialog"
-        aria-label="完整回复"
+        aria-label={translateText("完整回复")}
         onClose={() => setExpanded(false)}
         onClick={(event) => {
           if (event.target === event.currentTarget) setExpanded(false);
         }}
       >
         <header>
-          <strong>完整回复</strong>
+          <strong>{translateText("完整回复")}</strong>
           <button
             type="button"
-            aria-label="关闭完整回复"
+            aria-label={translateText("关闭完整回复")}
             onClick={() => setExpanded(false)}
           >
             <X size={18} />
@@ -315,6 +336,8 @@ export default function StoryRunResponse({
   message: StoryMessage;
   onToggleRun: (runId: string) => void;
 }) {
+  const { t: translateText, locale: interfaceLocale } = useI18n();
+
   const [processOpen, setProcessOpen] = useState(true);
   const events = visibleStoryEvents(run);
   let cursor = 0;
@@ -323,7 +346,9 @@ export default function StoryRunResponse({
       <div
         className="cui-event-stream"
         role="log"
-        aria-label={`${resolveStorySkill(run.command)?.title}过程`}
+        aria-label={translateText(
+          `${resolveStorySkill(run.command)?.title}过程`,
+        )}
         hidden={!processOpen}
       >
         {events.map((event) => {
@@ -344,7 +369,10 @@ export default function StoryRunResponse({
             <i style={{ width: `${(run.elapsed / run.duration) * 100}%` }} />
           </div>
           <span>
-            {run.status === "paused" ? "已暂停" : "正在生成分析与画布"} ·{" "}
+            {translateText(
+              run.status === "paused" ? "已暂停" : "正在生成分析与画布",
+            )}{" "}
+            ·{translateText(" ")}
             {Math.round((run.elapsed / run.duration) * 100)}%
           </span>
           <button type="button" onClick={() => onToggleRun(run.id)}>
@@ -353,7 +381,7 @@ export default function StoryRunResponse({
             ) : (
               <Play size={12} />
             )}
-            {run.status === "running" ? "暂停" : "继续"}
+            {translateText(run.status === "running" ? "暂停" : "继续")}
           </button>
         </div>
       )}

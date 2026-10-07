@@ -1,4 +1,5 @@
 "use client";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
 
 import { useEffect, useRef, useState } from "react";
 
@@ -25,6 +26,8 @@ export default function QueryLineChart({
   label: string;
   testId: string;
 }) {
+  const { t: translateText } = useI18n();
+
   const [selected, setSelected] = useState<number | null>(null);
   const chartRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(760);
@@ -80,18 +83,22 @@ export default function QueryLineChart({
                 style={{ backgroundColor: item.color }}
                 className={item.dashed ? "dashed" : ""}
               />
-              {item.legendLabel ?? item.label}
+              {translateText(item.legendLabel ?? item.label)}
             </span>
           ))}
         {series.some((item) => item.dashed && item.hideLegend) && (
           <span>
             <i className="dashed" style={{ backgroundColor: "#839087" }} />
-            模拟预测
+            {translateText("模拟预测")}
           </span>
         )}
-        <small>{unit}</small>
+        <small>{translateText(unit)}</small>
       </div>
-      <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={label}>
+      <svg
+        viewBox={`0 0 ${width} ${height}`}
+        role="img"
+        aria-label={translateText(label)}
+      >
         {[0, 1, 2, 3, 4].map((tick) => {
           const value = (ceiling * tick) / 4;
           return (
@@ -104,7 +111,7 @@ export default function QueryLineChart({
                 className="query-chart-grid"
               />
               <text x={left - 10} y={y(value) + 4} textAnchor="end">
-                {compact(value)}
+                {translateText(compact(value))}
               </text>
             </g>
           );
@@ -115,7 +122,9 @@ export default function QueryLineChart({
               (i === 0 || months.length - 1 - i >= labelStride)) ||
               i === months.length - 1) && (
               <text x={x(i)} y={height - 13} textAnchor="middle">
-                {width < 400 ? `${month.slice(5)}月` : month.slice(2)}
+                {translateText(
+                  width < 400 ? `${month.slice(5)}月` : month.slice(2),
+                )}
               </text>
             )}
             <rect
@@ -169,7 +178,7 @@ export default function QueryLineChart({
                     strokeWidth={2}
                     tabIndex={0}
                     role="button"
-                    aria-label={`${months[i]} ${item.label} ${value.toLocaleString("en-US")} ${unit}`}
+                    aria-label={`${months[i]} ${translateText(item.label)} ${value.toLocaleString("en-US")} ${translateText(unit)}`}
                     onFocus={() => setSelected(i)}
                     onMouseEnter={() => setSelected(i)}
                     onClick={() => setSelected(i)}
@@ -181,8 +190,10 @@ export default function QueryLineChart({
                     }}
                   >
                     <title>
-                      {months[i]} · {item.label} ·{" "}
-                      {value.toLocaleString("en-US")} {unit}
+                      {translateText(months[i])} · {translateText(item.label)} ·
+                      {translateText(" ")}
+                      {translateText(value.toLocaleString("en-US"))}{" "}
+                      {translateText(unit)}
                     </title>
                   </circle>
                 ),
@@ -192,7 +203,7 @@ export default function QueryLineChart({
         })}
       </svg>
       <div className="query-chart-readout" aria-live="polite">
-        <strong>{months[index] ?? "无数据"}</strong>
+        <strong>{translateText(months[index] ?? "无数据")}</strong>
         {series
           .filter(
             (item) =>
@@ -203,9 +214,11 @@ export default function QueryLineChart({
           .map((item) => (
             <span key={item.label}>
               <i style={{ backgroundColor: item.color }} />
-              {item.label}
-              <b>{item.values[index]?.toLocaleString("en-US")}</b>
-              <small>{unit}</small>
+              {translateText(item.label)}
+              <b>
+                {translateText(item.values[index]?.toLocaleString("en-US"))}
+              </b>
+              <small>{translateText(unit)}</small>
             </span>
           ))}
       </div>

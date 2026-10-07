@@ -1,4 +1,6 @@
 "use client";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
+
 import { useState, useEffect } from "react";
 import type { StoreAllocation } from "@/lib/story/store-planning";
 const fmt = (n: number) =>
@@ -19,6 +21,8 @@ export default function AllocationGraph({
   result: StoreAllocation;
   focusNode?: string;
 }) {
+  const { t: translateText } = useI18n();
+
   const [selected, setSelected] = useState("B10");
   const [zoom, setZoom] = useState(0);
   useEffect(() => {
@@ -261,25 +265,33 @@ export default function AllocationGraph({
   return (
     <section className="planning-panel ontology-panel">
       <header>
-        <h2>分车图谱</h2>
-        <p>参照本体节点 B1–B10。点击椭圆查看数据与规则，相关依赖直线会高亮。</p>
+        <h2>{translateText("分车图谱")}</h2>
+        <p>
+          {translateText(
+            "参照本体节点 B1–B10。点击椭圆查看数据与规则，相关依赖直线会高亮。",
+          )}
+        </p>
       </header>
       <div className="ontology-toolbar">
         <span>
           <i style={{ background: palette.input }} />
-          源数据 <i style={{ background: palette.rule }} />
-          配置 <i style={{ background: palette.compute }} />
-          计算 <i style={{ background: palette.output }} />
-          结果
+          {translateText("源数据 ")}
+          <i style={{ background: palette.rule }} />
+          {translateText("配置 ")}
+          <i style={{ background: palette.compute }} />
+          {translateText("计算 ")}
+          <i style={{ background: palette.output }} />
+          {translateText("结果")}
         </span>
         <label>
-          缩放{" "}
+          {translateText("缩放")}
+          {translateText(" ")}
           <select
-            aria-label="图谱缩放"
+            aria-label={translateText("图谱缩放")}
             value={zoom}
             onChange={(e) => setZoom(Number(e.target.value))}
           >
-            <option value={0}>适应画布</option>
+            <option value={0}>{translateText("适应画布")}</option>
             <option value={0.8}>80%</option>
             <option value={1}>100%</option>
             <option value={1.25}>125%</option>
@@ -290,7 +302,7 @@ export default function AllocationGraph({
         <svg
           data-testid="allocation-graph"
           role="group"
-          aria-label="分车本体逻辑图谱"
+          aria-label={translateText("分车本体逻辑图谱")}
           viewBox="0 0 1130 715"
           style={{ width: zoom ? 1130 * zoom : "100%" }}
         >
@@ -345,7 +357,7 @@ export default function AllocationGraph({
               key={n.id}
               role="button"
               tabIndex={0}
-              aria-label={`${n.id} ${n.label}`}
+              aria-label={translateText(`${n.id} ${n.label}`)}
               aria-pressed={n.id === selected}
               onClick={() => setSelected(n.id)}
               onKeyDown={(e) => {
@@ -379,7 +391,7 @@ export default function AllocationGraph({
                 fontSize="14"
                 fontWeight="600"
               >
-                {n.label}
+                {translateText(n.label)}
               </text>
               <text
                 x={n.x}
@@ -388,7 +400,7 @@ export default function AllocationGraph({
                 fill="#68867f"
                 fontSize="12"
               >
-                {n.value}
+                {translateText(n.value)}
               </text>
               <text
                 x={n.x + 76}
@@ -397,7 +409,7 @@ export default function AllocationGraph({
                 textAnchor="middle"
                 fill="#839b91"
               >
-                {n.id}
+                {translateText(n.id)}
               </text>
             </g>
           ))}
@@ -405,30 +417,37 @@ export default function AllocationGraph({
       </div>
       <aside className="ontology-inspector" data-testid="graph-inspector">
         <small>
-          {chosen.id} ·{" "}
-          {chosen.kind === "input"
-            ? "源数据"
-            : chosen.kind === "rule"
-              ? "规则"
-              : chosen.kind === "output"
-                ? "结果"
-                : "计算节点"}
+          {translateText(chosen.id)} ·{translateText(" ")}
+          {translateText(
+            chosen.kind === "input"
+              ? "源数据"
+              : chosen.kind === "rule"
+                ? "规则"
+                : chosen.kind === "output"
+                  ? "结果"
+                  : "计算节点",
+          )}
         </small>
         <h3>
-          {chosen.label} <span>{chosen.value}</span>
+          {translateText(chosen.label)}{" "}
+          <span>{translateText(chosen.value)}</span>
         </h3>
-        <p>{chosen.detail}</p>
+        <p>{translateText(chosen.detail)}</p>
         <p className="ontology-dependencies">
-          输入：
-          {edges
-            .filter((e) => e[1] === chosen.id)
-            .map((e) => nodes.find((n) => n.id === e[0])!.label)
-            .join("、") || "源数据 / 情景参数"}
-          　→　输出：
-          {edges
-            .filter((e) => e[0] === chosen.id)
-            .map((e) => nodes.find((n) => n.id === e[1])!.label)
-            .join("、") || "保存分车快照"}
+          {translateText("输入：")}
+          {translateText(
+            edges
+              .filter((e) => e[1] === chosen.id)
+              .map((e) => nodes.find((n) => n.id === e[0])!.label)
+              .join("、") || "源数据 / 情景参数",
+          )}
+          {translateText("　→　输出：")}
+          {translateText(
+            edges
+              .filter((e) => e[0] === chosen.id)
+              .map((e) => nodes.find((n) => n.id === e[1])!.label)
+              .join("、") || "保存分车快照",
+          )}
         </p>
       </aside>
     </section>

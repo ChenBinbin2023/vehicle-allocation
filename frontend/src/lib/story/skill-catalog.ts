@@ -114,7 +114,8 @@ export function resolveStorySkill(input: string): StorySkill | undefined {
     return storySkills.find(
       (skill) =>
         skill.command ===
-        (/缺货/.test(input) && /选择|选定|已选|采购订单|采购单/.test(input)
+        (/缺货|shortage/i.test(input) &&
+        /选择|选定|已选|采购订单|采购单|selected|purchase orders?/i.test(input)
           ? "/shortage-fulfillment"
           : "/daily-dispatch"),
     );

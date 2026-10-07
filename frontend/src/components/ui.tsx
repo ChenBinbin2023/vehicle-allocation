@@ -1,3 +1,4 @@
+import { useI18n } from "@/lib/i18n/LocaleProvider";
 import { ArrowUpRight, Info } from "lucide-react";
 import type { ReactNode } from "react";
 export function Badge({
@@ -7,7 +8,9 @@ export function Badge({
   children: ReactNode;
   tone?: "neutral" | "green" | "amber" | "red";
 }) {
-  return <span className={`badge ${tone}`}>{children}</span>;
+  const { t: translateText } = useI18n();
+
+  return <span className={`badge ${tone}`}>{translateText(children)}</span>;
 }
 export function Card({
   title,
@@ -22,18 +25,26 @@ export function Card({
   children: ReactNode;
   className?: string;
 }) {
+  const { t: translateText } = useI18n();
+
   return (
     <section className={`card ${className}`}>
-      {title && (
-        <header className="card-head">
-          <div>
-            {eyebrow && <span className="eyebrow">{eyebrow}</span>}
-            <h3>{title}</h3>
-          </div>
-          {action}
-        </header>
+      {translateText(
+        title && (
+          <header className="card-head">
+            <div>
+              {translateText(
+                eyebrow && (
+                  <span className="eyebrow">{translateText(eyebrow)}</span>
+                ),
+              )}
+              <h3>{translateText(title)}</h3>
+            </div>
+            {translateText(action)}
+          </header>
+        ),
       )}
-      {children}
+      {translateText(children)}
     </section>
   );
 }
@@ -52,6 +63,8 @@ export function Metric({
   accent?: string;
   onClick?: () => void;
 }) {
+  const { t: translateText } = useI18n();
+
   return (
     <button
       className={`metric ${accent ?? ""}`}
@@ -59,14 +72,14 @@ export function Metric({
       disabled={!onClick}
     >
       <div className="metric-label">
-        {label}
+        {translateText(label)}
         {onClick && <ArrowUpRight size={14} />}
       </div>
       <div className="metric-value">
-        {value}
-        <small>{unit}</small>
+        {translateText(value)}
+        <small>{translateText(unit)}</small>
       </div>
-      <div className="metric-note">{note}</div>
+      <div className="metric-note">{translateText(note)}</div>
     </button>
   );
 }
@@ -77,10 +90,12 @@ export function Note({
   children: ReactNode;
   tone?: string;
 }) {
+  const { t: translateText } = useI18n();
+
   return (
     <div className={`note ${tone}`}>
       <Info size={14} />
-      <span>{children}</span>
+      <span>{translateText(children)}</span>
     </div>
   );
 }
@@ -91,6 +106,8 @@ export function Progress({
   value: number;
   tone?: string;
 }) {
+  const { t: translateText } = useI18n();
+
   return (
     <div className={`progress ${tone}`}>
       <i style={{ width: `${Math.max(0, Math.min(100, value))}%` }} />

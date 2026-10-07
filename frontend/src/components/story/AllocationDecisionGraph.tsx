@@ -1,4 +1,5 @@
 "use client";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
 
 import type { AllocationPlan, VpcId } from "@/lib/story/types";
 import RelationshipGraph, {
@@ -15,6 +16,8 @@ export default function AllocationDecisionGraph({
   safety: number;
   onSafetyChange: (value: number) => void;
 }) {
+  const { t: translateText } = useI18n();
+
   const reserved = plan.assignments.filter(
     (item) => item.pool === "reserved",
   ).length;
@@ -194,7 +197,7 @@ export default function AllocationDecisionGraph({
   ];
   return (
     <RelationshipGraph
-      title="1,800 台车，怎样形成两类承诺"
+      title={translateText("1,800 台车，怎样形成两类承诺")}
       subtitle="订单先锁定，库存再按覆盖与响应能力落点。数量来自当前情景计算。"
       nodes={nodes}
       edges={edges}
@@ -203,8 +206,8 @@ export default function AllocationDecisionGraph({
       controls={
         <div className="graph-scenario-control">
           <div>
-            <strong>达曼自由安全库存</strong>
-            <small>情景预览 · 尚未采用</small>
+            <strong>{translateText("达曼自由安全库存")}</strong>
+            <small>{translateText("情景预览 · 尚未采用")}</small>
           </div>
           <label>
             <input
@@ -212,17 +215,17 @@ export default function AllocationDecisionGraph({
               min="80"
               max="160"
               step="10"
-              aria-label="达曼安全库存"
+              aria-label={translateText("达曼安全库存")}
               data-testid="allocation-safety-slider"
               value={safety}
               onChange={(event) => onSafetyChange(Number(event.target.value))}
             />
             <b>
               {safety}
-              <small> 台</small>
+              <small>{translateText(" 台")}</small>
             </b>
           </label>
-          <span>620 台订单不变</span>
+          <span>{translateText("620 台订单不变")}</span>
         </div>
       }
       height={498}

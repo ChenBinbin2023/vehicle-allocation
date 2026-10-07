@@ -1,4 +1,6 @@
 "use client";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
+
 import { useState } from "react";
 import { Pause, Play, RotateCcw, SkipBack, SkipForward } from "lucide-react";
 import type { VesselReplenishment } from "@/lib/story/vessel-replenishment";
@@ -28,6 +30,8 @@ export default function ReplenishmentWaterChart({
   setSpeed: (s: number) => void;
   setSelected: (id: string) => void;
 }) {
+  const { t: translateText } = useI18n();
+
   const [count, setCount] = useState(8),
     [page, setPage] = useState(0);
   const step = Math.max(1, Math.ceil(result.summary.budget / 80));
@@ -83,25 +87,25 @@ export default function ReplenishmentWaterChart({
       <header className="vr-panel-heading">
         <div>
           <small>WATERFILL SIMULATION</small>
-          <h3>门店动态注水</h3>
+          <h3>{translateText("门店动态注水")}</h3>
         </div>
         <span className="vr-stage" data-testid="water-stage">
-          {stage}
+          {translateText(stage)}
         </span>
       </header>
       <div className="vr-water-toolbar">
-        <button aria-label="重新演示" onClick={() => seek(0)}>
+        <button aria-label={translateText("重新演示")} onClick={() => seek(0)}>
           <RotateCcw size={14} />
         </button>
         <button
-          aria-label="上一步注水"
+          aria-label={translateText("上一步注水")}
           onClick={() => seek(Math.max(0, progress - step))}
         >
           <SkipBack size={14} />
         </button>
         <button
           className="vr-play"
-          aria-label={playing ? "暂停注水" : "播放注水"}
+          aria-label={translateText(playing ? "暂停注水" : "播放注水")}
           disabled={!result.summary.budget}
           onClick={() => {
             if (progress >= result.summary.budget) setProgress(0);
@@ -109,16 +113,16 @@ export default function ReplenishmentWaterChart({
           }}
         >
           {playing ? <Pause size={14} /> : <Play size={14} />}
-          {playing ? "暂停" : "播放"}
+          {translateText(playing ? "暂停" : "播放")}
         </button>
         <button
-          aria-label="下一步注水"
+          aria-label={translateText("下一步注水")}
           onClick={() => seek(Math.min(result.summary.budget, progress + step))}
         >
           <SkipForward size={14} />
         </button>
         <select
-          aria-label="注水播放速度"
+          aria-label={translateText("注水播放速度")}
           value={speed}
           onChange={(e) => setSpeed(Number(e.target.value))}
         >
@@ -129,28 +133,33 @@ export default function ReplenishmentWaterChart({
           ))}
         </select>
         <button onClick={() => seek(result.summary.budget)}>
-          查看最终水位
+          {translateText("查看最终水位")}
         </button>
       </div>
       <div className="vr-water-progress">
         <div>
           <span>
-            当前注入{" "}
+            {translateText("当前注入")}
+            {translateText(" ")}
             <b data-testid="water-progress">
-              {fmt(progress)} / {fmt(result.summary.budget)} 台
+              {translateText(fmt(progress))} /{" "}
+              {translateText(fmt(result.summary.budget))}
+              {translateText(" 台")}
             </b>
           </span>
           <span>
-            已分{" "}
+            {translateText("已分")}
+            {translateText(" ")}
             <b data-testid="water-assigned">
-              {fmt(frame.summary.replenishment)}
-            </b>{" "}
-            台
+              {translateText(fmt(frame.summary.replenishment))}
+            </b>
+            {translateText(" ")}
+            {translateText("台")}
           </span>
         </div>
         <input
           type="range"
-          aria-label="注水进度"
+          aria-label={translateText("注水进度")}
           min="0"
           max={result.summary.budget}
           step="1"
@@ -158,31 +167,38 @@ export default function ReplenishmentWaterChart({
           onChange={(e) => seek(Number(e.target.value))}
         />
         <small>
-          未注入 {fmt(result.summary.budget - progress)} 台 · 已注入未分配{" "}
-          {fmt(frame.summary.unallocatedInjection)} 台 · 预留{" "}
-          {fmt(result.summary.reserved)} 台
+          {translateText("未注入 ")}
+          {translateText(fmt(result.summary.budget - progress))}
+          {translateText(" 台 · 已注入未分配")}
+          {translateText(" ")}
+          {translateText(fmt(frame.summary.unallocatedInjection))}
+          {translateText(" 台 · 预留")}
+          {translateText(" ")}
+          {translateText(fmt(result.summary.reserved))}
+          {translateText(" 台")}
         </small>
       </div>
       <div className="vr-water-legend">
         <span>
           <i className="vr-existing" />
-          分车前库存
+          {translateText("分车前库存")}
         </span>
         <span>
           <i className="vr-added" />
-          本轮补库
+          {translateText("本轮补库")}
         </span>
         <span>
           <i className="vr-full" />
-          已达目标
+          {translateText("已达目标")}
         </span>
-        <span>┄ 目标 100%</span>
+        <span>{translateText("┄ 目标 100%")}</span>
       </div>
       <div className="vr-chart-options">
         <label>
-          每组展示{" "}
+          {translateText("每组展示")}
+          {translateText(" ")}
           <select
-            aria-label="每组展示门店数"
+            aria-label={translateText("每组展示门店数")}
             value={count}
             onChange={(e) => {
               setCount(Number(e.target.value));
@@ -191,15 +207,16 @@ export default function ReplenishmentWaterChart({
           >
             {[5, 8, 10].map((n) => (
               <option key={n} value={n}>
-                {n} 家
+                {n}
+                {translateText(" 家")}
               </option>
             ))}
           </select>
         </label>
-        <span>全部 79 家参与计算</span>
+        <span>{translateText("全部 79 家参与计算")}</span>
         <div>
           <button
-            aria-label="上一组门店"
+            aria-label={translateText("上一组门店")}
             disabled={page === 0}
             onClick={() => setPage(page - 1)}
           >
@@ -209,7 +226,7 @@ export default function ReplenishmentWaterChart({
             {page + 1} / {pages}
           </span>
           <button
-            aria-label="下一组门店"
+            aria-label={translateText("下一组门店")}
             disabled={page >= pages - 1}
             onClick={() => setPage(page + 1)}
           >
@@ -223,7 +240,7 @@ export default function ReplenishmentWaterChart({
           width={width}
           height="358"
           role="group"
-          aria-label="直营与授权门店满足率注水图"
+          aria-label={translateText("直营与授权门店满足率注水图")}
         >
           <text
             x="18"
@@ -232,7 +249,7 @@ export default function ReplenishmentWaterChart({
             fontSize="11"
             transform="rotate(-90 18 177)"
           >
-            库存目标满足率
+            {translateText("库存目标满足率")}
           </text>
           {[0, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 2]
             .filter((t) => t <= ymax)
@@ -253,7 +270,7 @@ export default function ReplenishmentWaterChart({
                   fontSize="10"
                   fill="#85998b"
                 >
-                  {fmt(t * 100)}%
+                  {translateText(fmt(t * 100))}%
                 </text>
               </g>
             ))}
@@ -282,7 +299,10 @@ export default function ReplenishmentWaterChart({
                   fontSize="13"
                   fontWeight="600"
                 >
-                  {g.channel}店 · {g.all.length} 家
+                  {translateText(g.channel)}
+                  {translateText("店 · ")}
+                  {g.all.length}
+                  {translateText(" 家")}
                 </text>
                 <text
                   x={start + channelWidth / 2 - 12}
@@ -291,7 +311,10 @@ export default function ReplenishmentWaterChart({
                   fill="#82958a"
                   fontSize="10"
                 >
-                  已补 {fmt(total)} 台 · 当前水位 {fmt(level * 100, 1)}%
+                  {translateText("已补 ")}
+                  {translateText(fmt(total))}
+                  {translateText(" 台 · 当前水位 ")}
+                  {translateText(fmt(level * 100, 1))}%
                 </text>
                 {g.stores.map((s, index) => {
                   const x = start + index * pitch,
@@ -304,7 +327,9 @@ export default function ReplenishmentWaterChart({
                       data-replenishment={s.replenishment}
                       role="button"
                       tabIndex={0}
-                      aria-label={`${s.shortName} ${s.name} 满足率 ${fmt(after * 100, 1)}%`}
+                      aria-label={translateText(
+                        `${s.shortName} ${s.name} 满足率 ${fmt(after * 100, 1)}%`,
+                      )}
                       aria-pressed={selected === s.id}
                       onClick={() => setSelected(s.id)}
                       onKeyDown={(e) => {
@@ -344,7 +369,7 @@ export default function ReplenishmentWaterChart({
                         fill="#56715f"
                         fontSize="9"
                       >
-                        {fmt(after * 100)}%
+                        {translateText(fmt(after * 100))}%
                       </text>
                       {s.replenishment > 0 && (
                         <text
@@ -364,7 +389,7 @@ export default function ReplenishmentWaterChart({
                         fontSize="10"
                         fill="#647e6d"
                       >
-                        {s.shortName}
+                        {translateText(s.shortName)}
                       </text>
                       <text
                         x={x + 14}
@@ -373,13 +398,23 @@ export default function ReplenishmentWaterChart({
                         fontSize="9"
                         fill="#8d9d92"
                       >
-                        {s.city}
+                        {translateText(s.city)}
                       </text>
                       <title>
-                        {s.name}：库存 {s.stock} 台，补库 {s.replenishment}{" "}
-                        台；满足率 {fmt(before * 100, 1)}% →{" "}
-                        {fmt(after * 100, 1)}%；目标 {fmt(s.targetWeeks, 2)}{" "}
-                        周。
+                        {translateText(s.name)}
+                        {translateText("：库存 ")}
+                        {s.stock}
+                        {translateText(" 台，补库 ")}
+                        {s.replenishment}
+                        {translateText(" ")}
+                        {translateText("台；满足率 ")}
+                        {translateText(fmt(before * 100, 1))}% →
+                        {translateText(" ")}
+                        {translateText(fmt(after * 100, 1))}
+                        {translateText("%；目标 ")}
+                        {translateText(fmt(s.targetWeeks, 2))}
+                        {translateText(" ")}
+                        {translateText("周。")}
                       </title>
                     </g>
                   );
@@ -404,44 +439,56 @@ export default function ReplenishmentWaterChart({
             fontSize="10"
             fill="#968350"
           >
-            100% 目标线
+            {translateText("100% 目标线")}
           </text>
         </svg>
       </div>
       <aside className="vr-store-inspector">
         <div>
           <strong>
-            {chose.shortName} · {chose.name}
+            {translateText(chose.shortName)} · {translateText(chose.name)}
           </strong>
           <small>
-            {chose.channel} · {chose.region} · 目标 {fmt(chose.targetWeeks, 2)}{" "}
-            周
+            {translateText(chose.channel)} · {translateText(chose.region)}
+            {translateText(" · 目标 ")}
+            {translateText(fmt(chose.targetWeeks, 2))}
+            {translateText(" ")}
+            {translateText("周")}
           </small>
         </div>
         <dl>
           <div>
-            <dt>库存 WoS</dt>
-            <dd>{fmt(chose.beforeWos ?? 0, 2)} 周</dd>
-          </div>
-          <div>
-            <dt>分车前满足率</dt>
-            <dd>{fmt((chose.beforeSatisfaction ?? 0) * 100, 1)}%</dd>
-          </div>
-          <div>
-            <dt>分车后满足率</dt>
-            <dd>{fmt((chose.afterSatisfaction ?? 0) * 100, 1)}%</dd>
-          </div>
-          <div>
-            <dt>已补库 / 搭配</dt>
+            <dt>{translateText("库存 WoS")}</dt>
             <dd>
-              {chose.replenishment} / {chose.pairedQty} 台
+              {translateText(fmt(chose.beforeWos ?? 0, 2))}
+              {translateText(" 周")}
+            </dd>
+          </div>
+          <div>
+            <dt>{translateText("分车前满足率")}</dt>
+            <dd>
+              {translateText(fmt((chose.beforeSatisfaction ?? 0) * 100, 1))}%
+            </dd>
+          </div>
+          <div>
+            <dt>{translateText("分车后满足率")}</dt>
+            <dd>
+              {translateText(fmt((chose.afterSatisfaction ?? 0) * 100, 1))}%
+            </dd>
+          </div>
+          <div>
+            <dt>{translateText("已补库 / 搭配")}</dt>
+            <dd>
+              {chose.replenishment} / {chose.pairedQty}
+              {translateText(" 台")}
             </dd>
           </div>
         </dl>
       </aside>
       <p className="vr-footnote">
-        柱高 =（现有库存 + 已补库车辆）÷ 加成后周销速 ÷ 加成后目标
-        WoS。图中分车后水位为归属覆盖，VPC 暂存车辆尚未计入门店实物库存。
+        {translateText(
+          "柱高 =（现有库存 + 已补库车辆）÷ 加成后周销速 ÷ 加成后目标 WoS。图中分车后水位为归属覆盖，VPC 暂存车辆尚未计入门店实物库存。",
+        )}
       </p>
     </section>
   );

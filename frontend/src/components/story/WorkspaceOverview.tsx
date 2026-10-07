@@ -1,4 +1,5 @@
 "use client";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
 
 import {
   ArrowRight,
@@ -25,6 +26,8 @@ export default function WorkspaceOverview({
   mode: "overview" | "data";
   onViewRun: (runId: string) => void;
 }) {
+  const { t: translateText } = useI18n();
+
   const latestAllocation = [...campaign.runs]
     .reverse()
     .find(
@@ -37,9 +40,15 @@ export default function WorkspaceOverview({
   if (mode === "data")
     return (
       <div className="workspace-data-library">
-        <span className="workspace-page-kicker">ALJ / 数据与业务规则</span>
-        <h1>每个判断都有来源</h1>
-        <p>本项目的船次、订单、库存及业务策略。所有数据均为本地演示快照。</p>
+        <span className="workspace-page-kicker">
+          {translateText("ALJ / 数据与业务规则")}
+        </span>
+        <h1>{translateText("每个判断都有来源")}</h1>
+        <p>
+          {translateText(
+            "本项目的船次、订单、库存及业务策略。所有数据均为本地演示快照。",
+          )}
+        </p>
         <div className="source-library-grid">
           {[
             {
@@ -70,17 +79,17 @@ export default function WorkspaceOverview({
           ].map((item) => (
             <article key={item.name}>
               <item.icon size={20} />
-              <strong>{item.name}</strong>
-              <span>{item.value}</span>
-              <p>{item.detail}</p>
-              <StatusPill tone="slate">演示快照</StatusPill>
+              <strong>{translateText(item.name)}</strong>
+              <span>{translateText(item.value)}</span>
+              <p>{translateText(item.detail)}</p>
+              <StatusPill tone="slate">{translateText("演示快照")}</StatusPill>
             </article>
           ))}
         </div>
         <section className="model-section">
           <header>
-            <h3>决策采用的业务规则</h3>
-            <StatusPill>5 类约束</StatusPill>
+            <h3>{translateText("决策采用的业务规则")}</h3>
+            <StatusPill>{translateText("5 类约束")}</StatusPill>
           </header>
           <div className="business-rule-library">
             {[
@@ -108,8 +117,8 @@ export default function WorkspaceOverview({
               <article key={item.title}>
                 <i>0{i + 1}</i>
                 <div>
-                  <strong>{item.title}</strong>
-                  <p>{item.rule}</p>
+                  <strong>{translateText(item.title)}</strong>
+                  <p>{translateText(item.rule)}</p>
                 </div>
               </article>
             ))}
@@ -120,21 +129,32 @@ export default function WorkspaceOverview({
   return (
     <div className="workspace-overview">
       <div className="workspace-page-kicker">
-        <Sparkles size={14} /> ALJ · 沙特供应链
+        <Sparkles size={14} />
+        {translateText(" ALJ · 沙特供应链")}
       </div>
-      <h1>供应链工作台</h1>
-      <p>先按订单与 WoS 分车到门店，再模拟直送、VPC 暂存和分批到店。</p>
+      <h1>{translateText("供应链工作台")}</h1>
+      <p>
+        {translateText(
+          "先按订单与 WoS 分车到门店，再模拟直送、VPC 暂存和分批到店。",
+        )}
+      </p>
       <article className="workspace-vessel-card">
         <div>
           <span>INBOUND VESSEL</span>
           <h2>JEDDAH HORIZON</h2>
           <p>
-            {storePlan.rows.length} 家门店 ·{" "}
-            {storePlan.input.brand ?? "历史情景"} ·{" "}
-            {storePlan.input.supply.toLocaleString("en-US")} 台供给模拟
+            {storePlan.rows.length}
+            {translateText(" 家门店 ·")}
+            {translateText(" ")}
+            {translateText(storePlan.input.brand ?? "历史情景")} ·
+            {translateText(" ")}
+            {translateText(storePlan.input.supply.toLocaleString("en-US"))}
+            {translateText(" 台供给模拟")}
           </p>
         </div>
-        <StatusPill tone="amber">单港 / 双港到店比较</StatusPill>
+        <StatusPill tone="amber">
+          {translateText("单港 / 双港到店比较")}
+        </StatusPill>
       </article>
       <MetricGrid
         items={[
@@ -157,8 +177,11 @@ export default function WorkspaceOverview({
       />
       <section className="workspace-recent">
         <header>
-          <h3>本任务的分析画布</h3>
-          <small>{campaign.runs.length} 项</small>
+          <h3>{translateText("本任务的分析画布")}</h3>
+          <small>
+            {campaign.runs.length}
+            {translateText(" 项")}
+          </small>
         </header>
         {campaign.runs.length ? (
           [...campaign.runs].reverse().map((run) => (
@@ -169,13 +192,17 @@ export default function WorkspaceOverview({
             >
               <FileText size={16} />
               <div>
-                <strong>{resolveStorySkill(run.command)?.title}</strong>
+                <strong>
+                  {translateText(resolveStorySkill(run.command)?.title)}
+                </strong>
                 <small>
-                  {run.businessDate} · 输入版本 v{run.inputVersion}
+                  {translateText(run.businessDate)}
+                  {translateText(" · 输入版本 v")}
+                  {run.inputVersion}
                 </small>
               </div>
               <StatusPill tone={run.status === "complete" ? "green" : "amber"}>
-                {run.status === "complete" ? "已保存" : "运行中"}
+                {translateText(run.status === "complete" ? "已保存" : "运行中")}
               </StatusPill>
               <ArrowRight size={13} />
             </button>
@@ -183,9 +210,13 @@ export default function WorkspaceOverview({
         ) : (
           <div className="workspace-empty">
             <p>
-              尚未开始分析。在右侧输入 <kbd>/</kbd> 选择所需能力。
+              {translateText("尚未开始分析。在右侧输入 ")}
+              <kbd>/</kbd>
+              {translateText(" 选择所需能力。")}
             </p>
-            <small>选择 Skill 只填入任务描述，按回车开始。</small>
+            <small>
+              {translateText("选择 Skill 只填入任务描述，按回车开始。")}
+            </small>
           </div>
         )}
       </section>

@@ -57,6 +57,8 @@ export type CommercialTrip = {
   destination: string;
   quantity: number;
   capacity: number;
+  dispatchStatus: "ready" | "awaiting-order" | "awaiting-load";
+  missingToFull: number;
   cost: number;
   parts: CommercialPart[];
 };
@@ -82,7 +84,7 @@ export type CommercialProfitRow = CommercialMoney & {
   unitFixed: number;
   priceFactor: number;
 };
-export const commercialCalculationVersion = "CAPACITY_BUDGET_V1";
+export const commercialCalculationVersion = "FULL_LOAD_BUDGET_V2";
 export type CommercialResult = {
   calculationVersion?: string;
   input: CommercialParameters;
@@ -426,6 +428,15 @@ export function calculateCommercial(
         destination: name(group.destinationId),
         quantity,
         capacity,
+        // A route's remainder is a waiting batch, never a dispatchable truck.
+        // Full last-mile loads still require an order before they can depart.
+        dispatchStatus:
+          quantity < capacity
+            ? "awaiting-load"
+            : group.stage === "last-mile"
+              ? "awaiting-order"
+              : "ready",
+        missingToFull: capacity - quantity,
         cost: cents(parts.reduce((n, p) => n + p.cost, 0)),
         parts,
       });

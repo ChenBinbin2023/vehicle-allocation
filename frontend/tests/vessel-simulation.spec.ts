@@ -1,5 +1,67 @@
 import { expect, test } from "@playwright/test";
 
+test("price changes expand the magnified scale and keep markers and labels readable", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.clock.install();
+  await page
+    .getByTestId("story-command")
+    .fill("/vessel-allocation 补库存 总量=2500");
+  await page.getByTestId("story-command").press("Enter");
+  await page.clock.runFor(12000);
+  const retail = page.getByRole("slider", {
+    name: "零售价格系数",
+    exact: true,
+  });
+  const wholesale = page.getByRole("slider", {
+    name: "批发价格系数",
+    exact: true,
+  });
+  const net = page.getByTestId("simulation-net");
+  const before = await net.textContent();
+  const scale = page.getByTestId("simulation-net-scale");
+  const initialScale = await scale.textContent();
+
+  for (const direction of ["increase", "decrease"] as const) {
+    if (direction === "increase") {
+      await retail.press("End");
+      await wholesale.press("End");
+    } else {
+      await wholesale.press("Home");
+      await retail.press("Home");
+    }
+    await expect(net).not.toHaveText(before!);
+    await expect(net).not.toHaveText("—万");
+    await expect(scale).not.toHaveText(initialScale!);
+    await expect(page.locator(".vs-chart-clipped")).toHaveCount(0);
+    const metrics = page.locator(".vs-financial-bars article");
+    await expect(metrics.locator(".vs-metric-track > i")).toHaveCount(4);
+    for (const metric of await metrics.all()) {
+      const position = await metric
+        .locator(".vs-metric-track > i")
+        .evaluate((el) => parseFloat((el as HTMLElement).style.bottom));
+      expect(position).toBeGreaterThanOrEqual(10);
+      expect(position).toBeLessThanOrEqual(90);
+      const bounds = await metric.evaluate((el) => {
+        const labels = el.querySelectorAll(".vs-metric-scale span");
+        const plot = el
+          .querySelector(".vs-metric-plot")!
+          .getBoundingClientRect();
+        return {
+          topLabelBottom: labels[0].getBoundingClientRect().bottom,
+          plotTop: plot.top,
+          plotBottom: plot.bottom,
+          bottomLabelTop: labels[1].getBoundingClientRect().top,
+        };
+      });
+      expect(bounds.plotTop).toBeGreaterThan(bounds.topLabelBottom);
+      expect(bounds.plotBottom).toBeLessThan(bounds.bottomLabelTop);
+    }
+  }
+  await expect(page.getByTestId("scenario-version")).toHaveText("V1");
+});
+
 test("channel controls start at ten percent and preview both directions with stable financial scales", async ({
   page,
 }) => {

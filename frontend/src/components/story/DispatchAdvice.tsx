@@ -1,4 +1,7 @@
 "use client";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
+import { matchesLocalizedText } from "@/lib/i18n/translate";
+
 import VesselSectionHeading from "./VesselSectionHeading";
 import { useState } from "react";
 import {
@@ -16,6 +19,8 @@ import {
 const fmt = (n: number) => n.toLocaleString("en-US");
 
 export default function DispatchAdvice({ data }: { data: DispatchSnapshot }) {
+  const { t: translateText } = useI18n();
+
   const [search, setSearch] = useState("");
   const [mode, setMode] = useState("all");
   const [page, setPage] = useState(0);
@@ -27,9 +32,10 @@ export default function DispatchAdvice({ data }: { data: DispatchSnapshot }) {
         trip.vehicleIds.some((id) => {
           const vehicle = data.vehicles.find((v) => v.id === id)!;
           const order = data.orders.find((o) => o.id === vehicle.orderId)!;
-          return `${trip.id} ${vehicle.vin} ${order.id} ${order.model} ${order.trim} ${data.stores.find((s) => s.id === order.storeId)!.name} ${data.sources.find((s) => s.id === trip.sourceId)!.name}`
-            .toLowerCase()
-            .includes(search.trim().toLowerCase());
+          return matchesLocalizedText(
+            `${trip.id} ${vehicle.vin} ${order.id} ${order.model} ${order.trim} ${data.stores.find((s) => s.id === order.storeId)!.name} ${data.sources.find((s) => s.id === trip.sourceId)!.name}`,
+            search,
+          );
         })),
   );
   const pageCount = Math.max(1, Math.ceil(trips.length / 4));
@@ -41,13 +47,13 @@ export default function DispatchAdvice({ data }: { data: DispatchSnapshot }) {
         <VesselSectionHeading
           number="02"
           english="FULFILMENT"
-          title="有货车辆 · 调度建议"
+          title={translateText("有货车辆 · 调度建议")}
           note={`区域有货 ${data.summary.vehicles - data.summary.shortage} 台 · 展开批次追溯每个订单中的每台车。`}
         />
         <span>
-          有货物流小计
+          {translateText("有货物流小计")}
           <strong>
-            {fmt(data.summary.logistics)} <small>SAR</small>
+            {translateText(fmt(data.summary.logistics))} <small>SAR</small>
           </strong>
         </span>
       </div>
@@ -55,9 +61,9 @@ export default function DispatchAdvice({ data }: { data: DispatchSnapshot }) {
         <label className="dd-search">
           <Search size={15} />
           <input
-            aria-label="搜索调度批次"
+            aria-label={translateText("搜索调度批次")}
             value={search}
-            placeholder="订单号、门店、车型或车源"
+            placeholder={translateText("订单号、门店、车型或车源")}
             onChange={(e) => {
               setSearch(e.target.value);
               setPage(0);
@@ -73,7 +79,7 @@ export default function DispatchAdvice({ data }: { data: DispatchSnapshot }) {
             <button
               type="button"
               key={value}
-              aria-label={label}
+              aria-label={translateText(label)}
               aria-pressed={mode === value}
               className={mode === value ? "active" : ""}
               onClick={() => {
@@ -81,7 +87,7 @@ export default function DispatchAdvice({ data }: { data: DispatchSnapshot }) {
                 setPage(0);
               }}
             >
-              {title}
+              {translateText(title)}
             </button>
           ))}
         </div>
@@ -122,29 +128,38 @@ export default function DispatchAdvice({ data }: { data: DispatchSnapshot }) {
                 </span>
                 <span className="dd-trip-route">
                   <span>
-                    <b>{source.name}</b>
+                    <b>{translateText(source.name)}</b>
                     <ArrowRight size={13} />
                     <b>
-                      {[...new Set(destinations.map((s) => s.city))].join(
-                        " / ",
+                      {translateText(
+                        [...new Set(destinations.map((s) => s.city))].join(
+                          " / ",
+                        ),
                       )}
                     </b>
                   </span>
                   <small>
-                    {trip.id} · {destinations.map((s) => s.name).join(" → ")}
+                    {translateText(trip.id)} ·{" "}
+                    {translateText(destinations.map((s) => s.name).join(" → "))}
                   </small>
                 </span>
                 <span className={`dd-mode ${trip.mode}`}>
-                  {trip.mode === "small" ? "小车直送" : "多单大车拼载"}
+                  {translateText(
+                    trip.mode === "small" ? "小车直送" : "多单大车拼载",
+                  )}
                 </span>
                 <ChevronDown size={16} className={open ? "rotated" : ""} />
               </button>
               <div className="dd-trip-metrics">
                 <div>
-                  <span>配载</span>
+                  <span>{translateText("配载")}</span>
                   <strong>
                     {trip.vehicleIds.length}
-                    <small> / {trip.capacity} 台</small>
+                    <small>
+                      {" "}
+                      / {trip.capacity}
+                      {translateText(" 台")}
+                    </small>
                     <i className="dd-load">
                       <i
                         style={{
@@ -155,24 +170,31 @@ export default function DispatchAdvice({ data }: { data: DispatchSnapshot }) {
                   </strong>
                 </div>
                 <div>
-                  <span>合并订单</span>
+                  <span>{translateText("合并订单")}</span>
                   <strong>
                     {orderCount}
-                    <small> 笔 · {trip.storeIds.length} 个卸货点</small>
+                    <small>
+                      {translateText(" 笔 · ")}
+                      {trip.storeIds.length}
+                      {translateText(" 个卸货点")}
+                    </small>
                   </strong>
                 </div>
                 <div>
-                  <span>物流费用</span>
+                  <span>{translateText("物流费用")}</span>
                   <strong>
-                    {fmt(trip.totalCost)}
-                    <small> SAR / 趟</small>
+                    {translateText(fmt(trip.totalCost))}
+                    <small>{translateText(" SAR / 趟")}</small>
                   </strong>
                 </div>
                 <div>
-                  <span>预计到店</span>
+                  <span>{translateText("预计到店")}</span>
                   <strong>
-                    {dispatchArrival(data, trip.arrivalHours)}
-                    <small>{trip.arrivalHours} 小时内</small>
+                    {translateText(dispatchArrival(data, trip.arrivalHours))}
+                    <small>
+                      {trip.arrivalHours}
+                      {translateText(" 小时内")}
+                    </small>
                   </strong>
                 </div>
               </div>
@@ -182,31 +204,41 @@ export default function DispatchAdvice({ data }: { data: DispatchSnapshot }) {
                   className="dd-trip-details"
                 >
                   <div className="dd-trip-detail-head">
-                    <strong>逐车来源与配送明细</strong>
+                    <strong>{translateText("逐车来源与配送明细")}</strong>
                     <span>
-                      预计发车 {dispatchArrival(data, trip.departHours)} ·
-                      沿线约 {fmt(trip.distance)} km
+                      {translateText("预计发车 ")}
+                      {translateText(dispatchArrival(data, trip.departHours))}
+                      {translateText(" · 沿线约 ")}
+                      {translateText(fmt(trip.distance))} km
                     </span>
                   </div>
                   {trip.comparison && (
                     <p className="dd-trip-comparison">
-                      本组 {trip.comparison.quantity} 台：小车组合合计{" "}
-                      {fmt(trip.comparison.smallCost)} SAR / 最晚{" "}
-                      {trip.comparison.smallArrivalHours}h，大车{" "}
-                      {fmt(trip.comparison.consolidatedCost)} SAR /{" "}
+                      {translateText("本组 ")}
+                      {trip.comparison.quantity}
+                      {translateText(" 台：小车组合合计")}
+                      {translateText(" ")}
+                      {translateText(fmt(trip.comparison.smallCost))}
+                      {translateText(" SAR / 最晚")}
+                      {translateText(" ")}
+                      {trip.comparison.smallArrivalHours}
+                      {translateText("h，大车")}
+                      {translateText(" ")}
+                      {translateText(fmt(trip.comparison.consolidatedCost))} SAR
+                      /{translateText(" ")}
                       {trip.comparison.consolidatedArrivalHours}h。
-                      {trip.comparison.reason}
+                      {translateText(trip.comparison.reason)}
                     </p>
                   )}
                   <div className="dd-table-wrap">
                     <table>
                       <thead>
                         <tr>
-                          <th>订单 / 车辆</th>
-                          <th>门店 · 车型 / 配置</th>
-                          <th>车源</th>
-                          <th>单车物流</th>
-                          <th>预计到店</th>
+                          <th>{translateText("订单 / 车辆")}</th>
+                          <th>{translateText("门店 · 车型 / 配置")}</th>
+                          <th>{translateText("车源")}</th>
+                          <th>{translateText("单车物流")}</th>
+                          <th>{translateText("预计到店")}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -224,38 +256,53 @@ export default function DispatchAdvice({ data }: { data: DispatchSnapshot }) {
                             <tr key={id}>
                               <td>
                                 <b>
-                                  {order.id} · 第 {id.split("-CAR-")[1]} 辆
+                                  {translateText(order.id)}
+                                  {translateText(" · 第 ")}
+                                  {translateText(id.split("-CAR-")[1])}
+                                  {translateText(" 辆")}
                                 </b>
-                                <small>{vehicle.vin}</small>
+                                <small>{translateText(vehicle.vin)}</small>
                               </td>
                               <td>
                                 <b>
-                                  {destination.name} · {order.model}
+                                  {translateText(destination.name)} ·{" "}
+                                  {translateText(order.model)}
                                 </b>
                                 <small>
-                                  {order.trim} / {order.color}
+                                  {translateText(order.trim)} /{" "}
+                                  {translateText(order.color)}
                                 </small>
                               </td>
                               <td>
-                                {source.name}
+                                {translateText(source.name)}
                                 <small>
-                                  {source.type === "vpc"
-                                    ? "VPC 可用库存"
-                                    : "其他门店可用库存"}
+                                  {translateText(
+                                    source.type === "vpc"
+                                      ? "VPC 可用库存"
+                                      : "其他门店可用库存",
+                                  )}
                                 </small>
                               </td>
                               <td>
-                                <b>{fmt(vehicle.logistics!)} SAR</b>
+                                <b>
+                                  {translateText(fmt(vehicle.logistics!))} SAR
+                                </b>
                                 <small>
-                                  {trip.mode === "small"
-                                    ? "小车直送"
-                                    : "多单拼大车"}
+                                  {translateText(
+                                    trip.mode === "small"
+                                      ? "小车直送"
+                                      : "多单拼大车",
+                                  )}
                                 </small>
                               </td>
                               <td>
-                                {dispatchArrival(data, vehicle.arrivalHours!)}
+                                {translateText(
+                                  dispatchArrival(data, vehicle.arrivalHours!),
+                                )}
                                 <small className="dd-on-time">
-                                  承诺 {order.dueHours}h · 按期
+                                  {translateText("承诺 ")}
+                                  {order.dueHours}
+                                  {translateText("h · 按期")}
                                 </small>
                               </td>
                             </tr>
@@ -265,7 +312,9 @@ export default function DispatchAdvice({ data }: { data: DispatchSnapshot }) {
                     </table>
                   </div>
                   <p>
-                    费用按本批次车辆均摊，尾差分配至前序车辆；所有单车费用之和等于本趟总费用。
+                    {translateText(
+                      "费用按本批次车辆均摊，尾差分配至前序车辆；所有单车费用之和等于本趟总费用。",
+                    )}
                   </p>
                 </div>
               )}
@@ -275,20 +324,24 @@ export default function DispatchAdvice({ data }: { data: DispatchSnapshot }) {
       </div>
       {!trips.length && (
         <div className="dd-empty" data-testid="dispatch-trips-empty">
-          暂无匹配的调度批次，请调整搜索或运输方式。
+          {translateText("暂无匹配的调度批次，请调整搜索或运输方式。")}
         </div>
       )}
       <footer className="dd-pagination">
         <span>
-          {trips.length
-            ? `${currentPage * 4 + 1}–${Math.min(currentPage * 4 + 4, trips.length)}`
-            : "0"}{" "}
-          / {trips.length} 个批次<small>筛选保留完整配载与费用</small>
+          {translateText(
+            trips.length
+              ? `${currentPage * 4 + 1}–${Math.min(currentPage * 4 + 4, trips.length)}`
+              : "0",
+          )}
+          {translateText(" ")}/ {trips.length}
+          {translateText(" 个批次")}
+          <small>{translateText("筛选保留完整配载与费用")}</small>
         </span>
         <div>
           <button
             type="button"
-            aria-label="上一页调度批次"
+            aria-label={translateText("上一页调度批次")}
             disabled={currentPage === 0}
             onClick={() => setPage(currentPage - 1)}
           >
@@ -299,7 +352,7 @@ export default function DispatchAdvice({ data }: { data: DispatchSnapshot }) {
           </span>
           <button
             type="button"
-            aria-label="下一页调度批次"
+            aria-label={translateText("下一页调度批次")}
             disabled={currentPage + 1 >= pageCount}
             onClick={() => setPage(currentPage + 1)}
           >
@@ -308,13 +361,11 @@ export default function DispatchAdvice({ data }: { data: DispatchSnapshot }) {
         </div>
       </footer>
       <details className="dd-assumptions">
-        <summary>查看物流测算口径</summary>
+        <summary>{translateText("查看物流测算口径")}</summary>
         <p>
-          同车源、同区域沿线合并，最多 8 台 / 3 个卸货点；小车最多 2
-          台，急单单独发运。演示报价：小车 240 + 2.4 × 估算公里数，大车 900 +
-          3.2 × 沿线最远距离 + 120 × 额外卸货点（SAR）。公里数按城市直线距离 ×
-          1.22
-          估算；到店时间包括集货、运输、装卸与各站停靠。报价与路线需执行前确认。
+          {translateText(
+            "同车源、同区域沿线合并，最多 8 台 / 3 个卸货点；小车最多 2 台，急单单独发运。演示报价：小车 240 + 2.4 × 估算公里数，大车 900 + 3.2 × 沿线最远距离 + 120 × 额外卸货点（SAR）。公里数按城市直线距离 × 1.22 估算；到店时间包括集货、运输、装卸与各站停靠。报价与路线需执行前确认。",
+          )}
         </p>
       </details>
     </section>

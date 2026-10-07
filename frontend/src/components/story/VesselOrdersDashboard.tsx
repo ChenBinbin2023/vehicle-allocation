@@ -1,4 +1,5 @@
 "use client";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
 
 import { useState } from "react";
 import VesselOrderMap from "./VesselOrderMap";
@@ -35,6 +36,8 @@ function Bars({
   title: string;
   testId: string;
 }) {
+  const { t: translateText } = useI18n();
+
   const groups = new Map<string, { quantity: number; allocated: number }>();
   for (const order of orders) {
     const group = groups.get(order[dimension]) ?? { quantity: 0, allocated: 0 };
@@ -47,10 +50,14 @@ function Bars({
   );
   const max = Math.max(1, ...rows.map(([, value]) => value.quantity));
   return (
-    <section className="voa-chart" data-testid={testId} aria-label={title}>
+    <section
+      className="voa-chart"
+      data-testid={testId}
+      aria-label={translateText(title)}
+    >
       <header>
-        <h3>{title}</h3>
-        <span>订单车辆 · 台 / 数量降序</span>
+        <h3>{translateText(title)}</h3>
+        <span>{translateText("订单车辆 · 台 / 数量降序")}</span>
       </header>
       <div className="voa-bars">
         {rows.map(([label, value]) => (
@@ -59,11 +66,13 @@ function Bars({
             key={label}
             data-quantity={value.quantity}
           >
-            <span title={label}>{label}</span>
+            <span title={translateText(label)}>{translateText(label)}</span>
             <div
               className="voa-bar-track"
               role="img"
-              aria-label={`${label}：${value.quantity} 台，已分配 ${value.allocated} 台`}
+              aria-label={translateText(
+                `${label}：${value.quantity} 台，已分配 ${value.allocated} 台`,
+              )}
             >
               <i style={{ width: `${(value.quantity / max) * 100}%` }}>
                 <b
@@ -73,80 +82,107 @@ function Bars({
                 />
               </i>
             </div>
-            <strong>{fmt(value.quantity)}</strong>
+            <strong>{translateText(fmt(value.quantity))}</strong>
           </div>
         ))}
         {!rows.length && (
-          <p className="voa-empty">当前门店没有符合筛选条件的订单。</p>
+          <p className="voa-empty">
+            {translateText("当前门店没有符合筛选条件的订单。")}
+          </p>
         )}
       </div>
       <footer>
-        <i /> 本船已分配 <i className="gap" /> 待补供给
+        <i />
+        {translateText(" 本船已分配 ")}
+        <i className="gap" />
+        {translateText(" 待补供给")}
       </footer>
     </section>
   );
 }
 
 function TripDetail({ trip }: { trip: OrderTrip }) {
+  const { t: translateText } = useI18n();
+
   return (
     <section className="voa-trip-detail" data-testid="order-trip-detail">
       <header>
         <span>
-          <Truck size={15} /> 当前车次
+          <Truck size={15} />
+          {translateText(" 当前车次")}
         </span>
-        <b>{trip.id}</b>
+        <b>{translateText(trip.id)}</b>
       </header>
       <h3>
-        {trip.portName} <ArrowRight size={15} /> {trip.stops.at(-1)?.city}
+        {translateText(trip.portName)} <ArrowRight size={15} />{" "}
+        {translateText(trip.stops.at(-1)?.city)}
       </h3>
       <dl className="voa-trip-metrics">
         <div>
-          <dt>运送数量</dt>
+          <dt>{translateText("运送数量")}</dt>
           <dd>
             {trip.quantity}
-            <small> / {trip.capacity} 台</small>
+            <small>
+              {" "}
+              / {trip.capacity}
+              {translateText(" 台")}
+            </small>
           </dd>
         </div>
         <div>
-          <dt>物流总成本</dt>
+          <dt>{translateText("物流总成本")}</dt>
           <dd>
-            {fmt(trip.totalCost)}
+            {translateText(fmt(trip.totalCost))}
             <small> SAR</small>
           </dd>
         </div>
         <div>
-          <dt>每台物流成本</dt>
+          <dt>{translateText("每台物流成本")}</dt>
           <dd>
-            {fmt(trip.unitCost, 1)}
-            <small> SAR / 台</small>
+            {translateText(fmt(trip.unitCost, 1))}
+            <small>{translateText(" SAR / 台")}</small>
           </dd>
         </div>
       </dl>
       <div className="voa-stops">
         <div className="voa-origin">
           <Anchor size={14} />
-          <strong>{trip.portName}</strong>
-          <span>装车 {trip.quantity} 台 · 出发点</span>
+          <strong>{translateText(trip.portName)}</strong>
+          <span>
+            {translateText("装车 ")}
+            {trip.quantity}
+            {translateText(" 台 · 出发点")}
+          </span>
         </div>
         {trip.stops.map((stop, index) => (
           <article key={stop.storeId}>
             <span className="voa-stop-number">{index + 1}</span>
             <div>
               <small>
-                {index === trip.stops.length - 1 ? "目的地" : "途经卸货"} ·{" "}
-                {stop.city}
+                {translateText(
+                  index === trip.stops.length - 1 ? "目的地" : "途经卸货",
+                )}{" "}
+                ·{translateText(" ")}
+                {translateText(stop.city)}
               </small>
-              <h4>{stop.storeName}</h4>
+              <h4>{translateText(stop.storeName)}</h4>
               <p>
-                卸货 <b>{stop.quantity} 台</b> · 成本分摊{" "}
-                <b>{fmt(stop.cost)} SAR</b>
+                {translateText("卸货 ")}
+                <b>
+                  {stop.quantity}
+                  {translateText(" 台")}
+                </b>
+                {translateText(" · 成本分摊")}
+                {translateText(" ")}
+                <b>{translateText(fmt(stop.cost))} SAR</b>
               </p>
               <ul>
                 {stop.orders.map((order, i) => (
                   <li key={order.orderId + "-" + i}>
-                    <code>{order.orderId}</code>
+                    <code>{translateText(order.orderId)}</code>
                     <span>
-                      {order.model} · {order.quantity} 台
+                      {translateText(order.model)} · {order.quantity}
+                      {translateText(" 台")}
                     </span>
                   </li>
                 ))}
@@ -156,9 +192,14 @@ function TripDetail({ trip }: { trip: OrderTrip }) {
         ))}
       </div>
       <footer>
-        整趟运输 {fmt(trip.linehaulCost)} + 港口处理与整备{" "}
-        {fmt(trip.handlingCost)} = {fmt(trip.totalCost)}{" "}
-        SAR。卸货点成本按台数分摊，尾差回补。
+        {translateText("整趟运输 ")}
+        {translateText(fmt(trip.linehaulCost))}
+        {translateText(" + 港口处理与整备")}
+        {translateText(" ")}
+        {translateText(fmt(trip.handlingCost))} ={" "}
+        {translateText(fmt(trip.totalCost))}
+        {translateText(" ")}
+        {translateText("SAR。卸货点成本按台数分摊，尾差回补。")}
       </footer>
     </section>
   );
@@ -173,6 +214,8 @@ export default function VesselOrdersDashboard({
   prompt?: string;
   data?: typeof defaultVesselOrders;
 }) {
+  const { t: translateText } = useI18n();
+
   const vesselOrders = data;
   const initialLogistics =
     focusNode?.startsWith("LOGISTICS") ||
@@ -237,17 +280,20 @@ export default function VesselOrdersDashboard({
       <header className="voa-heading">
         <div>
           <small>ORDER ALLOCATION</small>
-          <h2>先兑现订单，再规划到店</h2>
-          <p>从门店需求到每一车的订单、卸货与成本。</p>
+          <h2>{translateText("先兑现订单，再规划到店")}</h2>
+          <p>{translateText("从门店需求到每一车的订单、卸货与成本。")}</p>
         </div>
-        <span>{vesselOrders.snapshotDate} · 模拟订单与物流建议</span>
+        <span>
+          {translateText(vesselOrders.snapshotDate)}
+          {translateText(" · 模拟订单与物流建议")}
+        </span>
       </header>
       <StreamBlock name="orders-summary">
-        <section className="voa-section" aria-label="订单概览">
+        <section className="voa-section" aria-label={translateText("订单概览")}>
           <VesselSectionHeading
             number="01"
             english="ORDER ALLOCATION OVERVIEW"
-            title="订单概览"
+            title={translateText("订单概览")}
             note="先保障当前订单，再规划运输；本船数量与预留参数同步。"
           />
           <div className="voa-kpis">
@@ -274,52 +320,57 @@ export default function VesselOrdersDashboard({
               ],
             ].map(([label, value, note]) => (
               <article key={label}>
-                <span>{label}</span>
-                <strong>{value}</strong>
-                <small>{note}</small>
+                <span>{translateText(label)}</span>
+                <strong>{translateText(value)}</strong>
+                <small>{translateText(note)}</small>
               </article>
             ))}
           </div>
         </section>
       </StreamBlock>
       <StreamBlock name="orders-routes">
-        <section className="voa-section" aria-label="订单与物流路线">
+        <section
+          className="voa-section"
+          aria-label={translateText("订单与物流路线")}
+        >
           <VesselSectionHeading
             number="02"
             english="ORDER & LOGISTICS PLANNING"
-            title="订单与物流路线"
+            title={translateText("订单与物流路线")}
             note="筛选门店需求，切换订单与物流图层，查看每个班次的卸货与成本。"
           />
           <div className="voa-section-body">
             <div className="voa-filters">
               <label>
-                渠道
+                {translateText("渠道")}
                 <select
-                  aria-label="订单渠道"
+                  aria-label={translateText("订单渠道")}
                   value={channel}
                   onChange={(e) => {
                     setChannel(e.target.value);
                     setPage(0);
                   }}
                 >
-                  <option>全部</option>
-                  <option>直营</option>
-                  <option>授权</option>
+                  <option value={"全部"}>{translateText("全部")}</option>
+                  <option value={"直营"}>{translateText("直营")}</option>
+                  <option value={"授权"}>{translateText("授权")}</option>
                 </select>
               </label>
               <label>
-                品牌
+                {translateText("品牌")}
                 <select
-                  aria-label="订单品牌"
+                  aria-label={translateText("订单品牌")}
                   value={brand}
                   onChange={(e) => {
                     setBrand(e.target.value);
                     setPage(0);
                   }}
                 >
-                  <option>全部</option>
-                  <option>丰田</option>
-                  <option>雷克萨斯</option>
+                  <option value={"全部"}>{translateText("全部")}</option>
+                  <option value={"丰田"}>{translateText("丰田")}</option>
+                  <option value={"雷克萨斯"}>
+                    {translateText("雷克萨斯")}
+                  </option>
                 </select>
               </label>
               <OrderStoreSearch
@@ -331,17 +382,19 @@ export default function VesselOrdersDashboard({
                 }}
                 onSelectStore={setSelectedStore}
               />
-              {(channel !== "全部" || brand !== "全部" || search) && (
-                <button
-                  onClick={() => {
-                    setChannel("全部");
-                    setBrand("全部");
-                    setSearch("");
-                    setPage(0);
-                  }}
-                >
-                  清除筛选
-                </button>
+              {translateText(
+                (channel !== "全部" || brand !== "全部" || search) && (
+                  <button
+                    onClick={() => {
+                      setChannel("全部");
+                      setBrand("全部");
+                      setSearch("");
+                      setPage(0);
+                    }}
+                  >
+                    {translateText("清除筛选")}
+                  </button>
+                ),
               )}
             </div>
             <div className="voa-layout">
@@ -353,20 +406,22 @@ export default function VesselOrdersDashboard({
                       onClick={() => setLayer("orders")}
                     >
                       <MapPin size={15} />
-                      门店订单
+                      {translateText("门店订单")}
                     </button>
                     <button
                       aria-pressed={layer === "logistics"}
                       onClick={() => setLayer("logistics")}
                     >
                       <Truck size={15} />
-                      物流建议
+                      {translateText("物流建议")}
                     </button>
                   </div>
                   <small>
-                    {layer === "orders"
-                      ? "点击圆圈，查看门店订单"
-                      : "选择车次，查看卸货路线"}
+                    {translateText(
+                      layer === "orders"
+                        ? "点击圆圈，查看门店订单"
+                        : "选择车次，查看卸货路线",
+                    )}
                   </small>
                 </header>
                 {layer === "logistics" && (
@@ -379,7 +434,7 @@ export default function VesselOrdersDashboard({
                         setPage(0);
                       }}
                     >
-                      单港 · 吉达
+                      {translateText("单港 · 吉达")}
                     </button>
                     <button
                       aria-pressed={mode === "dual"}
@@ -389,7 +444,7 @@ export default function VesselOrdersDashboard({
                         setPage(0);
                       }}
                     >
-                      双港 · 吉达 + 达曼
+                      {translateText("双港 · 吉达 + 达曼")}
                     </button>
                   </div>
                 )}
@@ -413,40 +468,47 @@ export default function VesselOrdersDashboard({
                     <header className="voa-store-heading">
                       <span>
                         <Package size={15} />
-                        门店订单
+                        {translateText("门店订单")}
                       </span>
                       <select
-                        aria-label="查看订单门店"
+                        aria-label={translateText("查看订单门店")}
                         value={store?.id ?? ""}
                         onChange={(e) => setSelectedStore(e.target.value)}
                       >
                         {stores.map((s) => (
                           <option key={s.id} value={s.id}>
-                            {s.shortName} · {s.name}
+                            {translateText(s.shortName)} ·{" "}
+                            {translateText(s.name)}
                           </option>
                         ))}
                       </select>
-                      <h3>{store?.name ?? "无匹配门店"}</h3>
+                      <h3>{translateText(store?.name ?? "无匹配门店")}</h3>
                       <p>
-                        {store
-                          ? `${store.city} · ${store.channel} · ${store.id}`
-                          : "调整筛选条件后查看订单。"}
+                        {translateText(
+                          store
+                            ? `${store.city} · ${store.channel} · ${store.id}`
+                            : "调整筛选条件后查看订单。",
+                        )}
                       </p>
                       <strong>
-                        {fmt(sum(currentOrders))}
-                        <small> 台 / {currentOrders.length} 笔订单</small>
+                        {translateText(fmt(sum(currentOrders)))}
+                        <small>
+                          {translateText(" 台 / ")}
+                          {currentOrders.length}
+                          {translateText(" 笔订单")}
+                        </small>
                       </strong>
                     </header>
                     <Bars
                       orders={currentOrders}
                       dimension="model"
-                      title="按车型数量统计"
+                      title={translateText("按车型数量统计")}
                       testId="order-model-chart"
                     />
                     <Bars
                       orders={currentOrders}
                       dimension="type"
-                      title="按订单类型统计"
+                      title={translateText("按订单类型统计")}
                       testId="order-type-chart"
                     />
                   </div>
@@ -459,12 +521,13 @@ export default function VesselOrdersDashboard({
                       <header>
                         <div>
                           <h3>
-                            建议车次 <small>{trips.length}</small>
+                            {translateText("建议车次 ")}
+                            <small>{trips.length}</small>
                           </h3>
-                          <p>全车明细 · 点击联动地图</p>
+                          <p>{translateText("全车明细 · 点击联动地图")}</p>
                         </div>
                         <select
-                          aria-label="车次类型"
+                          aria-label={translateText("车次类型")}
                           value={tripKind}
                           onChange={(e) => {
                             setTripKind(e.target.value);
@@ -472,9 +535,15 @@ export default function VesselOrdersDashboard({
                             setPage(0);
                           }}
                         >
-                          <option value="all">全部车次</option>
-                          <option value="multi">多点卸货</option>
-                          <option value="direct">单点直送</option>
+                          <option value="all">
+                            {translateText("全部车次")}
+                          </option>
+                          <option value="multi">
+                            {translateText("多点卸货")}
+                          </option>
+                          <option value="direct">
+                            {translateText("单点直送")}
+                          </option>
                         </select>
                       </header>
                       <div className="voa-trip-items">
@@ -488,61 +557,76 @@ export default function VesselOrdersDashboard({
                               onClick={() => selectTrip(t.id)}
                             >
                               <span>
-                                <b>{t.id}</b>
+                                <b>{translateText(t.id)}</b>
                                 <small>
-                                  {t.stops.length > 1
-                                    ? `${t.stops.length} 点卸货`
-                                    : "直送"}
+                                  {translateText(
+                                    t.stops.length > 1
+                                      ? `${t.stops.length} 点卸货`
+                                      : "直送",
+                                  )}
                                 </small>
-                                <strong>{t.quantity} 台</strong>
+                                <strong>
+                                  {t.quantity}
+                                  {translateText(" 台")}
+                                </strong>
                               </span>
                               <span className="voa-trip-route">
-                                {t.portName} →{" "}
-                                {t.stops
-                                  .map(
-                                    (s) =>
-                                      `${s.city} ${vesselOrders.stores.find((store) => store.id === s.storeId)?.shortName}`,
-                                  )
-                                  .join(" → ")}
+                                {translateText(t.portName)} →
+                                {translateText(" ")}
+                                {translateText(
+                                  t.stops
+                                    .map(
+                                      (s) =>
+                                        `${s.city} ${vesselOrders.stores.find((store) => store.id === s.storeId)?.shortName}`,
+                                    )
+                                    .join(" → "),
+                                )}
                               </span>
                               <span className="voa-trip-cost">
-                                <span>{fmt(t.totalCost)} SAR</span>
+                                <span>
+                                  {translateText(fmt(t.totalCost))} SAR
+                                </span>
                                 <small>
-                                  {fmt(t.unitCost, 1)} SAR / 台 ·{" "}
+                                  {translateText(fmt(t.unitCost, 1))}
+                                  {translateText(" SAR / 台 ·")}
+                                  {translateText(" ")}
                                   {
                                     new Set(
                                       t.stops.flatMap((s) =>
                                         s.orders.map((o) => o.orderId),
                                       ),
                                     ).size
-                                  }{" "}
-                                  笔订单
+                                  }
+                                  {translateText(" ")}
+                                  {translateText("笔订单")}
                                 </small>
                               </span>
                             </button>
                           ))}
                         {!trips.length && (
-                          <p className="voa-empty">没有符合筛选条件的车次。</p>
+                          <p className="voa-empty">
+                            {translateText("没有符合筛选条件的车次。")}
+                          </p>
                         )}
                       </div>
                       {pageCount > 1 && (
                         <footer>
                           <button
-                            aria-label="上一页车次"
+                            aria-label={translateText("上一页车次")}
                             disabled={activePage === 0}
                             onClick={() => setPage(activePage - 1)}
                           >
-                            上一页
+                            {translateText("上一页")}
                           </button>
                           <span>
                             {activePage + 1} / {pageCount}
                           </span>
                           <button
-                            aria-label="下一页车次"
+                            aria-label={translateText("下一页车次")}
                             disabled={activePage + 1 >= pageCount}
                             onClick={() => setPage(activePage + 1)}
                           >
-                            下一页
+                            {translateText("下一页")}
                           </button>
                         </footer>
                       )}
@@ -559,26 +643,29 @@ export default function VesselOrdersDashboard({
         <OrderLogisticsCosts summary={costSummary} />
       </StreamBlock>
       <details className="voa-assumptions">
-        <summary>订单分车与物流计算口径</summary>
+        <summary>{translateText("订单分车与物流计算口径")}</summary>
         <p>
-          订单号为模拟编号。按 tab1 的渠道 ×
-          车型订单总量，以门店八周销速为权重分摊，直营订单类型权重 7:2:1、授权
-          4:4:2；车型缺口在各店与类型间分摊。物流仅运输本轮已分配的{" "}
-          {fmt(vesselOrders.plans.dual.quantity)} 台，
-          {fmt(
-            vesselOrders.orders.reduce(
-              (sum, order) => sum + order.quantity - order.allocated,
-              0,
+          {translateText(
+            "订单号为模拟编号。按 tab1 的渠道 × 车型订单总量，以门店八周销速为权重分摊，直营订单类型权重 7:2:1、授权 4:4:2；车型缺口在各店与类型间分摊。物流仅运输本轮已分配的",
+          )}
+          {translateText(" ")}
+          {translateText(fmt(vesselOrders.plans.dual.quantity))}
+          {translateText(" 台，")}
+          {translateText(
+            fmt(
+              vesselOrders.orders.reduce(
+                (sum, order) => sum + order.quantity - order.allocated,
+                0,
+              ),
             ),
-          )}{" "}
-          台缺口不排车；分配数量与本轮预留和船量参数同步。
+          )}
+          {translateText(" ")}
+          {translateText("台缺口不排车；分配数量与本轮预留和船量参数同步。")}
         </p>
         <p>
-          单港由吉达出发；双港按目的城市的整趟模拟报价选择吉达或达曼。默认 8
-          台/车，邻近城市合车、最多 3 个卸货点。每车费用 = 沿线最高整趟报价 +
-          120 SAR × 额外卸货点 + 400 SAR × 车辆数（港口处理 150、整备
-          250）。报价源参数来自当前模拟路线表，作为历史情景假设；费用不含
-          VPC、跨港调拨及海运成本。筛选展示整车，其他门店的同车订单也保留。车次列表为建议，未实际发运。
+          {translateText(
+            "单港由吉达出发；双港按目的城市的整趟模拟报价选择吉达或达曼。默认 8 台/车，邻近城市合车、最多 3 个卸货点。每车费用 = 沿线最高整趟报价 + 120 SAR × 额外卸货点 + 400 SAR × 车辆数（港口处理 150、整备 250）。报价源参数来自当前模拟路线表，作为历史情景假设；费用不含 VPC、跨港调拨及海运成本。筛选展示整车，其他门店的同车订单也保留。车次列表为建议，未实际发运。",
+          )}
         </p>
       </details>
     </section>

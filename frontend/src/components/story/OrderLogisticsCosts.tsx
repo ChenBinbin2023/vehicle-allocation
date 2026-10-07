@@ -1,4 +1,5 @@
 "use client";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
 
 import { useState } from "react";
 import VesselSectionHeading from "./VesselSectionHeading";
@@ -32,6 +33,8 @@ function StoreCostChart({
   activeStore?: OrderStoreCosts;
   onStore: (id: string) => void;
 }) {
+  const { t: translateText } = useI18n();
+
   const rows =
     summary.single.quantity || summary.dual.quantity ? summary.stores : [];
   const total = metric === "totalCost";
@@ -52,22 +55,28 @@ function StoreCostChart({
     <section
       className="voa-store-cost-chart"
       data-store-cost-chart={`${mode}-${metric}`}
-      aria-label={title}
+      aria-label={translateText(title)}
     >
       <header>
         <small>
           <i style={{ background: colors[mode] }} />
-          {mode === "single" ? "单港 · 吉达" : "双港 · 吉达 + 达曼"}
+          {translateText(
+            mode === "single" ? "单港 · 吉达" : "双港 · 吉达 + 达曼",
+          )}
         </small>
-        <h4>{total ? "门店物流总费用" : "门店单车物流费用"}</h4>
+        <h4>{translateText(total ? "门店物流总费用" : "门店单车物流费用")}</h4>
       </header>
       <div className="voa-cost-chart-metric">
         <strong>
-          {total ? fmt(summary[mode].totalCost) : price(summary[mode].unitCost)}
+          {translateText(
+            total
+              ? fmt(summary[mode].totalCost)
+              : price(summary[mode].unitCost),
+          )}
         </strong>
         <span>
-          {unit}
-          {!total && " · 加权平均"}
+          {translateText(unit)}
+          {translateText(!total && " · 加权平均")}
         </span>
       </div>
       {rows.length ? (
@@ -75,16 +84,21 @@ function StoreCostChart({
           <div className="voa-store-cost-plot">
             <div className="voa-store-cost-axis" aria-hidden="true">
               {[max, max / 2, 0].map((value) => (
-                <span key={value}>{fmt(value)}</span>
+                <span key={value}>{translateText(fmt(value))}</span>
               ))}
             </div>
             <div
               className="voa-cost-scroll"
               tabIndex={0}
               role="region"
-              aria-label={`${title}，可横向滚动查看全部门店`}
+              aria-label={translateText(`${title}，可横向滚动查看全部门店`)}
             >
-              <svg width={width} height={198} role="group" aria-label={title}>
+              <svg
+                width={width}
+                height={198}
+                role="group"
+                aria-label={translateText(title)}
+              >
                 {[16, 88, 160].map((y) => (
                   <line
                     key={y}
@@ -123,12 +137,18 @@ function StoreCostChart({
                         fill={colors[mode]}
                         role="img"
                         tabIndex={0}
-                        aria-label={`${store.name}：${price(value)} ${unit}，运送 ${store[mode].quantity} 台`}
+                        aria-label={translateText(
+                          `${store.name}：${price(value)} ${unit}，运送 ${store[mode].quantity} 台`,
+                        )}
                         onFocus={() => onStore(store.id)}
                       >
                         <title>
-                          {store.name}：{price(value)} {unit} · 运送{" "}
-                          {store[mode].quantity} 台
+                          {translateText(store.name)}：
+                          {translateText(price(value))} {translateText(unit)}
+                          {translateText(" · 运送")}
+                          {translateText(" ")}
+                          {store[mode].quantity}
+                          {translateText(" 台")}
                         </title>
                       </rect>
                       <text
@@ -137,7 +157,7 @@ function StoreCostChart({
                         textAnchor="middle"
                         className="voa-cost-store-label"
                       >
-                        {store.shortName}
+                        {translateText(store.shortName)}
                       </text>
                     </g>
                   );
@@ -147,21 +167,27 @@ function StoreCostChart({
           </div>
           <p className="voa-cost-store-detail">
             <span>
-              {activeStore?.shortName} · {activeStore?.name}
+              {translateText(activeStore?.shortName)} ·{" "}
+              {translateText(activeStore?.name)}
             </span>
             <b>
-              {price(activeStore?.[mode][metric] ?? null)} {unit}
+              {translateText(price(activeStore?.[mode][metric] ?? null))}{" "}
+              {translateText(unit)}
             </b>
           </p>
         </>
       ) : (
-        <p className="voa-cost-chart-empty">当前筛选没有已分配的运输订单</p>
+        <p className="voa-cost-chart-empty">
+          {translateText("当前筛选没有已分配的运输订单")}
+        </p>
       )}
     </section>
   );
 }
 
 function RegionCosts({ summary }: { summary: OrderLogisticsSummary }) {
+  const { t: translateText } = useI18n();
+
   const max = chartMax(
     Math.max(
       0,
@@ -176,77 +202,79 @@ function RegionCosts({ summary }: { summary: OrderLogisticsSummary }) {
   return (
     <div className="voa-region-cost-layout">
       <div className="voa-region-cost-table">
-        <h4>大区费用与平均单车成本</h4>
+        <h4>{translateText("大区费用与平均单车成本")}</h4>
         <div className="voa-cost-table-scroll" tabIndex={0}>
-          <table aria-label="各业务大区物流费用对比">
+          <table aria-label={translateText("各业务大区物流费用对比")}>
             <thead>
               <tr>
-                <th rowSpan={2}>业务大区</th>
-                <th rowSpan={2}>运送台数</th>
+                <th rowSpan={2}>{translateText("业务大区")}</th>
+                <th rowSpan={2}>{translateText("运送台数")}</th>
                 <th colSpan={2} className="single">
-                  单港 · 吉达
+                  {translateText("单港 · 吉达")}
                 </th>
                 <th colSpan={2} className="dual">
-                  双港 · 吉达 + 达曼
+                  {translateText("双港 · 吉达 + 达曼")}
                 </th>
               </tr>
               <tr>
-                <th>总费用</th>
-                <th>平均 / 台</th>
-                <th>总费用</th>
-                <th>平均 / 台</th>
+                <th>{translateText("总费用")}</th>
+                <th>{translateText("平均 / 台")}</th>
+                <th>{translateText("总费用")}</th>
+                <th>{translateText("平均 / 台")}</th>
               </tr>
             </thead>
             <tbody>
               {summary.regions.map((row) => (
                 <tr key={row.name} data-cost-region={row.name}>
-                  <th scope="row">{row.name}</th>
-                  <td>{fmt(row.single.quantity)}</td>
-                  <td>{fmt(row.single.totalCost)}</td>
-                  <td>{price(row.single.unitCost)}</td>
-                  <td>{fmt(row.dual.totalCost)}</td>
-                  <td>{price(row.dual.unitCost)}</td>
+                  <th scope="row">{translateText(row.name)}</th>
+                  <td>{translateText(fmt(row.single.quantity))}</td>
+                  <td>{translateText(fmt(row.single.totalCost))}</td>
+                  <td>{translateText(price(row.single.unitCost))}</td>
+                  <td>{translateText(fmt(row.dual.totalCost))}</td>
+                  <td>{translateText(price(row.dual.unitCost))}</td>
                 </tr>
               ))}
             </tbody>
             <tfoot>
               <tr>
-                <th scope="row">合计 / 加权平均</th>
-                <td>{fmt(summary.single.quantity)}</td>
-                <td>{fmt(summary.single.totalCost)}</td>
-                <td>{price(summary.single.unitCost)}</td>
-                <td>{fmt(summary.dual.totalCost)}</td>
-                <td>{price(summary.dual.unitCost)}</td>
+                <th scope="row">{translateText("合计 / 加权平均")}</th>
+                <td>{translateText(fmt(summary.single.quantity))}</td>
+                <td>{translateText(fmt(summary.single.totalCost))}</td>
+                <td>{translateText(price(summary.single.unitCost))}</td>
+                <td>{translateText(fmt(summary.dual.totalCost))}</td>
+                <td>{translateText(price(summary.dual.unitCost))}</td>
               </tr>
             </tfoot>
           </table>
         </div>
-        <p>总费用单位 SAR；平均单车成本单位 SAR / 台。</p>
+        <p>{translateText("总费用单位 SAR；平均单车成本单位 SAR / 台。")}</p>
       </div>
       <section
         className="voa-region-cost-chart"
-        aria-label="各业务大区单车物流成本对比"
+        aria-label={translateText("各业务大区单车物流成本对比")}
       >
         <header>
-          <h4>大区单车物流成本对比</h4>
+          <h4>{translateText("大区单车物流成本对比")}</h4>
           <div className="voa-cost-legend">
             <span>
               <i style={{ background: colors.single }} />
-              单港
+              {translateText("单港")}
             </span>
             <span>
               <i style={{ background: colors.dual }} />
-              双港
+              {translateText("双港")}
             </span>
           </div>
         </header>
-        <small>SAR / 台 · 按运送车辆数加权</small>
+        <small>{translateText("SAR / 台 · 按运送车辆数加权")}</small>
         {summary.single.quantity || summary.dual.quantity ? (
           <div className="voa-region-cost-scroll" tabIndex={0}>
             <svg
               viewBox={`0 0 ${width} 242`}
               role="group"
-              aria-label="横轴为业务大区，蓝色为单港，绿色为双港"
+              aria-label={translateText(
+                "横轴为业务大区，蓝色为单港，绿色为双港",
+              )}
             >
               {[0, max / 2, max].map((value) => {
                 const y = 188 - (value / max) * 158;
@@ -265,7 +293,7 @@ function RegionCosts({ summary }: { summary: OrderLogisticsSummary }) {
                       textAnchor="end"
                       className="voa-cost-tick"
                     >
-                      {fmt(value)}
+                      {translateText(fmt(value))}
                     </text>
                   </g>
                 );
@@ -291,11 +319,17 @@ function RegionCosts({ summary }: { summary: OrderLogisticsSummary }) {
                             fill={colors[mode]}
                             role="img"
                             tabIndex={0}
-                            aria-label={`${row.name} ${mode === "single" ? "单港" : "双港"}：${price(value)} SAR / 台`}
+                            aria-label={translateText(
+                              `${row.name} ${mode === "single" ? "单港" : "双港"}：${price(value)} SAR / 台`,
+                            )}
                           >
                             <title>
-                              {row.name} · {mode === "single" ? "单港" : "双港"}
-                              ：{price(value)} SAR / 台
+                              {translateText(row.name)} ·{" "}
+                              {translateText(
+                                mode === "single" ? "单港" : "双港",
+                              )}
+                              ：{translateText(price(value))}
+                              {translateText(" SAR / 台")}
                             </title>
                           </rect>
                           <text
@@ -304,7 +338,7 @@ function RegionCosts({ summary }: { summary: OrderLogisticsSummary }) {
                             textAnchor="middle"
                             className="voa-cost-bar-value"
                           >
-                            {price(value)}
+                            {translateText(price(value))}
                           </text>
                         </g>
                       );
@@ -315,7 +349,7 @@ function RegionCosts({ summary }: { summary: OrderLogisticsSummary }) {
                       textAnchor="middle"
                       className="voa-cost-region-label"
                     >
-                      {row.name}
+                      {translateText(row.name)}
                     </text>
                   </g>
                 );
@@ -323,7 +357,9 @@ function RegionCosts({ summary }: { summary: OrderLogisticsSummary }) {
             </svg>
           </div>
         ) : (
-          <p className="voa-cost-chart-empty">当前筛选没有已分配的运输订单</p>
+          <p className="voa-cost-chart-empty">
+            {translateText("当前筛选没有已分配的运输订单")}
+          </p>
         )}
       </section>
     </div>
@@ -335,6 +371,8 @@ export default function OrderLogisticsCosts({
 }: {
   summary: OrderLogisticsSummary;
 }) {
+  const { t: translateText } = useI18n();
+
   const [activeStoreId, setActiveStoreId] = useState("");
   const activeStore =
     summary.stores.find((store) => store.id === activeStoreId) ??
@@ -348,12 +386,12 @@ export default function OrderLogisticsCosts({
     <section
       className="voa-section voa-logistics-costs"
       data-testid="order-logistics-costs"
-      aria-label="当前订单物流费用统计"
+      aria-label={translateText("当前订单物流费用统计")}
     >
       <VesselSectionHeading
         number="03"
         english="LOGISTICS COST COMPARISON"
-        title="物流费用对比"
+        title={translateText("物流费用对比")}
         note={`${summary.stores.length} 家门店 · 运送 ${fmt(summary.single.quantity)} 台 · 跟随门店、渠道与品牌筛选`}
       />
       <div className="voa-section-body">
@@ -374,16 +412,18 @@ export default function OrderLogisticsCosts({
           </div>
         </div>
         <p className="voa-cost-chart-guide">
-          四图使用相同门店顺序，按单港总费用降序排列；横向滚动查看全部门店，悬停柱子查看费用。
+          {translateText(
+            "四图使用相同门店顺序，按单港总费用降序排列；横向滚动查看全部门店，悬停柱子查看费用。",
+          )}
         </p>
         <RegionCosts summary={summary} />
         <p className="voa-cost-change" data-testid="order-cost-change">
-          {changeText}
+          {translateText(changeText)}
         </p>
         <p className="voa-cost-basis">
-          仅统计当前订单已分配的运输车辆；单车指订单车辆，平均成本 = 物流总费用
-          ÷
-          运送台数。合车费用沿用车次卸货点分摊，品牌筛选再按订单台数归集，不重新计算整车报价。费用包含整趟运输、额外卸货、港口处理与整备。
+          {translateText(
+            "仅统计当前订单已分配的运输车辆；单车指订单车辆，平均成本 = 物流总费用 ÷ 运送台数。合车费用沿用车次卸货点分摊，品牌筛选再按订单台数归集，不重新计算整车报价。费用包含整趟运输、额外卸货、港口处理与整备。",
+          )}
         </p>
       </div>
     </section>

@@ -1,4 +1,6 @@
 "use client";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
+
 import { useState } from "react";
 import geography from "@/lib/query-map-data.json";
 import { deliveryNetwork } from "@/lib/story/delivery-network";
@@ -36,6 +38,8 @@ export default function DeliveryRouteMap({
   allocation: StoreAllocation;
   delivery: StoreDelivery;
 }) {
+  const { t: translateText } = useI18n();
+
   const routes = deliveryNetwork(allocation, delivery, delivery.input.mode);
   const [selected, setSelected] = useState(
     routes.find((r) => r.unrouted > 0)?.id ?? routes[0]?.id ?? "",
@@ -44,7 +48,8 @@ export default function DeliveryRouteMap({
   const [store, setStore] = useState("all");
   const [batchId, setBatchId] = useState("");
   const route = routes.find((r) => r.id === selected) ?? routes[0];
-  if (!route) return <p>当前快照没有 data 城市路线，无法绘制地图。</p>;
+  if (!route)
+    return <p>{translateText("当前快照没有 data 城市路线，无法绘制地图。")}</p>;
   const batches = route.batches.filter(
     (b) => store === "all" || b.storeId === store,
   );
@@ -64,10 +69,13 @@ export default function DeliveryRouteMap({
       <header className="profit-section-header">
         <div>
           <small>LOGISTICS NETWORK</small>
-          <h2>城市路线与到店批次</h2>
+          <h2>{translateText("城市路线与到店批次")}</h2>
           <p>
-            {delivery.input.mode === "single" ? "吉达单港" : "吉达 + 达曼双港"}{" "}
-            · {routes.length} 条共享城市路线 · 运力为源数据周额度
+            {translateText(
+              delivery.input.mode === "single" ? "吉达单港" : "吉达 + 达曼双港",
+            )}
+            {translateText(" ")}· {routes.length}
+            {translateText(" 条共享城市路线 · 运力为源数据周额度")}
           </p>
         </div>
         <div className="map-layer-toggle">
@@ -76,54 +84,57 @@ export default function DeliveryRouteMap({
             aria-pressed={layer === "routes"}
             onClick={() => setLayer("routes")}
           >
-            路线总览
+            {translateText("路线总览")}
           </button>
           <button
             type="button"
             aria-pressed={layer === "batches"}
             onClick={() => setLayer("batches")}
           >
-            计划批次
+            {translateText("计划批次")}
           </button>
         </div>
       </header>
       {!delivery[delivery.input.mode].network && (
         <p className="planning-footnote">
-          旧画布的城市路线基础信息来自当前
-          data；分车数量、到店批次和干线摊分费来自原快照。
+          {translateText(
+            "旧画布的城市路线基础信息来自当前 data；分车数量、到店批次和干线摊分费来自原快照。",
+          )}
         </p>
       )}
       <div className="delivery-map-controls">
         <label>
-          选择城市路线
+          {translateText("选择城市路线")}
           <select
-            aria-label="地图路线"
+            aria-label={translateText("地图路线")}
             value={route.id}
             onChange={(e) => select(e.target.value)}
           >
             {routes.map((r) => (
               <option key={r.id} value={r.id}>
-                {origins[r.originId]} → {r.city} · {fmt(r.total)} 台
-                {r.unrouted ? " / 缺 " + r.unrouted : ""}
+                {translateText(origins[r.originId])} → {translateText(r.city)} ·{" "}
+                {translateText(fmt(r.total))}
+                {translateText(" 台")}
+                {translateText(r.unrouted ? " / 缺 " + r.unrouted : "")}
               </option>
             ))}
           </select>
         </label>
         {layer === "batches" && (
           <label>
-            筛选门店
+            {translateText("筛选门店")}
             <select
-              aria-label="地图门店"
+              aria-label={translateText("地图门店")}
               value={store}
               onChange={(e) => {
                 setStore(e.target.value);
                 setBatchId("");
               }}
             >
-              <option value="all">路线内全部门店</option>
+              <option value="all">{translateText("路线内全部门店")}</option>
               {route.rows.map((r) => (
                 <option key={r.storeId} value={r.storeId}>
-                  {r.storeName}
+                  {translateText(r.storeName)}
                 </option>
               ))}
             </select>
@@ -134,7 +145,7 @@ export default function DeliveryRouteMap({
         <div className="delivery-map-art">
           <svg
             viewBox="0 0 760 550"
-            aria-label="沙特城市物流路线地图"
+            aria-label={translateText("沙特城市物流路线地图")}
             role="group"
           >
             <rect width="760" height="550" fill="#eef4f5" />
@@ -148,13 +159,13 @@ export default function DeliveryRouteMap({
               />
             ))}
             <text x="255" y="220" className="map-country-label">
-              沙特阿拉伯
+              {translateText("沙特阿拉伯")}
             </text>
             <text x="35" y="330" className="map-sea-label">
-              红海
+              {translateText("红海")}
             </text>
             <text x="650" y="115" className="map-sea-label">
-              波斯湾
+              {translateText("波斯湾")}
             </text>
             {[...routes.filter((r) => r.id !== route.id), route].map((r) => {
               const a = project(cities[origins[r.originId]].coordinates),
@@ -164,7 +175,9 @@ export default function DeliveryRouteMap({
                   key={r.id}
                   role="button"
                   tabIndex={0}
-                  aria-label={`路线 ${origins[r.originId]}到${r.city}`}
+                  aria-label={translateText(
+                    `路线 ${origins[r.originId]}到${r.city}`,
+                  )}
                   onClick={() => select(r.id)}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" || e.key === " ") {
@@ -175,8 +188,14 @@ export default function DeliveryRouteMap({
                   className="map-route-hit"
                 >
                   <title>
-                    {origins[r.originId]} → {r.city}：已路由 {r.routed}{" "}
-                    台，未落实 {r.unrouted} 台
+                    {translateText(origins[r.originId])} →{" "}
+                    {translateText(r.city)}
+                    {translateText("：已路由 ")}
+                    {r.routed}
+                    {translateText(" ")}
+                    {translateText("台，未落实 ")}
+                    {r.unrouted}
+                    {translateText(" 台")}
                   </title>
                   <line
                     x1={a.x}
@@ -257,7 +276,7 @@ export default function DeliveryRouteMap({
                       active ? "map-city-label selected" : "map-city-label"
                     }
                   >
-                    {r.city}
+                    {translateText(r.city)}
                   </text>
                 </g>
               );
@@ -282,7 +301,8 @@ export default function DeliveryRouteMap({
                       textAnchor="end"
                       className="map-origin-label"
                     >
-                      {origins[id]}港
+                      {translateText(origins[id])}
+                      {translateText("港")}
                     </text>
                   </g>
                 );
@@ -292,24 +312,26 @@ export default function DeliveryRouteMap({
           <div className="delivery-map-legend">
             <span>
               <i />
-              城市干线路线
+              {translateText("城市干线路线")}
             </span>
             <span>
               <i className="via" />
-              VPC 示意连接
+              {translateText("VPC 示意连接")}
             </span>
-            <span>虚线干线：含未落实数量</span>
+            <span>{translateText("虚线干线：含未落实数量")}</span>
           </div>
           <p>
-            城市坐标示意，非实际道路；门店归属到目的城市。地理数据：
+            {translateText(
+              "城市坐标示意，非实际道路；门店归属到目的城市。地理数据：",
+            )}
             <a
               href={geography.attribution.boundaries}
               target="_blank"
               rel="noreferrer"
             >
               Natural Earth
-            </a>{" "}
-            /{" "}
+            </a>
+            {translateText(" ")}/{translateText(" ")}
             <a
               href={geography.attribution.places}
               target="_blank"
@@ -324,56 +346,85 @@ export default function DeliveryRouteMap({
           className="delivery-map-inspector"
           data-testid="delivery-map-inspector"
         >
-          <small>{route.id}</small>
+          <small>{translateText(route.id)}</small>
           <h3>
-            {origins[route.originId]} → {route.city}
+            {translateText(origins[route.originId])} →{" "}
+            {translateText(route.city)}
           </h3>
           <dl>
-            <dt>门店计划 / 已路由</dt>
+            <dt>{translateText("门店计划 / 已路由")}</dt>
             <dd>
-              {fmt(route.total)} / {fmt(route.routed)} 台
+              {translateText(fmt(route.total))} /{" "}
+              {translateText(fmt(route.routed))}
+              {translateText(" 台")}
             </dd>
-            <dt>直送 / 经 VPC</dt>
+            <dt>{translateText("直送 / 经 VPC")}</dt>
             <dd>
-              {fmt(route.direct)} / {fmt(route.via)} 台
+              {translateText(fmt(route.direct))} /{" "}
+              {translateText(fmt(route.via))}
+              {translateText(" 台")}
             </dd>
-            <dt>未落实 / 待排时段</dt>
+            <dt>{translateText("未落实 / 待排时段")}</dt>
             <dd>
-              {fmt(route.unrouted)} / {fmt(route.pending)} 台
+              {translateText(fmt(route.unrouted))} /{" "}
+              {translateText(fmt(route.pending))}
+              {translateText(" 台")}
             </dd>
-            <dt>共享周运力</dt>
-            <dd>{fmt(route.capacity)} 台</dd>
-            <dt>运输距离 / 时长</dt>
+            <dt>{translateText("共享周运力")}</dt>
             <dd>
-              {fmt(route.km ?? 0)} km / {route.hours} h
+              {translateText(fmt(route.capacity))}
+              {translateText(" 台")}
             </dd>
-            <dt>整趟报价 / 装载</dt>
+            <dt>{translateText("运输距离 / 时长")}</dt>
             <dd>
-              {fmt(route.quote)} SAR / {route.load} 台
+              {translateText(fmt(route.km ?? 0))} km / {route.hours} h
             </dd>
-            <dt>本轮干线运费</dt>
-            <dd>{fmt(route.linehaul)} SAR</dd>
+            <dt>{translateText("整趟报价 / 装载")}</dt>
+            <dd>
+              {translateText(fmt(route.quote))} SAR / {route.load}
+              {translateText(" 台")}
+            </dd>
+            <dt>{translateText("本轮干线运费")}</dt>
+            <dd>{translateText(fmt(route.linehaul))} SAR</dd>
           </dl>
           <p>
-            按路线已路由量向上取整计车次，再按车辆分摊。此费用为城市干线报价，VPC/整备/末端另计。
+            {translateText(
+              "按路线已路由量向上取整计车次，再按车辆分摊。此费用为城市干线报价，VPC/整备/末端另计。",
+            )}
           </p>
           {layer === "routes" ? (
             <button type="button" onClick={() => setLayer("batches")}>
-              查看此路线的 {route.batches.length} 个计划批次 →
+              {translateText("查看此路线的 ")}
+              {route.batches.length}
+              {translateText(" 个计划批次 →")}
             </button>
           ) : (
             batch && (
               <div className="map-selected-batch">
-                <small>选中计划批次 · {batch.id}</small>
-                <strong>{batch.storeName}</strong>
+                <small>
+                  {translateText("选中计划批次 · ")}
+                  {translateText(batch.id)}
+                </small>
+                <strong>{translateText(batch.storeName)}</strong>
                 <p>
-                  {batch.qty} 台 ·{" "}
-                  {batch.viaVpc ? "经 " + batch.viaVpc + " VPC" : "首批直送"} ·{" "}
-                  {batch.arrivalDay === null
-                    ? "到店时段待确认"
-                    : "D+" + batch.arrivalDay + " 到店"}
+                  {batch.qty}
+                  {translateText(" 台 ·")}
+                  {translateText(" ")}
+                  {translateText(
+                    batch.viaVpc ? "经 " + batch.viaVpc + " VPC" : "首批直送",
+                  )}{" "}
+                  ·{translateText(" ")}
+                  {translateText(
+                    batch.arrivalDay === null
+                      ? "到店时段待确认"
+                      : "D+" + batch.arrivalDay + " 到店",
+                  )}
                 </p>
-                <p>分摊干线费 {fmt(batch.cost)} SAR；无真实承运班次号。</p>
+                <p>
+                  {translateText("分摊干线费 ")}
+                  {translateText(fmt(batch.cost))}
+                  {translateText(" SAR；无真实承运班次号。")}
+                </p>
               </div>
             )
           )}
@@ -384,12 +435,12 @@ export default function DeliveryRouteMap({
           <table data-testid="map-batch-table">
             <thead>
               <tr>
-                <th>计划批次</th>
-                <th>门店</th>
-                <th>去向</th>
-                <th>数量</th>
-                <th>到店日</th>
-                <th>干线摊分费</th>
+                <th>{translateText("计划批次")}</th>
+                <th>{translateText("门店")}</th>
+                <th>{translateText("去向")}</th>
+                <th>{translateText("数量")}</th>
+                <th>{translateText("到店日")}</th>
+                <th>{translateText("干线摊分费")}</th>
               </tr>
             </thead>
             <tbody>
@@ -397,16 +448,22 @@ export default function DeliveryRouteMap({
                 <tr key={b.id} className={b.id === batch?.id ? "selected" : ""}>
                   <td>
                     <button type="button" onClick={() => setBatchId(b.id)}>
-                      {b.id}
+                      {translateText(b.id)}
                     </button>
                   </td>
-                  <td>{b.storeName}</td>
-                  <td>{b.viaVpc ? b.viaVpc + " VPC → 店" : "港口 → 店"}</td>
+                  <td>{translateText(b.storeName)}</td>
+                  <td>
+                    {translateText(
+                      b.viaVpc ? b.viaVpc + " VPC → 店" : "港口 → 店",
+                    )}
+                  </td>
                   <td>{b.qty}</td>
                   <td>
-                    {b.arrivalDay === null ? "待确认" : "D+" + b.arrivalDay}
+                    {translateText(
+                      b.arrivalDay === null ? "待确认" : "D+" + b.arrivalDay,
+                    )}
                   </td>
-                  <td>{fmt(b.cost)} SAR</td>
+                  <td>{translateText(fmt(b.cost))} SAR</td>
                 </tr>
               ))}
             </tbody>

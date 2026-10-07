@@ -1,4 +1,5 @@
 "use client";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
 
 import {
   AlertTriangle,
@@ -35,15 +36,20 @@ function sources(plan: DailyPlan | undefined, orderId: string) {
   );
 }
 function SourceRow({ source }: { source: SourceCandidate }) {
+  const { t: translateText } = useI18n();
+
   return (
     <article>
-      <strong>{source.location}</strong>
+      <strong>{translateText(source.location)}</strong>
       <span>
-        {source.vehicleIds.length} 台 · {source.leadDays} 天
+        {source.vehicleIds.length}
+        {translateText(" 台 · ")}
+        {source.leadDays}
+        {translateText(" 天")}
       </span>
-      <span>{source.cost.toLocaleString()} SAR</span>
+      <span>{translateText(source.cost.toLocaleString())} SAR</span>
       <StatusPill tone={source.executable ? "green" : "amber"}>
-        {source.executable ? "可执行" : "待确认"}
+        {translateText(source.executable ? "可执行" : "待确认")}
       </StatusPill>
     </article>
   );
@@ -60,8 +66,10 @@ export default function RebalanceBlocks({
   onApprove: (decisionId: string) => void;
   canApprove?: boolean;
 }) {
+  const { t: translateText } = useI18n();
+
   const plan = currentPlan(block, campaign);
-  if (!plan) return <p>正在建立今日调拨方案…</p>;
+  if (!plan) return <p>{translateText("正在建立今日调拨方案…")}</p>;
   const enterpriseOrder = plan.orders.find(
     (item) => item.type === "enterprise",
   );
@@ -84,20 +92,21 @@ export default function RebalanceBlocks({
     return (
       <div className="story-data-table daily" data-testid="daily-orders">
         <div>
-          <span>订单</span>
-          <span>类型</span>
-          <span>数量</span>
-          <span>目的地 / 承诺</span>
+          <span>{translateText("订单")}</span>
+          <span>{translateText("类型")}</span>
+          <span>{translateText("数量")}</span>
+          <span>{translateText("目的地 / 承诺")}</span>
         </div>
         {plan.orders.map((order) => (
           <article key={order.id}>
-            <strong>{order.id}</strong>
-            <span>{typeLabel[order.type]}</span>
+            <strong>{translateText(order.id)}</strong>
+            <span>{translateText(typeLabel[order.type])}</span>
             <span>
-              {order.quantity} × {order.model}
+              {order.quantity} × {translateText(order.model)}
             </span>
             <span>
-              {order.destination} · {order.dueInDays} 天
+              {translateText(order.destination)} · {order.dueInDays}
+              {translateText(" 天")}
             </span>
           </article>
         ))}
@@ -132,14 +141,23 @@ export default function RebalanceBlocks({
   if (block.type === "vpc-fulfillment")
     return (
       <SectionGrid columns={3}>
-        <FactCard eyebrow="LOCAL FIRST" title="达曼 VPC → Camry">
-          <p>本地库存随既有短驳班次发运，成本 950 SAR。</p>
+        <FactCard
+          eyebrow="LOCAL FIRST"
+          title={translateText("达曼 VPC → Camry")}
+        >
+          <p>{translateText("本地库存随既有短驳班次发运，成本 950 SAR。")}</p>
         </FactCard>
-        <FactCard eyebrow="MULTI-SOURCE" title="三 VPC → 80 Hilux">
-          <p>40 + 24 + 16 组合，不击穿任一来源安全水位。</p>
+        <FactCard
+          eyebrow="MULTI-SOURCE"
+          title={translateText("三 VPC → 80 Hilux")}
+        >
+          <p>{translateText("40 + 24 + 16 组合，不击穿任一来源安全水位。")}</p>
         </FactCard>
-        <FactCard eyebrow="CONSOLIDATED" title="吉达 VPC → 塔布克">
-          <p>8 台满载一台板车，进入西北周班。</p>
+        <FactCard
+          eyebrow="CONSOLIDATED"
+          title={translateText("吉达 VPC → 塔布克")}
+        >
+          <p>{translateText("8 台满载一台板车，进入西北周班。")}</p>
         </FactCard>
       </SectionGrid>
     );
@@ -154,8 +172,11 @@ export default function RebalanceBlocks({
               className={candidate.executable ? "ready" : "blocked"}
             >
               <i />
-              {candidate.location}
-              <small>{candidate.vehicleIds.length || "—"} 台</small>
+              {translateText(candidate.location)}
+              <small>
+                {translateText(candidate.vehicleIds.length || "—")}
+                {translateText(" 台")}
+              </small>
             </span>
           ))}
         </div>
@@ -168,19 +189,25 @@ export default function RebalanceBlocks({
           {enterpriseSources.map((source, index) => (
             <span className="story-assembly-part" key={source.id}>
               <article>
-                <span>{source.location}</span>
+                <span>{translateText(source.location)}</span>
                 <strong>{source.vehicleIds.length}</strong>
                 <small>
-                  {source.leadDays} 天 · {source.cost.toLocaleString()} SAR
+                  {source.leadDays}
+                  {translateText(" 天 · ")}
+                  {translateText(source.cost.toLocaleString())} SAR
                 </small>
               </article>
               {index < enterpriseSources.length - 1 && <b>+</b>}
             </span>
           ))}
-          <em>= {enterpriseOrder?.quantity ?? 0} 台</em>
+          <em>
+            = {enterpriseOrder?.quantity ?? 0}
+            {translateText(" 台")}
+          </em>
         </div>
         <p className="story-inline-note">
-          <LockKeyhole size={14} /> 组合后来源覆盖仍为 18 / 17 / 10 天。
+          <LockKeyhole size={14} />
+          {translateText(" 组合后来源覆盖仍为 18 / 17 / 10 天。")}
         </p>
       </div>
     );
@@ -188,18 +215,18 @@ export default function RebalanceBlocks({
     return (
       <div className="story-premium-choice">
         <article className="recommended">
-          <StatusPill>推荐</StatusPill>
+          <StatusPill>{translateText("推荐")}</StatusPill>
           <Store size={20} />
-          <strong>利雅得旗舰店</strong>
-          <p>1 台 Lexus LX · 同城 · 当日可达</p>
-          <small>调出后仍有 3 天覆盖 · 成本 2,800 SAR</small>
+          <strong>{translateText("利雅得旗舰店")}</strong>
+          <p>{translateText("1 台 Lexus LX · 同城 · 当日可达")}</p>
+          <small>{translateText("调出后仍有 3 天覆盖 · 成本 2,800 SAR")}</small>
         </article>
         <article>
-          <StatusPill tone="amber">备选</StatusPill>
+          <StatusPill tone="amber">{translateText("备选")}</StatusPill>
           <Store size={20} />
-          <strong>利雅得授权车商</strong>
-          <p>车源存在，但权属和回购价未确认</p>
-          <small>未满足 3 项交易条件</small>
+          <strong>{translateText("利雅得授权车商")}</strong>
+          <p>{translateText("车源存在，但权属和回购价未确认")}</p>
+          <small>{translateText("未满足 3 项交易条件")}</small>
         </article>
       </div>
     );
@@ -207,11 +234,14 @@ export default function RebalanceBlocks({
     return (
       <div className="story-decision-list">
         <p>
-          <CheckCircle2 size={16} /> Camry 普通订单：达曼 VPC 本地发货，成本低于
-          6,200 SAR 毛利。
+          <CheckCircle2 size={16} />
+          {translateText(
+            " Camry 普通订单：达曼 VPC 本地发货，成本低于 6,200 SAR 毛利。",
+          )}
         </p>
         <p>
-          <Truck size={16} /> 不生成跨区亏损专车；本地缺车时才从利雅得补位。
+          <Truck size={16} />
+          {translateText(" 不生成跨区亏损专车；本地缺车时才从利雅得补位。")}
         </p>
       </div>
     );
@@ -220,11 +250,15 @@ export default function RebalanceBlocks({
       <div className="story-remote" data-testid="remote-consolidation">
         <Truck size={34} />
         <div>
-          <span>JED → TABUK · 西北周班</span>
-          <strong>8 台 Hilux 拼单，满载一台板车</strong>
-          <p>预计 3 天到达 · 成本 21,000 SAR · 利用既有周班，不开单车专车</p>
+          <span>{translateText("JED → TABUK · 西北周班")}</span>
+          <strong>{translateText("8 台 Hilux 拼单，满载一台板车")}</strong>
+          <p>
+            {translateText(
+              "预计 3 天到达 · 成本 21,000 SAR · 利用既有周班，不开单车专车",
+            )}
+          </p>
         </div>
-        <StatusPill>承诺内</StatusPill>
+        <StatusPill>{translateText("承诺内")}</StatusPill>
       </div>
     );
   if (block.type === "store-impact")
@@ -252,11 +286,11 @@ export default function RebalanceBlocks({
       <div className="story-buyback">
         <div>
           <AlertTriangle size={22} />
-          <strong>授权车商回购尚不可执行</strong>
-          <p>{dealer?.unmetConditions.join(" · ")}</p>
+          <strong>{translateText("授权车商回购尚不可执行")}</strong>
+          <p>{translateText(dealer?.unmetConditions.join(" · "))}</p>
         </div>
         <button type="button" disabled data-testid="buyback-disabled">
-          等待权属与付款授权
+          {translateText("等待权属与付款授权")}
         </button>
       </div>
     );
@@ -266,12 +300,13 @@ export default function RebalanceBlocks({
         {plan.decisions.map((decision) => (
           <article key={decision.id}>
             <div>
-              <span>{decision.orderId}</span>
-              <strong>{decision.rationale}</strong>
+              <span>{translateText(decision.orderId)}</span>
+              <strong>{translateText(decision.rationale)}</strong>
             </div>
             {decision.status === "approved" ? (
               <StatusPill>
-                <CheckCircle2 size={12} /> 已批准
+                <CheckCircle2 size={12} />
+                {translateText(" 已批准")}
               </StatusPill>
             ) : decision.status === "approval_required" && canApprove ? (
               <button
@@ -285,13 +320,15 @@ export default function RebalanceBlocks({
                 }
                 onClick={() => onApprove(decision.id)}
               >
-                批准方案
+                {translateText("批准方案")}
               </button>
             ) : (
               <StatusPill tone="slate">
-                {decision.status === "approval_required"
-                  ? "历史方案 · 只读"
-                  : "自动建议"}
+                {translateText(
+                  decision.status === "approval_required"
+                    ? "历史方案 · 只读"
+                    : "自动建议",
+                )}
               </StatusPill>
             )}
           </article>
@@ -306,14 +343,19 @@ export default function RebalanceBlocks({
     <div className="story-daily-execution" data-testid="daily-execution">
       <PackageCheck size={35} />
       <div>
-        <span>{plan.businessDate} EXECUTION BOARD</span>
+        <span>{translateText(plan.businessDate)} EXECUTION BOARD</span>
         <strong>
-          {plan.executionTasks.length} 个运输任务 · {locked} 台已锁定
+          {plan.executionTasks.length}
+          {translateText(" 个运输任务 · ")}
+          {locked}
+          {translateText(" 台已锁定")}
         </strong>
         <p>
-          {plan.executionTasks.length
-            ? "已生成发运任务，库存从 available 更新为 locked。"
-            : "批准企业大单或高利润调拨后，Agent 将生成运输任务并锁定库存。"}
+          {translateText(
+            plan.executionTasks.length
+              ? "已生成发运任务，库存从 available 更新为 locked。"
+              : "批准企业大单或高利润调拨后，Agent 将生成运输任务并锁定库存。",
+          )}
         </p>
       </div>
       <Clock3 size={21} />

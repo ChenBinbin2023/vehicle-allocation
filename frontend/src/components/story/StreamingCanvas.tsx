@@ -1,4 +1,6 @@
 "use client";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
+
 import type { SaveVesselScenario } from "@/lib/story/vessel-scenario";
 
 import { useEffect, useRef, useState } from "react";
@@ -100,6 +102,8 @@ export default function StreamingCanvas({
     allocationRunId?: string,
   ) => void;
 }) {
+  const { t: translateText } = useI18n();
+
   const [historyOpen, setHistoryOpen] = useState(false);
   const mainRef = useRef<HTMLElement>(null);
   const historyRef = useRef<HTMLDivElement>(null);
@@ -166,8 +170,8 @@ export default function StreamingCanvas({
           <button
             type="button"
             className="workspace-sidebar-toggle"
-            aria-label="切换导航"
-            title={sidebarCollapsed ? "展开导航" : "收起导航"}
+            aria-label={translateText("切换导航")}
+            title={translateText(sidebarCollapsed ? "展开导航" : "收起导航")}
             aria-expanded={!sidebarCollapsed}
             onClick={onToggleSidebar}
           >
@@ -184,20 +188,20 @@ export default function StreamingCanvas({
         <div className="canvas-history-control" ref={historyRef}>
           <button
             type="button"
-            aria-label="关闭 GUI 画布"
+            aria-label={translateText("关闭 GUI 画布")}
             onClick={onCloseCanvas}
           >
             <X size={16} />
           </button>
           <button
             type="button"
-            aria-label="画布历史"
+            aria-label={translateText("画布历史")}
             aria-expanded={historyOpen}
             data-testid="canvas-history-toggle"
             onClick={() => setHistoryOpen((value) => !value)}
           >
             <History size={15} />
-            <span>画布历史</span>
+            <span>{translateText("画布历史")}</span>
             <small>{campaign.runs.length}</small>
           </button>
           {historyOpen && (
@@ -205,7 +209,7 @@ export default function StreamingCanvas({
               className="canvas-history-menu"
               data-testid="canvas-history-menu"
             >
-              <header>当前任务 · 分析画布</header>
+              <header>{translateText("当前任务 · 分析画布")}</header>
               {[...campaign.runs].reverse().map((item) => (
                 <button
                   type="button"
@@ -220,20 +224,25 @@ export default function StreamingCanvas({
                 >
                   <FileText size={14} />
                   <div>
-                    <strong>{resolveStorySkill(item.command)?.title}</strong>
+                    <strong>
+                      {translateText(resolveStorySkill(item.command)?.title)}
+                    </strong>
                     <small>
-                      {item.businessDate} · v{item.inputVersion} ·{" "}
-                      {item.blocks.some((block) => block.status === "stale")
-                        ? "输入已变更"
-                        : item.status === "complete"
-                          ? "已保存"
-                          : "运行中"}
+                      {translateText(item.businessDate)} · v{item.inputVersion}{" "}
+                      ·{translateText(" ")}
+                      {translateText(
+                        item.blocks.some((block) => block.status === "stale")
+                          ? "输入已变更"
+                          : item.status === "complete"
+                            ? "已保存"
+                            : "运行中",
+                      )}
                     </small>
                   </div>
                 </button>
               ))}
               {!campaign.runs.length && (
-                <p>尚无分析画布，请在 CUI 发起任务。</p>
+                <p>{translateText("尚无分析画布，请在 CUI 发起任务。")}</p>
               )}
             </div>
           )}
@@ -259,34 +268,45 @@ export default function StreamingCanvas({
                 <>
                   <header className="story-canvas-head">
                     <div>
-                      <span>{run.command}</span>
-                      <h1>{resolveStorySkill(run.command)?.title}</h1>
-                      <p>{run.prompt.replace(run.command, "").trim()}</p>
+                      <span>{translateText(run.command)}</span>
+                      <h1>
+                        {translateText(resolveStorySkill(run.command)?.title)}
+                      </h1>
+                      <p>
+                        {translateText(
+                          run.prompt.replace(run.command, "").trim(),
+                        )}
+                      </p>
                     </div>
                     <div
                       className={`story-run-state ${stale ? "stale" : run.status}`}
                     >
                       <i />
-                      {stale
-                        ? "输入已变更"
-                        : run.status === "complete"
-                          ? "已完成"
-                          : run.status === "paused"
-                            ? "已暂停"
-                            : "Agent 运行中"}
+                      {translateText(
+                        stale
+                          ? "输入已变更"
+                          : run.status === "complete"
+                            ? "已完成"
+                            : run.status === "paused"
+                              ? "已暂停"
+                              : "Agent 运行中",
+                      )}
                     </div>
                   </header>
                   <div className="story-canvas-meta">
                     <span>
                       <Ship size={14} />
-                      JEDDAH HORIZON · 1,800 台
+                      {translateText("JEDDAH HORIZON · 1,800 台")}
                     </span>
                     <span>
                       <Clock3 size={14} />
-                      {run.businessDate}
+                      {translateText(run.businessDate)}
                     </span>
-                    <span>输入版本 v{run.inputVersion}</span>
-                    <span>本地演示快照</span>
+                    <span>
+                      {translateText("输入版本 v")}
+                      {run.inputVersion}
+                    </span>
+                    <span>{translateText("本地演示快照")}</span>
                   </div>
                 </>
               )}
@@ -359,7 +379,7 @@ export default function StreamingCanvas({
                           <i />
                           <i />
                           <i />
-                          <p>正在汇总本轮数据与判断依据…</p>
+                          <p>{translateText("正在汇总本轮数据与判断依据…")}</p>
                         </div>
                       );
                     else if (block.type === "allocation-logic" && run.evidence)
@@ -443,14 +463,16 @@ export default function StreamingCanvas({
                       >
                         <div className="story-block-copy">
                           <div className="business-block-heading">
-                            <h2>{block.title}</h2>
+                            <h2>{translateText(block.title)}</h2>
                             <div className="story-block-status">
                               <i />
-                              {block.status === "streaming"
-                                ? "生成中"
-                                : block.status === "stale"
-                                  ? "已失效"
-                                  : "已就绪"}
+                              {translateText(
+                                block.status === "streaming"
+                                  ? "生成中"
+                                  : block.status === "stale"
+                                    ? "已失效"
+                                    : "已就绪",
+                              )}
                             </div>
                           </div>
                           {content}

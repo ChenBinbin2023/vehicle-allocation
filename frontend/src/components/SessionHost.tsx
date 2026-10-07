@@ -1,4 +1,5 @@
 "use client";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import StoryWorkspace from "./story/StoryWorkspace";
@@ -23,6 +24,8 @@ function newDraft(folderId = "global"): Session {
 }
 
 export default function SessionHost() {
+  const { t: translateText } = useI18n();
+
   const [workspace, setWorkspace] = useState<WorkspaceData>(createWorkspace);
   const [draft, setDraft] = useState<Session>(() => newDraft());
   const [ready, setReady] = useState(false);
@@ -108,9 +111,12 @@ export default function SessionHost() {
     draft;
   if (!ready)
     return (
-      <div className="story-loading" aria-label="正在恢复工作会话">
+      <div
+        className="story-loading"
+        aria-label={translateText("正在恢复工作会话")}
+      >
         <span>AT</span>
-        <p>正在恢复工作会话…</p>
+        <p>{translateText("正在恢复工作会话…")}</p>
       </div>
     );
 

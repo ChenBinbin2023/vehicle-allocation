@@ -1,4 +1,6 @@
 "use client";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
+import { matchesLocalizedText } from "@/lib/i18n/translate";
 
 import { useState } from "react";
 import type { QueryDimension, QueryResult } from "@/lib/story/query-engine";
@@ -39,6 +41,8 @@ export default function QuerySalesTrend({
   chosen: string[] | null;
   onChoose: (ids: string[] | null) => void;
 }) {
+  const { t: translateText } = useI18n();
+
   const [search, setSearch] = useState("");
   const selectedIds = chosen ?? rows.slice(0, 5).map((row) => row.id);
   const displayed =
@@ -89,14 +93,16 @@ export default function QuerySalesTrend({
       {dimension === "store" && (
         <details className="query-trend-store-picker">
           <summary>
-            选择趋势门店 · {displayed.length} 家
-            {chosen === null ? "（默认前 5）" : ""}
+            {translateText("选择趋势门店 · ")}
+            {displayed.length}
+            {translateText(" 家")}
+            {translateText(chosen === null ? "（默认前 5）" : "")}
           </summary>
           <div className="query-trend-store-toolbar">
             <input
               type="search"
-              aria-label="搜索趋势门店"
-              placeholder="搜索门店名称"
+              aria-label={translateText("搜索趋势门店")}
+              placeholder={translateText("搜索门店名称")}
               value={search}
               onChange={(event) => setSearch(event.target.value)}
             />
@@ -107,36 +113,41 @@ export default function QuerySalesTrend({
                 setSearch("");
               }}
             >
-              恢复前 5 家
+              {translateText("恢复前 5 家")}
             </button>
             <button type="button" onClick={() => onChoose([])}>
-              清空选择
+              {translateText("清空选择")}
             </button>
           </div>
           <p>
-            按所选期间历史销量排序；仅有预测时按预测销量排序。勾选只调整趋势图。
+            {translateText(
+              "按所选期间历史销量排序；仅有预测时按预测销量排序。勾选只调整趋势图。",
+            )}
           </p>
           <fieldset>
-            <legend className="sr-only">趋势门店多选</legend>
+            <legend className="sr-only">{translateText("趋势门店多选")}</legend>
             {rows
-              .filter((row) => row.label.includes(search.trim()))
+              .filter((row) => matchesLocalizedText(row.label, search))
               .map((row) => (
                 <label key={row.id}>
                   <input
                     type="checkbox"
-                    aria-label={row.label}
+                    aria-label={translateText(row.label)}
                     checked={selectedIds.includes(row.id)}
                     onChange={() => toggle(row.id)}
                   />
-                  <span>{row.label}</span>
+                  <span>{translateText(row.label)}</span>
                   <small>
-                    {(row.actual || row.forecast).toLocaleString("en-US")} 台
+                    {translateText(
+                      (row.actual || row.forecast).toLocaleString("en-US"),
+                    )}
+                    {translateText(" 台")}
                   </small>
                 </label>
               ))}
           </fieldset>
-          {!rows.some((row) => row.label.includes(search.trim())) && (
-            <p>没有匹配的门店名称。</p>
+          {!rows.some((row) => matchesLocalizedText(row.label, search)) && (
+            <p>{translateText("没有匹配的门店名称。")}</p>
           )}
         </details>
       )}
@@ -151,7 +162,7 @@ export default function QuerySalesTrend({
         />
       ) : (
         <div className="query-trend-empty">
-          请勾选要对比的门店，或恢复销量前 5 家。
+          {translateText("请勾选要对比的门店，或恢复销量前 5 家。")}
         </div>
       )}
     </>

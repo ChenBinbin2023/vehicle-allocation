@@ -1,4 +1,5 @@
 "use client";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
 
 import { useEffect, useState } from "react";
 import {
@@ -18,6 +19,8 @@ export default function DecisionProcess({
   run: StoryRun;
   focusedStep: number | null;
 }) {
+  const { t: translateText } = useI18n();
+
   const shown = visibleStoryEvents(run);
   const [selected, setSelected] = useState(0);
   const [expanded, setExpanded] = useState(false);
@@ -48,8 +51,8 @@ export default function DecisionProcess({
       <header>
         <div>
           <GitBranch size={15} />
-          <h2>决策过程</h2>
-          <span>数据 · 规则 · 校验 · 执行动作</span>
+          <h2>{translateText("决策过程")}</h2>
+          <span>{translateText("数据 · 规则 · 校验 · 执行动作")}</span>
         </div>
         <button
           type="button"
@@ -57,21 +60,23 @@ export default function DecisionProcess({
           aria-expanded={expanded}
           onClick={() => setExpanded((value) => !value)}
         >
-          {expanded ? "收起明细" : "查看规则明细"}
+          {translateText(expanded ? "收起明细" : "查看规则明细")}
         </button>
         <small>
-          {run.status === "running" ? (
-            <>
-              <LoaderCircle size={13} className="decision-spinner" />
-              分析中
-            </>
-          ) : (
-            "可追溯"
+          {translateText(
+            run.status === "running" ? (
+              <>
+                <LoaderCircle size={13} className="decision-spinner" />
+                {translateText("分析中")}
+              </>
+            ) : (
+              "可追溯"
+            ),
           )}
         </small>
       </header>
       <div className="decision-process-body">
-        <nav aria-label="决策步骤">
+        <nav aria-label={translateText("决策步骤")}>
           {visibleSteps.map((item, i) => (
             <button
               type="button"
@@ -91,8 +96,8 @@ export default function DecisionProcess({
                 )}
               </i>
               <span>
-                <small>{item.operation}</small>
-                <strong>{item.title}</strong>
+                <small>{translateText(item.operation)}</small>
+                <strong>{translateText(item.title)}</strong>
               </span>
               <ChevronRight size={12} />
             </button>
@@ -100,33 +105,35 @@ export default function DecisionProcess({
         </nav>
         <article className="decision-detail" data-testid="decision-detail">
           <div className="decision-detail-heading">
-            <span>{active.operation}</span>
-            <h3>{active.title}</h3>
+            <span>{translateText(active.operation)}</span>
+            <h3>{translateText(active.title)}</h3>
           </div>
           <div className="decision-inputs">
             {active.inputs.map((input) => (
               <div key={input.label}>
-                <small>{input.label}</small>
-                <strong>{input.value}</strong>
+                <small>{translateText(input.label)}</small>
+                <strong>{translateText(input.value)}</strong>
               </div>
             ))}
           </div>
           <div className="decision-rule">
-            <b>采用规则</b>
-            <p>{active.rule}</p>
+            <b>{translateText("采用规则")}</b>
+            <p>{translateText(active.rule)}</p>
           </div>
           <div className={`decision-output ${!finished ? "pending" : ""}`}>
-            <b>{finished ? "处理结果" : "正在校验"}</b>
+            <b>{translateText(finished ? "处理结果" : "正在校验")}</b>
             <p>
-              {finished
-                ? active.output
-                : "正在基于本轮数据计算；完成后写入结果。"}
+              {translateText(
+                finished
+                  ? active.output
+                  : "正在基于本轮数据计算；完成后写入结果。",
+              )}
             </p>
           </div>
           <footer>
             <Database size={12} />
             {active.sources.map((source) => (
-              <span key={source}>{source}</span>
+              <span key={source}>{translateText(source)}</span>
             ))}
           </footer>
         </article>

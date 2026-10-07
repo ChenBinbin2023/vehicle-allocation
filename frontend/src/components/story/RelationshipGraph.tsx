@@ -1,4 +1,5 @@
 "use client";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
 
 import { useId, useState, type ReactNode } from "react";
 import { ArrowUpRight, CircleDot, GitBranch } from "lucide-react";
@@ -48,6 +49,8 @@ export default function RelationshipGraph({
   controls?: ReactNode;
   height?: number;
 }) {
+  const { t: translateText } = useI18n();
+
   const id = useId().replace(/:/g, "");
   const [selectedId, setSelectedId] = useState(initialNode);
   const selected = nodes.find((node) => node.id === selectedId) ?? nodes[0];
@@ -63,20 +66,20 @@ export default function RelationshipGraph({
           <span className="visual-eyebrow">
             <GitBranch size={12} /> DECISION NETWORK
           </span>
-          <h3>{title}</h3>
-          <p>{subtitle}</p>
+          <h3>{translateText(title)}</h3>
+          <p>{translateText(subtitle)}</p>
         </div>
         <span className="visual-interaction-hint">
           <CircleDot size={13} />
-          点击节点查看依据
+          {translateText("点击节点查看依据")}
         </span>
       </header>
-      {controls}
+      {translateText(controls)}
       <div className="relationship-scroll">
         <svg
           className="relationship-svg"
           viewBox={`0 0 840 ${height}`}
-          aria-label={title}
+          aria-label={translateText(title)}
         >
           <defs>
             <pattern
@@ -113,16 +116,16 @@ export default function RelationshipGraph({
           </defs>
           <rect width="840" height={height} fill={`url(#${id}-grid)`} />
           <text className="graph-column-label" x="24" y="25">
-            业务输入
+            {translateText("业务输入")}
           </text>
           <text className="graph-column-label" x="242" y="25">
-            筛选与决策
+            {translateText("筛选与决策")}
           </text>
           <text className="graph-column-label" x="468" y="25">
-            计算与约束
+            {translateText("计算与约束")}
           </text>
           <text className="graph-column-label" x="674" y="25">
-            业务结果
+            {translateText("业务结果")}
           </text>
           {edges.map((edge, index) => {
             const from = nodes.find((node) => node.id === edge.from)!;
@@ -142,14 +145,16 @@ export default function RelationshipGraph({
                 data-edge-status={status}
               >
                 <path d={d} markerEnd={`url(#${id}-${status})`} />
-                {edge.label && (
-                  <text
-                    x={edge.labelX ?? (sx + tx) / 2}
-                    y={edge.labelY ?? (sy + ty) / 2 - 9}
-                    textAnchor="middle"
-                  >
-                    {edge.label}
-                  </text>
+                {translateText(
+                  edge.label && (
+                    <text
+                      x={edge.labelX ?? (sx + tx) / 2}
+                      y={edge.labelY ?? (sy + ty) / 2 - 9}
+                      textAnchor="middle"
+                    >
+                      {translateText(edge.label)}
+                    </text>
+                  ),
                 )}
               </g>
             );
@@ -160,7 +165,7 @@ export default function RelationshipGraph({
               transform={`translate(${node.x},${node.y})`}
               role="button"
               tabIndex={0}
-              aria-label={`查看 ${node.title}`}
+              aria-label={translateText(`查看 ${node.title}`)}
               aria-pressed={selected.id === node.id}
               onClick={() => setSelectedId(node.id)}
               onKeyDown={(event) => {
@@ -188,15 +193,17 @@ export default function RelationshipGraph({
               />
               <circle cx="15" cy="17" r="3" />
               <text className="node-kicker" x="24" y="20">
-                {node.kicker}
+                {translateText(node.kicker)}
               </text>
               <text className="node-title" x="14" y="43">
-                {node.title}
+                {translateText(node.title)}
               </text>
-              {node.value && (
-                <text className="node-value" x="14" y="75">
-                  {node.value}
-                </text>
+              {translateText(
+                node.value && (
+                  <text className="node-value" x="14" y="75">
+                    {translateText(node.value)}
+                  </text>
+                ),
               )}
               {node.lines?.map((line, i) => (
                 <text
@@ -205,7 +212,7 @@ export default function RelationshipGraph({
                   x="14"
                   y={(node.value ? 98 : 66) + i * 19}
                 >
-                  {line}
+                  {translateText(line)}
                 </text>
               ))}
             </g>
@@ -218,20 +225,20 @@ export default function RelationshipGraph({
         aria-live="polite"
       >
         <div className="graph-inspector-title">
-          <span>{selected.kicker}</span>
-          <strong>{selected.title}</strong>
+          <span>{translateText(selected.kicker)}</span>
+          <strong>{translateText(selected.title)}</strong>
           <ArrowUpRight size={15} />
         </div>
         <div className="graph-inspector-copy">
-          <p>{selected.summary}</p>
-          <small>{selected.rule}</small>
+          <p>{translateText(selected.summary)}</p>
+          <small>{translateText(selected.rule)}</small>
         </div>
         {selected.facts && (
           <div className="graph-inspector-facts">
             {selected.facts.map((fact) => (
               <div key={fact.label}>
-                <small>{fact.label}</small>
-                <strong>{fact.value}</strong>
+                <small>{translateText(fact.label)}</small>
+                <strong>{translateText(fact.value)}</strong>
               </div>
             ))}
           </div>
@@ -240,19 +247,19 @@ export default function RelationshipGraph({
       <footer className="visual-legend">
         <span>
           <i className="data" />
-          数据与供给
+          {translateText("数据与供给")}
         </span>
         <span>
           <i className="rule" />
-          规则与约束
+          {translateText("规则与约束")}
         </span>
         <span>
           <i className="result" />
-          决策结果
+          {translateText("决策结果")}
         </span>
         <span>
           <i className="excluded" />
-          不可执行 / 待关闭
+          {translateText("不可执行 / 待关闭")}
         </span>
       </footer>
     </section>

@@ -242,6 +242,128 @@
   margin-left: auto;
   color: #8c918c;
 }
+.workspace-account-control {
+  margin-top: auto;
+  flex-shrink: 0;
+}
+button.workspace-account {
+  width: 100%;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  border-right: 0;
+  border-bottom: 0;
+  border-left: 0;
+  font: inherit;
+}
+button.workspace-account:hover,
+button.workspace-account[aria-expanded="true"] {
+  background: #e8eae7;
+}
+.account-chevron-open {
+  transform: rotate(180deg);
+}
+.workspace-account-menu {
+  position: fixed;
+  left: 8px;
+  bottom: 64px;
+  width: min(244px, calc(100vw - 16px));
+  padding: 7px;
+  background: #fff;
+  border: 1px solid #e6e8e5;
+  border-radius: 14px;
+  box-shadow: 0 12px 36px #263b2b26;
+  z-index: 100;
+  color: #404342;
+}
+.workspace-account-identity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 7px 13px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid #f0f1ee;
+}
+.workspace-account-avatar {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  width: 29px;
+  height: 29px;
+  background: #333633;
+  color: #fff;
+  font-size: 10px;
+}
+.workspace-account-identity div {
+  display: grid;
+  gap: 3px;
+}
+.workspace-account-identity strong {
+  font-size: 12px;
+}
+.workspace-account-identity small {
+  color: #8b918b;
+  font-size: 10px;
+}
+.workspace-account-menu button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 39px;
+  padding: 8px;
+  border: 0;
+  border-radius: 7px;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+}
+.workspace-account-menu button:hover,
+.workspace-account-menu button:focus-visible {
+  background: #eff3ee;
+}
+.workspace-account-menu button:focus-visible,
+.workspace-account:focus-visible {
+  outline: 2px solid #416b50;
+  outline-offset: -2px;
+}
+.workspace-account-menu button > span {
+  flex: 1;
+}
+.workspace-language-badge {
+  display: grid;
+  place-items: center;
+  min-width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  color: #fff;
+  background: #416452;
+  font-size: 10px;
+}
+.workspace-account-menu .workspace-language-back {
+  color: #7d857c;
+  font-size: 11px;
+}
+html[lang="en"] .story-brand strong {
+  font-size: 13px;
+  line-height: 1.35;
+  min-width: 0;
+  white-space: normal;
+  flex: 1;
+}
+html[lang="en"] .dd-strip-label span {
+  min-width: 0;
+  white-space: normal;
+}
+html[lang="en"] .workspace-quick-actions span,
+html[lang="en"] .workspace-sidebar-section nav span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
 .story-shell .story-chat {
   height: 100dvh;
   min-height: 0;

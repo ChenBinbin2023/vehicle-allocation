@@ -1,3 +1,4 @@
+import { useI18n } from "@/lib/i18n/LocaleProvider";
 export default function VesselSectionHeading({
   number,
   english,
@@ -11,15 +12,17 @@ export default function VesselSectionHeading({
   note: string;
   headingId?: string;
 }) {
+  const { t: translateText } = useI18n();
+
   return (
     <header className="vessel-section-heading">
       <span className="vessel-section-number" aria-hidden="true">
-        {number}
+        {translateText(number)}
       </span>
       <div>
-        <small>{english}</small>
-        <h2 id={headingId}>{title}</h2>
-        <p>{note}</p>
+        <small>{translateText(english)}</small>
+        <h2 id={headingId}>{translateText(title)}</h2>
+        <p>{translateText(note)}</p>
       </div>
     </header>
   );

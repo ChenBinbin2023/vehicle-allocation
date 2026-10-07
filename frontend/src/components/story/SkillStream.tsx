@@ -1,4 +1,6 @@
 "use client";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
+
 import { createContext, useContext, type ReactNode } from "react";
 import type { StoryRun } from "@/lib/story/types";
 
@@ -10,8 +12,12 @@ export function SkillStream({
   run: StoryRun;
   children: ReactNode;
 }) {
+  const { t: translateText } = useI18n();
+
   return (
-    <StreamContext.Provider value={run}>{children}</StreamContext.Provider>
+    <StreamContext.Provider value={run}>
+      {translateText(children)}
+    </StreamContext.Provider>
   );
 }
 export function StreamBlock({
@@ -21,8 +27,10 @@ export function StreamBlock({
   name: string;
   children: ReactNode;
 }) {
+  const { t: translateText } = useI18n();
+
   const run = useContext(StreamContext);
-  if (!run) return <>{children}</>;
+  if (!run) return <>{translateText(children)}</>;
   const block = run.blocks.find((item) => item.type === name);
   if (!block || block.status === "queued") return null;
   return (
@@ -32,18 +40,23 @@ export function StreamBlock({
       data-testid="skill-gui-block"
       data-block-type={name}
       data-block-status={block.status}
-      aria-label={block.title}
+      aria-label={translateText(block.title)}
       aria-busy={block.status === "streaming"}
     >
-      {block.status === "streaming" ? (
-        <div className="skill-block-skeleton">
-          <span />
-          <strong>正在生成{block.title}…</strong>
-          <i />
-          <i />
-        </div>
-      ) : (
-        children
+      {translateText(
+        block.status === "streaming" ? (
+          <div className="skill-block-skeleton">
+            <span />
+            <strong>
+              {translateText("正在生成")}
+              {translateText(block.title)}…
+            </strong>
+            <i />
+            <i />
+          </div>
+        ) : (
+          children
+        ),
       )}
     </div>
   );

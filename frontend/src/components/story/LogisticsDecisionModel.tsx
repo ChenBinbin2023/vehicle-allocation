@@ -1,4 +1,5 @@
 "use client";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
 
 import { useMemo, useState } from "react";
 import { ArrowRight, GitBranch, Route, Truck } from "lucide-react";
@@ -66,6 +67,8 @@ export default function LogisticsDecisionModel({
 }: {
   evidence: DecisionEvidence;
 }) {
+  const { t: translateText } = useI18n();
+
   const [caseId, setCaseId] = useState<string>("east");
   const [shortfall, setShortfall] = useState(false);
   const [batchIndex, setBatchIndex] = useState(0);
@@ -103,8 +106,8 @@ export default function LogisticsDecisionModel({
       <div className="decision-objective">
         <Route size={19} />
         <div>
-          <strong>先满足交期，再比较全程成本与装卸</strong>
-          <p>{evidence.objective}</p>
+          <strong>{translateText("先满足交期，再比较全程成本与装卸")}</strong>
+          <p>{translateText(evidence.objective)}</p>
         </div>
       </div>
       <LogisticsMap
@@ -119,14 +122,15 @@ export default function LogisticsDecisionModel({
             onClick={() => setCaseId(item.id)}
             className={caseId === item.id ? "active" : ""}
           >
-            {item.label} · {item.quantity} 台
+            {translateText(item.label)} · {item.quantity}
+            {translateText(" 台")}
           </button>
         ))}
       </div>
       <section className="model-section">
         <header>
-          <h3>{activeCase.title}</h3>
-          <small>同一需求，比较两条候选路径</small>
+          <h3>{translateText(activeCase.title)}</h3>
+          <small>{translateText("同一需求，比较两条候选路径")}</small>
         </header>
         <div className="route-comparison">
           {activeCase.choices.map((choice) => (
@@ -135,57 +139,64 @@ export default function LogisticsDecisionModel({
               className={choice.recommended ? "recommended" : "rejected"}
             >
               <StatusPill tone={choice.recommended ? "green" : "amber"}>
-                {choice.recommended ? "保留并推荐" : "交期淘汰"}
+                {translateText(choice.recommended ? "保留并推荐" : "交期淘汰")}
               </StatusPill>
-              <h4>{choice.label}</h4>
+              <h4>{translateText(choice.label)}</h4>
               <div className="route-stops">
                 <span>JED</span>
                 <i />
                 <Truck size={18} />
                 <i />
                 <span>
-                  {choice.recommended && caseId === "east"
-                    ? "交付点"
-                    : caseId === "transition" && choice.recommended
-                      ? "RUH"
-                      : "DMM"}
+                  {translateText(
+                    choice.recommended && caseId === "east"
+                      ? "交付点"
+                      : caseId === "transition" && choice.recommended
+                        ? "RUH"
+                        : "DMM",
+                  )}
                 </span>
               </div>
               <dl>
                 <div>
-                  <dt>每板全程</dt>
-                  <dd>{choice.cost.toLocaleString()} SAR</dd>
+                  <dt>{translateText("每板全程")}</dt>
+                  <dd>{translateText(choice.cost.toLocaleString())} SAR</dd>
                 </div>
                 <div>
-                  <dt>批次预算</dt>
+                  <dt>{translateText("批次预算")}</dt>
                   <dd>
-                    {(
-                      Math.ceil(activeCase.quantity / 8) * choice.cost
-                    ).toLocaleString()}{" "}
+                    {translateText(
+                      (
+                        Math.ceil(activeCase.quantity / 8) * choice.cost
+                      ).toLocaleString(),
+                    )}
+                    {translateText(" ")}
                     SAR
                   </dd>
                 </div>
                 <div>
-                  <dt>到达 / 装卸</dt>
+                  <dt>{translateText("到达 / 装卸")}</dt>
                   <dd>
-                    D+{choice.days} / {choice.handling} 次
+                    D+{choice.days} / {choice.handling}
+                    {translateText(" 次")}
                   </dd>
                 </div>
               </dl>
-              <p>{choice.reason}</p>
+              <p>{translateText(choice.reason)}</p>
             </article>
           ))}
         </div>
         <p className="model-note">
-          备选线路运价为演示报价；以 8 位板车估算批次费用。先达曼再短驳按 7,600
-          + 1,850 SAR/板测算。
+          {translateText(
+            "备选线路运价为演示报价；以 8 位板车估算批次费用。先达曼再短驳按 7,600 + 1,850 SAR/板测算。",
+          )}
         </p>
       </section>
       <section className="scenario-console">
         <header>
           <div>
             <GitBranch size={15} />
-            <h3>运力不足时，怎样回压分车</h3>
+            <h3>{translateText("运力不足时，怎样回压分车")}</h3>
           </div>
           <button
             type="button"
@@ -193,20 +204,25 @@ export default function LogisticsDecisionModel({
             className={shortfall ? "active" : ""}
             onClick={() => setShortfall((value) => !value)}
           >
-            {shortfall ? "恢复 650 台容量" : "模拟中轴运力减 80 台"}
+            {translateText(
+              shortfall ? "恢复 650 台容量" : "模拟中轴运力减 80 台",
+            )}
           </button>
         </header>
         <div className="capacity-relationship">
           <span>
-            利雅得干线需求 <b>{riyadhDemand}</b>
+            {translateText("利雅得干线需求 ")}
+            <b>{riyadhDemand}</b>
           </span>
           <ArrowRight size={16} />
           <span>
-            已确认容量 <b>{shortfall ? 570 : 650}</b>
+            {translateText("已确认容量 ")}
+            <b>{shortfall ? 570 : 650}</b>
           </span>
           <ArrowRight size={16} />
           <span>
-            中轴缺口 <b>{riyadhGap}</b>
+            {translateText("中轴缺口 ")}
+            <b>{riyadhGap}</b>
           </span>
         </div>
         <div
@@ -214,43 +230,54 @@ export default function LogisticsDecisionModel({
           data-testid="logistics-scenario-result"
         >
           <strong>
-            {simulation.affected.length} 台待调整 ·{" "}
-            {simulation.protectedAffected} 台已预订订单受影响
+            {simulation.affected.length}
+            {translateText(" 台待调整 ·")}
+            {translateText(" ")}
+            {simulation.protectedAffected}
+            {translateText(" 台已预订订单受影响")}
           </strong>
           <p>
-            {blocked
-              ? `按优先级标记 ${affectedTypes["DEM-CONTINGENCY"] ?? 0} 台异常缓冲、${affectedTypes["DEM-MOBILE"] ?? 0} 台机动、${affectedTypes["DEM-REPLENISHMENT"] ?? 0} 台补货待调整。当前情景不能发布。`
-              : "每条路线分别校验；当前路线容量通过，可进入执行。"}
+            {translateText(
+              blocked
+                ? `按优先级标记 ${affectedTypes["DEM-CONTINGENCY"] ?? 0} 台异常缓冲、${affectedTypes["DEM-MOBILE"] ?? 0} 台机动、${affectedTypes["DEM-REPLENISHMENT"] ?? 0} 台补货待调整。当前情景不能发布。`
+                : "每条路线分别校验；当前路线容量通过，可进入执行。",
+            )}
           </p>
         </div>
         {blocked && (
           <div className="capacity-vins">
             {simulation.affected.slice(0, 4).map((item) => (
               <span key={item.vehicleId}>
-                {item.vehicleId} ·{" "}
-                {item.pool === "reserved"
-                  ? "已确认订单"
-                  : item.demandId === "DEM-CONTINGENCY"
-                    ? "异常缓冲"
-                    : item.demandId === "DEM-MOBILE"
-                      ? "机动库存"
-                      : "普通补货"}
+                {translateText(item.vehicleId)} ·{translateText(" ")}
+                {translateText(
+                  item.pool === "reserved"
+                    ? "已确认订单"
+                    : item.demandId === "DEM-CONTINGENCY"
+                      ? "异常缓冲"
+                      : item.demandId === "DEM-MOBILE"
+                        ? "机动库存"
+                        : "普通补货",
+                )}
               </span>
             ))}
             <small>
-              共 {simulation.affected.length} 台，原归属仍保留；需重排后再发布
+              {translateText("共 ")}
+              {simulation.affected.length}
+              {translateText(" 台，原归属仍保留；需重排后再发布")}
             </small>
           </div>
         )}
         <p className="model-note">
-          这是本轮输入的运力情景测算，不会修改已经发布的运输任务。
+          {translateText(
+            "这是本轮输入的运力情景测算，不会修改已经发布的运输任务。",
+          )}
         </p>
       </section>
       <section className="model-section">
         <header>
-          <h3>从 VIN 到板位，而不只是路线总数</h3>
+          <h3>{translateText("从 VIN 到板位，而不只是路线总数")}</h3>
           <select
-            aria-label="查看配载批次"
+            aria-label={translateText("查看配载批次")}
             value={batchIndex}
             onChange={(event) => setBatchIndex(Number(event.target.value))}
           >
@@ -264,13 +291,15 @@ export default function LogisticsDecisionModel({
                   key={item.id}
                   value={evidence.delivery?.batches.indexOf(item)}
                 >
-                  {item.id.replace("DEMO-TRUCK-", "")}
+                  {translateText(item.id.replace("DEMO-TRUCK-", ""))}
                 </option>
               ))}
           </select>
         </header>
         <p className="model-note">
-          同方向分组 → 每板 8 位 → 唯一 VIN 入板 → 校验尾板装载率。
+          {translateText(
+            "同方向分组 → 每板 8 位 → 唯一 VIN 入板 → 校验尾板装载率。",
+          )}
         </p>
         <div className="truck-slot-grid">
           {Array.from({ length: 8 }, (_, i) => {
@@ -278,10 +307,15 @@ export default function LogisticsDecisionModel({
             const vehicle = vin ? vehicles.get(vin) : undefined;
             return (
               <article className={vin ? "occupied" : "empty"} key={i}>
-                <span>板位 {i + 1}</span>
+                <span>
+                  {translateText("板位 ")}
+                  {i + 1}
+                </span>
                 <Truck size={18} />
-                <strong>{vehicle?.model ?? "空位"}</strong>
-                <small>{vin?.replace("DEMO-", "") ?? "尾板允许未满载"}</small>
+                <strong>{translateText(vehicle?.model ?? "空位")}</strong>
+                <small>
+                  {translateText(vin?.replace("DEMO-", "") ?? "尾板允许未满载")}
+                </small>
               </article>
             );
           })}
@@ -289,10 +323,19 @@ export default function LogisticsDecisionModel({
         {batch && (
           <div className="truck-batch-facts">
             <span>
-              发运 D+{batch.departDay} → 到达 D+{batch.arrivalDay}
+              {translateText("发运 D+")}
+              {batch.departDay}
+              {translateText(" → 到达 D+")}
+              {batch.arrivalDay}
             </span>
-            <span>装载 {batch.vehicleIds.length}/8</span>
-            <span>预算 {batch.cost.toLocaleString()} SAR</span>
+            <span>
+              {translateText("装载 ")}
+              {batch.vehicleIds.length}/8
+            </span>
+            <span>
+              {translateText("预算 ")}
+              {translateText(batch.cost.toLocaleString())} SAR
+            </span>
           </div>
         )}
       </section>

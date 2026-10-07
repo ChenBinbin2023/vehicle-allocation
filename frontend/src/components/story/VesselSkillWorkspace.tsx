@@ -1,4 +1,6 @@
 "use client";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
+
 import { useEffect, useRef } from "react";
 import { Database, Download } from "lucide-react";
 import { resolveStorySkill } from "@/lib/story/skill-catalog";
@@ -28,6 +30,8 @@ export default function VesselSkillWorkspace({
   focusRevision: number;
   onSaveScenario?: SaveVesselScenario;
 }) {
+  const { t: translateText } = useI18n();
+
   const root = useRef<HTMLDivElement>(null);
   const snapshot = run.planning;
   const event = focusedStep === null ? undefined : run.events[focusedStep];
@@ -82,42 +86,54 @@ export default function VesselSkillWorkspace({
       <header className="planning-heading">
         <div>
           <small>
-            {statistics
-              ? "VESSEL OVERVIEW"
-              : orderSkill
-                ? "ORDER ALLOCATION"
-                : "ALLOCATION SIMULATION"}{" "}
-            · SKILL WORKSPACE
+            {translateText(
+              statistics
+                ? "VESSEL OVERVIEW"
+                : orderSkill
+                  ? "ORDER ALLOCATION"
+                  : "ALLOCATION SIMULATION",
+            )}
+            {translateText(" ")}· SKILL WORKSPACE
           </small>
-          <h1>{skill.title}</h1>
-          <p>{skill.description}</p>
+          <h1>{translateText(skill.title)}</h1>
+          <p>{translateText(skill.description)}</p>
         </div>
         <span className="planning-status">
-          {run.status === "complete"
-            ? "已完成"
-            : run.status === "paused"
-              ? "已暂停"
-              : "生成中"}{" "}
-          · {Math.round((run.elapsed / run.duration) * 100)}%
+          {translateText(
+            run.status === "complete"
+              ? "已完成"
+              : run.status === "paused"
+                ? "已暂停"
+                : "生成中",
+          )}
+          {translateText(" ")}· {Math.round((run.elapsed / run.duration) * 100)}
+          %
         </span>
       </header>
       <div className="planning-context">
         <span>
           <Database size={14} />
-          {overview.snapshotDate} · 模拟统计快照
+          {translateText(overview.snapshotDate)}
+          {translateText(" · 模拟统计快照")}
         </span>
-        <span>丰田 / 雷克萨斯 · {overview.stores.length} 家门店</span>
+        <span>
+          {translateText("丰田 / 雷克萨斯 · ")}
+          {overview.stores.length}
+          {translateText(" 家门店")}
+        </span>
         <button
           type="button"
           disabled={run.status !== "complete"}
           onClick={download}
         >
           <Download size={14} />
-          {statistics
-            ? "导出统计快照"
-            : orderSkill
-              ? "导出订单与物流快照"
-              : "导出快照"}
+          {translateText(
+            statistics
+              ? "导出统计快照"
+              : orderSkill
+                ? "导出订单与物流快照"
+                : "导出快照",
+          )}
         </button>
       </div>
       <SkillStream run={run}>

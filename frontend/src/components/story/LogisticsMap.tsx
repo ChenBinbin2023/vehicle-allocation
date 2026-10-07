@@ -1,4 +1,5 @@
 "use client";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
 
 import { useId, useState, type CSSProperties } from "react";
 import {
@@ -93,6 +94,8 @@ export default function LogisticsMap({
   plan: DeliveryPlan;
   affectedQuantity: number;
 }) {
+  const { t: translateText } = useI18n();
+
   const id = useId().replace(/:/g, "");
   const [selected, setSelected] = useState<RouteId>("eastDirect");
   const [showRejected, setShowRejected] = useState(false);
@@ -116,25 +119,29 @@ export default function LogisticsMap({
           <span className="visual-eyebrow">
             <Compass size={12} /> SINGLE-PORT NETWORK
           </span>
-          <h3>从一个入口，重新组织全国配送</h3>
-          <p>吉达是唯一入境港；按最终需求选择路径，不再套用旧母库归属。</p>
+          <h3>{translateText("从一个入口，重新组织全国配送")}</h3>
+          <p>
+            {translateText(
+              "吉达是唯一入境港；按最终需求选择路径，不再套用旧母库归属。",
+            )}
+          </p>
         </div>
         <button
           type="button"
           className={`map-layer-button ${showRejected ? "active" : ""}`}
           aria-pressed={showRejected}
-          aria-label="显示淘汰路径"
+          aria-label={translateText("显示淘汰路径")}
           onClick={() => setShowRejected((value) => !value)}
         >
           <Layers3 size={14} />
-          {showRejected ? "隐藏旧路径" : "对比旧路径"}
+          {translateText(showRejected ? "隐藏旧路径" : "对比旧路径")}
         </button>
       </header>
       <div className="logistics-map-surface">
         <svg
           viewBox="0 0 840 500"
           className="logistics-geography"
-          aria-label="沙特单港物流地理示意图"
+          aria-label={translateText("沙特单港物流地理示意图")}
         >
           <defs>
             <linearGradient id={`${id}-land`} x1="0" x2=".9" y1="0" y2="1">
@@ -198,7 +205,7 @@ export default function LogisticsMap({
             SAUDI ARABIA
           </text>
           <text x="367" y="403" className="map-country-local">
-            沙特阿拉伯
+            {translateText("沙特阿拉伯")}
           </text>
           <text
             x="59"
@@ -251,7 +258,7 @@ export default function LogisticsMap({
                 stroke="#ddc5ae"
               />
               <text x="276" y="116">
-                东部旧母库路径 · D+4 超承诺
+                {translateText("东部旧母库路径 · D+4 超承诺")}
               </text>
             </g>
           )}
@@ -261,7 +268,7 @@ export default function LogisticsMap({
               className={`map-route ${selected === route.id ? "selected" : "muted"}`}
               role="button"
               tabIndex={0}
-              aria-label={`地图路线 ${route.label}`}
+              aria-label={translateText(`地图路线 ${route.label}`)}
               aria-pressed={selected === route.id}
               onClick={() => setSelected(route.id)}
               onKeyDown={(event) => {
@@ -329,9 +336,11 @@ export default function LogisticsMap({
                   strokeWidth="2"
                 />
                 <g transform={`translate(${lx},${ly})`}>
-                  <text className="map-location-name">{location.name}</text>
+                  <text className="map-location-name">
+                    {translateText(location.name)}
+                  </text>
                   <text className="map-location-code" y="16">
-                    {location.code}
+                    {translateText(location.code)}
                   </text>
                 </g>
               </g>
@@ -354,37 +363,43 @@ export default function LogisticsMap({
             />
             <circle cx="15" cy="15" r="4" fill="#248168" />
             <text x="27" y="19" className="map-entry-label">
-              唯一入境节点 · JEDDAH PORT
+              {translateText("唯一入境节点 · JEDDAH PORT")}
             </text>
           </g>
         </svg>
         {affectedQuantity > 0 && (
           <div className="map-capacity-alert" data-testid="map-capacity-alert">
             <TriangleAlert size={14} />
-            <span>{affectedQuantity} 台库存待运力调整</span>
-            <small>订单优先保护</small>
+            <span>
+              {affectedQuantity}
+              {translateText(" 台库存待运力调整")}
+            </span>
+            <small>{translateText("订单优先保护")}</small>
           </div>
         )}
       </div>
-      <nav className="map-route-selector" aria-label="物流路线选择">
+      <nav
+        className="map-route-selector"
+        aria-label={translateText("物流路线选择")}
+      >
         {routes.map((route) => (
           <button
             key={route.id}
             type="button"
             className={selected === route.id ? "active" : ""}
             aria-pressed={selected === route.id}
-            aria-label={`查看 ${route.label}`}
+            aria-label={translateText(`查看 ${route.label}`)}
             onClick={() => setSelected(route.id)}
             style={{ "--route-color": route.color } as CSSProperties}
           >
             <i />
-            <span>{route.label}</span>
+            <span>{translateText(route.label)}</span>
             <strong>
               {
                 plan.assignments.filter((item) => item.route === route.id)
                   .length
               }
-              <small>台</small>
+              <small>{translateText("台")}</small>
             </strong>
           </button>
         ))}
@@ -395,31 +410,41 @@ export default function LogisticsMap({
             <Route size={12} /> ROUTE DECISION
           </span>
           <h4>
-            {active.label}
+            {translateText(active.label)}
             <ArrowRight size={14} />
-            <span>{quantity} 台</span>
+            <span>
+              {quantity}
+              {translateText(" 台")}
+            </span>
           </h4>
-          <p>{active.why}</p>
+          <p>{translateText(active.why)}</p>
         </div>
         <div className="map-route-metrics">
           <div>
-            <small>每板运价</small>
+            <small>{translateText("每板运价")}</small>
             <strong>
-              {(batches[0]?.cost ?? 0).toLocaleString()}
+              {translateText((batches[0]?.cost ?? 0).toLocaleString())}
               <em>SAR</em>
             </strong>
           </div>
           <div>
-            <small>计划到达 / 装卸</small>
+            <small>{translateText("计划到达 / 装卸")}</small>
             <strong>
               D+{arrival}
-              <em> / {handling} 次</em>
+              <em>
+                {" "}
+                / {handling}
+                {translateText(" 次")}
+              </em>
             </strong>
           </div>
           <div>
-            <small>{batches.length} 板 · 路线预算</small>
+            <small>
+              {batches.length}
+              {translateText(" 板 · 路线预算")}
+            </small>
             <strong>
-              {totalCost.toLocaleString()}
+              {translateText(totalCost.toLocaleString())}
               <em>SAR</em>
             </strong>
           </div>
@@ -428,19 +453,20 @@ export default function LogisticsMap({
       <footer className="map-attribution">
         <span>
           <MapPin size={11} />
-          底图：
+          {translateText("底图：")}
           <a
             href="https://www.naturalearthdata.com/"
             target="_blank"
             rel="noreferrer"
           >
             Natural Earth
-          </a>{" "}
-          · 地理轮廓 / 非导航路径
+          </a>
+          {translateText(" ")}
+          {translateText("· 地理轮廓 / 非导航路径")}
         </span>
         <span>
           <Check size={11} />
-          数量与预算来自本轮运输计划
+          {translateText("数量与预算来自本轮运输计划")}
         </span>
       </footer>
     </section>

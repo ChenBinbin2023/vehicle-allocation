@@ -1,4 +1,6 @@
 "use client";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
+
 import type {
   CommercialParameters,
   ModelPricing,
@@ -32,6 +34,8 @@ export default function VesselCommercialParameters({
   onStore: (id: string) => void;
   onModel: (id: string) => void;
 }) {
+  const { t: translateText } = useI18n();
+
   function log(id: string, p: Partial<StoreLogistics>) {
     const next = {
       ...input,
@@ -54,7 +58,7 @@ export default function VesselCommercialParameters({
     return (
       <input
         type="number"
-        aria-label={label}
+        aria-label={translateText(label)}
         value={Number.isNaN(value) ? "" : value}
         step={step}
         disabled={disabled}
@@ -99,14 +103,14 @@ export default function VesselCommercialParameters({
           <table>
             <thead>
               <tr>
-                <th>门店 / 渠道</th>
+                <th>{translateText("门店 / 渠道")}</th>
                 <th>
-                  8 台满载基准
+                  {translateText("8 台满载基准")}
                   <br />
                   SAR
                 </th>
-                <th>门店系数 ×</th>
-                <th>暂存中心</th>
+                <th>{translateText("门店系数 ×")}</th>
+                <th>{translateText("暂存中心")}</th>
               </tr>
             </thead>
             <tbody>
@@ -114,9 +118,9 @@ export default function VesselCommercialParameters({
                 <tr key={s.id} data-selected={selected === s.id}>
                   <td>
                     <button type="button" onClick={() => onStore(s.id)}>
-                      {s.shortName}
+                      {translateText(s.shortName)}
                       <small>
-                        {s.channel} · {s.city}
+                        {translateText(s.channel)} · {translateText(s.city)}
                       </small>
                     </button>
                   </td>
@@ -136,14 +140,14 @@ export default function VesselCommercialParameters({
                   </td>
                   <td>
                     <select
-                      aria-label={s.id + " 中转中心"}
+                      aria-label={translateText(s.id + " 中转中心")}
                       disabled={disabled}
                       value={input.logistics[s.id].hub}
                       onChange={(e) => log(s.id, { hub: e.target.value })}
                     >
                       {commercialHubs.map((h) => (
                         <option key={h.id} value={h.id}>
-                          {h.name}
+                          {translateText(h.name)}
                         </option>
                       ))}
                     </select>
@@ -157,11 +161,12 @@ export default function VesselCommercialParameters({
         factors.every((n) => Number.isFinite(n) && n >= 0) ? (
           <div className="vc-coefficient-panel">
             <div className="vc-chart-caption">
-              <strong>每店最终单车物流成本</strong>
+              <strong>{translateText("每店最终单车物流成本")}</strong>
               <span>
                 <i className="vc-dot blue" />
-                成本 · 左轴 SAR <i className="vc-dot gold" />
-                系数 · 右轴 ×
+                {translateText("成本 · 左轴 SAR ")}
+                <i className="vc-dot gold" />
+                {translateText("系数 · 右轴 ×")}
               </span>
             </div>
             <div className="vc-chart-scroll">
@@ -169,7 +174,7 @@ export default function VesselCommercialParameters({
                 viewBox={"0 0 " + width + " 355"}
                 style={{ minWidth: width }}
                 role="img"
-                aria-label="门店物流成本与系数双轴图"
+                aria-label={translateText("门店物流成本与系数双轴图")}
                 data-testid="logistics-coefficient-chart"
               >
                 {[0, 1, 2, 3, 4].map((i) => {
@@ -184,10 +189,10 @@ export default function VesselCommercialParameters({
                         stroke="#e9edf2"
                       />
                       <text x={left - 10} y={y + 4} textAnchor="end">
-                        {fmt((maximum * i) / 4)}
+                        {translateText(fmt((maximum * i) / 4))}
                       </text>
                       <text x={right + 10} y={y + 4}>
-                        {fmt((maxFactor * i) / 4)}
+                        {translateText(fmt((maxFactor * i) / 4))}
                       </text>
                     </g>
                   );
@@ -211,7 +216,7 @@ export default function VesselCommercialParameters({
                     key={s.id}
                     role="button"
                     tabIndex={0}
-                    aria-label={s.id + " 物流成本"}
+                    aria-label={translateText(s.id + " 物流成本")}
                     onClick={() => onStore(s.id)}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") {
@@ -238,24 +243,27 @@ export default function VesselCommercialParameters({
                       fill="#c69533"
                     />
                     <text transform={"translate(" + x(i) + " 293) rotate(60)"}>
-                      {s.shortName}
+                      {translateText(s.shortName)}
                     </text>
                     <title>
-                      {s.name +
-                        "：" +
-                        fmt(costs[i]) +
-                        " SAR，系数 ×" +
-                        factors[i]}
+                      {translateText(
+                        s.name +
+                          "：" +
+                          fmt(costs[i]) +
+                          " SAR，系数 ×" +
+                          factors[i],
+                      )}
                     </title>
                   </g>
                 ))}
               </svg>
             </div>
             <p className="vr-footnote">
-              初始成本参考单港线路报价 ÷ 8
-              加示例服务费用。可逐店修改；完整单车预算包含中转及末端调拨。图中显示实时参数，最终系数
-              = 门店系数 × 所属大区系数；最终单车预算 = 基准成本 × 最终系数 × 8
-              ÷ 板车容量（当前 {truckCapacity} 台）。尾班按单车预算计费。
+              {translateText(
+                "初始成本参考单港线路报价 ÷ 8 加示例服务费用。可逐店修改；完整单车预算包含中转及末端调拨。图中显示实时参数，最终系数 = 门店系数 × 所属大区系数；最终单车预算 = 基准成本 × 最终系数 × 8 ÷ 板车容量（当前 ",
+              )}
+              {truckCapacity}
+              {translateText(" 台）。尾班按单车预算计费。")}
             </p>
           </div>
         ) : (
@@ -264,8 +272,9 @@ export default function VesselCommercialParameters({
             role="status"
             data-testid="logistics-input-incomplete"
           >
-            物流参数未填写完整或数值无效，暂无法生成成本与系数图。缺失成本不按 0
-            计算。
+            {translateText(
+              "物流参数未填写完整或数值无效，暂无法生成成本与系数图。缺失成本不按 0 计算。",
+            )}
           </p>
         )}
       </div>
@@ -282,24 +291,28 @@ export default function VesselCommercialParameters({
   return (
     <div className="vc-pricing-parameters">
       <p className="vc-formula">
-        <strong>直营</strong> 零售价 × 零售系数 − 采购价 <span>｜</span>
-        <strong>授权</strong> 批发价 × 批发系数 − 采购价{" "}
-        <span>→ 毛利 − 物流 − 直营固定费用 = 净利</span>
+        <strong>{translateText("直营")}</strong>
+        {translateText(" 零售价 × 零售系数 − 采购价 ")}
+        <span>｜</span>
+        <strong>{translateText("授权")}</strong>
+        {translateText(" 批发价 × 批发系数 − 采购价")}
+        {translateText(" ")}
+        <span>{translateText("→ 毛利 − 物流 − 直营固定费用 = 净利")}</span>
       </p>
       <div className="vr-table-scroll vc-editor-scroll">
         <table>
           <thead>
             <tr>
-              <th>车型</th>
+              <th>{translateText("车型")}</th>
               {columns.map(([key, label]) => (
                 <th key={key}>
-                  {label}
+                  {translateText(label)}
                   <br />
-                  {key.includes("Factor") ? "×" : "SAR"}
+                  {translateText(key.includes("Factor") ? "×" : "SAR")}
                 </th>
               ))}
               <th>
-                基准零售毛利率
+                {translateText("基准零售毛利率")}
                 <br />%
               </th>
             </tr>
@@ -309,7 +322,7 @@ export default function VesselCommercialParameters({
               <tr key={id} data-selected={model === id}>
                 <td>
                   <button type="button" onClick={() => onModel(id)}>
-                    {id}
+                    {translateText(id)}
                   </button>
                 </td>
                 {columns.map(([key, label]) => (
@@ -341,8 +354,9 @@ export default function VesselCommercialParameters({
         </table>
       </div>
       <p className="vr-footnote">
-        价格为 SAR 示例假设；成交价格 = 基准价 × 车型系数 ×
-        全局价格系数。零售价须高于批发价，系数调整后仍保持这一关系。授权不扣固定费用；同车型计入各店物流后，直营单车净利须高于授权。毛利率与采购价联动，避免重复计成本。负净利会保留显示。
+        {translateText(
+          "价格为 SAR 示例假设；成交价格 = 基准价 × 车型系数 × 全局价格系数。零售价须高于批发价，系数调整后仍保持这一关系。授权不扣固定费用；同车型计入各店物流后，直营单车净利须高于授权。毛利率与采购价联动，避免重复计成本。负净利会保留显示。",
+        )}
       </p>
     </div>
   );

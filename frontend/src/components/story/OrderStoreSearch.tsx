@@ -1,4 +1,6 @@
 "use client";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
+import { matchesLocalizedText } from "@/lib/i18n/translate";
 
 import { useEffect, useId, useRef, useState } from "react";
 import { MapPin, Search, Store } from "lucide-react";
@@ -23,6 +25,8 @@ export default function OrderStoreSearch({
   onChange: (value: string) => void;
   onSelectStore: (id: string) => void;
 }) {
+  const { t: translateText } = useI18n();
+
   const listId = useId();
   const wrapperRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
@@ -34,7 +38,7 @@ export default function OrderStoreSearch({
     ? stores.filter((store) => matchesOrderStore(store, value))
     : [];
   const cities = [...new Set(stores.map((store) => store.city))].filter(
-    (city) => keyword && city.toLowerCase().includes(keyword),
+    (city) => keyword && matchesLocalizedText(city, keyword),
   );
   const suggestions: Suggestion[] = [
     ...cities.slice(0, 3).map((city) => ({
@@ -114,7 +118,7 @@ export default function OrderStoreSearch({
         <Search size={14} aria-hidden="true" />
         <input
           role="combobox"
-          aria-label="搜索订单门店"
+          aria-label={translateText("搜索订单门店")}
           aria-autocomplete="list"
           aria-expanded={expanded}
           aria-controls={expanded ? listId : undefined}
@@ -122,7 +126,7 @@ export default function OrderStoreSearch({
             expanded && active >= 0 ? `${listId}-${active}` : undefined
           }
           autoComplete="off"
-          placeholder="搜索门店名称、城市或编码"
+          placeholder={translateText("搜索门店名称、城市或编码")}
           value={value}
           onFocus={() => setOpen(true)}
           onClick={() => setOpen(true)}
@@ -168,7 +172,7 @@ export default function OrderStoreSearch({
                 id={listId}
                 ref={listRef}
                 role="listbox"
-                aria-label="门店搜索联想"
+                aria-label={translateText("门店搜索联想")}
                 className="voa-search-options"
               >
                 {suggestions.map((suggestion, index) => (
@@ -189,25 +193,31 @@ export default function OrderStoreSearch({
                     )}
                     <span>
                       <span>
-                        <small>{suggestion.storeId ? "门店" : "城市"}</small>
-                        <strong>{suggestion.label}</strong>
+                        <small>
+                          {translateText(suggestion.storeId ? "门店" : "城市")}
+                        </small>
+                        <strong>{translateText(suggestion.label)}</strong>
                       </span>
                       <span className="voa-suggestion-detail">
-                        {suggestion.detail}
+                        {translateText(suggestion.detail)}
                       </span>
                     </span>
                   </button>
                 ))}
               </div>
               <footer>
-                ↑ ↓ 选择 · Enter 确认 · Esc 收起
-                {matches.length > 7
-                  ? ` · 已显示前 7 家，共 ${matches.length} 家匹配门店`
-                  : ""}
+                {translateText("↑ ↓ 选择 · Enter 确认 · Esc 收起")}
+                {translateText(
+                  matches.length > 7
+                    ? ` · 已显示前 7 家，共 ${matches.length} 家匹配门店`
+                    : "",
+                )}
               </footer>
             </>
           ) : (
-            <p role="status">没有匹配的城市或门店，试试名称或编码。</p>
+            <p role="status">
+              {translateText("没有匹配的城市或门店，试试名称或编码。")}
+            </p>
           )}
         </div>
       )}

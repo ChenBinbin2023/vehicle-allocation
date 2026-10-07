@@ -1,4 +1,5 @@
 "use client";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
 
 import { useMemo, useRef, useState } from "react";
 import {
@@ -44,6 +45,8 @@ export default function StoryComposer({
   onToggleRun: () => void;
   dispatchRunId?: string;
 }) {
+  const { t: translateText } = useI18n();
+
   const [highlighted, setHighlighted] = useState(0);
   const [dismissed, setDismissed] = useState(false);
   const [settings, setSettings] = useState(false);
@@ -58,7 +61,7 @@ export default function StoryComposer({
   const choose = (index: number) => {
     const skill = options[index];
     if (skill) {
-      onDraft(`${skill.command} ${skill.defaultPrompt}`);
+      onDraft(`${skill.command} ${translateText(skill.defaultPrompt)}`);
       setDismissed(true);
       textarea.current?.focus();
     }
@@ -68,25 +71,29 @@ export default function StoryComposer({
   };
   return (
     <div className="cui-composer-wrap">
-      {notice && (
-        <div className="cui-composer-notice" role="status">
-          {notice}
-          <button
-            type="button"
-            aria-label="关闭提示"
-            onClick={() => setNotice("")}
-          >
-            ×
-          </button>
-        </div>
+      {translateText(
+        notice && (
+          <div className="cui-composer-notice" role="status">
+            {translateText(notice)}
+            <button
+              type="button"
+              aria-label={translateText("关闭提示")}
+              onClick={() => setNotice("")}
+            >
+              ×
+            </button>
+          </div>
+        ),
       )}
       {menuOpen && (
         <div
           className="story-skill-menu"
           role="listbox"
-          aria-label="选择 Skill"
+          aria-label={translateText("选择 Skill")}
         >
-          <div className="story-skill-menu-title">供应链 Skills</div>
+          <div className="story-skill-menu-title">
+            {translateText("供应链 Skills")}
+          </div>
           {options.map((skill, index) => {
             const availability = skillAvailability(
               skill.command,
@@ -105,19 +112,23 @@ export default function StoryComposer({
                 onClick={() => choose(index)}
               >
                 <span>
-                  <strong>{skill.command}</strong>
-                  <small>{skill.title}</small>
+                  <strong>{translateText(skill.command)}</strong>
+                  <small>{translateText(skill.title)}</small>
                 </span>
                 <em>
-                  {skill.description}
+                  {translateText(skill.description)}
                   <small>
-                    {availability.available ? "可运行" : availability.reason}
+                    {translateText(
+                      availability.available ? "可运行" : availability.reason,
+                    )}
                   </small>
                 </em>
               </button>
             );
           })}
-          {!options.length && <p>没有匹配的 Skill，按 Esc 继续输入。</p>}
+          {!options.length && (
+            <p>{translateText("没有匹配的 Skill，按 Esc 继续输入。")}</p>
+          )}
         </div>
       )}
       <form
@@ -130,10 +141,10 @@ export default function StoryComposer({
         <textarea
           ref={textarea}
           data-testid="story-command"
-          aria-label="输入任务或追问"
+          aria-label={translateText("输入任务或追问")}
           rows={2}
           value={draft}
-          placeholder="输入任务或追问..."
+          placeholder={translateText("输入任务或追问...")}
           onChange={(event) => {
             onDraft(event.target.value);
             setHighlighted(0);
@@ -171,7 +182,7 @@ export default function StoryComposer({
           <div>
             <button
               type="button"
-              aria-label="添加 Skill"
+              aria-label={translateText("添加 Skill")}
               onClick={() => {
                 onDraft("/");
                 setDismissed(false);
@@ -182,18 +193,18 @@ export default function StoryComposer({
             </button>
             <span className="cui-access">
               <ShieldCheck size={16} />
-              完全访问
+              {translateText("完全访问")}
             </span>
           </div>
           <div className="cui-composer-model">
             <span>
               <Zap size={16} fill="currentColor" />
-              5.6 Sol <em>极高</em>
+              5.6 Sol <em>{translateText("极高")}</em>
               <ChevronDown size={13} />
             </span>
             <button
               type="button"
-              aria-label="语音输入"
+              aria-label={translateText("语音输入")}
               onClick={() => setNotice("当前为本地演示，请通过文字输入任务。 ")}
             >
               <Mic size={18} />
@@ -202,7 +213,7 @@ export default function StoryComposer({
               <button
                 type="button"
                 className="cui-send"
-                aria-label={paused ? "继续任务" : "暂停任务"}
+                aria-label={translateText(paused ? "继续任务" : "暂停任务")}
                 onClick={onToggleRun}
               >
                 {paused ? (
@@ -215,7 +226,7 @@ export default function StoryComposer({
               <button
                 type="submit"
                 className="cui-send"
-                aria-label="发送"
+                aria-label={translateText("发送")}
                 disabled={!draft.trim()}
               >
                 {draft.trim() ? (
@@ -232,13 +243,13 @@ export default function StoryComposer({
         <label>
           <FolderKanban size={15} />
           <select
-            aria-label="当前项目"
+            aria-label={translateText("当前项目")}
             value={folderId}
             onChange={(event) => onProjectChange(event.target.value)}
           >
             {folders.map((folder) => (
               <option key={folder.id} value={folder.id}>
-                {folder.name}
+                {translateText(folder.name)}
               </option>
             ))}
           </select>
@@ -250,11 +261,11 @@ export default function StoryComposer({
             <i />
             <i />
           </span>
-          插件
+          {translateText("插件")}
         </button>
         <button
           type="button"
-          aria-label="输入设置"
+          aria-label={translateText("输入设置")}
           aria-expanded={settings}
           onClick={() => setSettings(!settings)}
         >
@@ -262,9 +273,9 @@ export default function StoryComposer({
         </button>
         {settings && (
           <div className="cui-settings">
-            <strong>输入设置</strong>
-            <p>Enter 发送 · Shift + Enter 换行</p>
-            <p>输入 / 选择 Skill · Esc 关闭菜单</p>
+            <strong>{translateText("输入设置")}</strong>
+            <p>{translateText("Enter 发送 · Shift + Enter 换行")}</p>
+            <p>{translateText("输入 / 选择 Skill · Esc 关闭菜单")}</p>
           </div>
         )}
       </div>

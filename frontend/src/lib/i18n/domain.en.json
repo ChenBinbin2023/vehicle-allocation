@@ -1,0 +1,22 @@
+{
+  "吉赞": "Jizan",
+  "奈季兰": "Najran",
+  "凯美瑞": "Camry",
+  "兰德酷路泽": "Land Cruiser",
+  "吉达西部港口": "Jeddah western port",
+  "达曼东部港口": "Dammam eastern port",
+  "新增模拟情景": "Additional simulation scenario",
+  "非实际财务数据": "Simulated financial data",
+  "最近": "Last",
+  "个完整自然周平均": "complete calendar weeks, average",
+  "个完整月按实际天数折周": "complete months, normalized to weeks by actual days",
+  "伊朗": "Iran",
+  "埃及": "Egypt",
+  "否": "No",
+  "店": "store",
+  "门店排名": "Store rankings",
+  "中转中心": "Transfer center",
+  "生成门店排名": "Generate store rankings",
+  "计划：{0}；批次：{1} 个。": "Plan: {0}; batches: {1}.",
+  "运输任务：{0} 个；最后到达日：{1}。": "Transport tasks: {0}; final arrival day: {1}."
+}

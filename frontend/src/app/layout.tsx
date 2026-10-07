@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { LocaleProvider } from "@/lib/i18n/LocaleProvider";
 import "./globals.css";
 import "@/styles/ui-tokens.css";
 import "@/styles/story.css";
@@ -26,7 +27,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="zh-CN">
-      <body>{children}</body>
+      <body>
+        <LocaleProvider>{children}</LocaleProvider>
+      </body>
     </html>
   );
 }

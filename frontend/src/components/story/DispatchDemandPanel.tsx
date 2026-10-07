@@ -1,4 +1,6 @@
 "use client";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
+
 import VesselSectionHeading from "./VesselSectionHeading";
 import { useMemo, useState } from "react";
 import { MapPin, SlidersHorizontal } from "lucide-react";
@@ -17,6 +19,8 @@ export default function DispatchDemandPanel({
 }: {
   data: DispatchSnapshot;
 }) {
+  const { t: translateText } = useI18n();
+
   const [filter, setFilter] = useState<DispatchFilter>("all");
   const [storeId, setStoreId] = useState(data.stores[0].id);
   const [hoverStore, setHoverStore] = useState<string | null>(null);
@@ -75,18 +79,22 @@ export default function DispatchDemandPanel({
         <VesselSectionHeading
           number="01"
           english="DEMAND"
-          title="门店需求分布"
+          title={translateText("门店需求分布")}
           note="先看需求在哪里，再定位到具体车型与配置。"
         />
         <span>
-          {orders.length} 笔订单 <i />{" "}
-          {orders.reduce((n, o) => n + o.quantity, 0)} 台车
+          {orders.length}
+          {translateText(" 笔订单 ")}
+          <i />
+          {translateText(" ")}
+          {orders.reduce((n, o) => n + o.quantity, 0)}
+          {translateText(" 台车")}
         </span>
       </div>
       <div className="dd-filters">
         <span>
           <SlidersHorizontal size={14} />
-          订单状态
+          {translateText("订单状态")}
         </span>
         <div className="dd-segment">
           {(
@@ -103,14 +111,14 @@ export default function DispatchDemandPanel({
               className={filter === value ? "active" : ""}
               onClick={() => changeFilter(value)}
             >
-              {label}
+              {translateText(label)}
             </button>
           ))}
         </div>
         <label>
           <MapPin size={14} />
           <select
-            aria-label="需求门店"
+            aria-label={translateText("需求门店")}
             value={storeId}
             onChange={(e) => {
               setStoreId(e.target.value);
@@ -119,7 +127,8 @@ export default function DispatchDemandPanel({
           >
             {data.stores.map((s) => (
               <option key={s.id} value={s.id}>
-                {s.name} · {quantity(s.id)} 台
+                {translateText(s.name)} · {quantity(s.id)}
+                {translateText(" 台")}
               </option>
             ))}
           </select>
@@ -129,13 +138,13 @@ export default function DispatchDemandPanel({
         <div className="dd-map-panel">
           <div className="dd-map-kicker">
             <span>SAUDI ARABIA</span>
-            <small>门店订单需求 · 台</small>
+            <small>{translateText("门店订单需求 · 台")}</small>
           </div>
           <svg
             viewBox="70 35 650 450"
             className="dd-map"
             data-testid="dispatch-map"
-            aria-label="沙特门店需求地图"
+            aria-label={translateText("沙特门店需求地图")}
           >
             <defs>
               <pattern
@@ -174,7 +183,7 @@ export default function DispatchDemandPanel({
               className="dd-map-country"
               textAnchor="middle"
             >
-              沙 特 阿 拉 伯
+              {translateText("沙 特 阿 拉 伯")}
             </text>
             <text
               x="125"
@@ -182,7 +191,7 @@ export default function DispatchDemandPanel({
               className="dd-map-sea"
               transform="rotate(45 125 295)"
             >
-              红 海
+              {translateText("红 海")}
             </text>
             {points.map((point) => {
               const s = data.stores.find((s) => s.id === point.id)!;
@@ -194,7 +203,7 @@ export default function DispatchDemandPanel({
                   key={s.id}
                   role="button"
                   tabIndex={0}
-                  aria-label={`${s.name}，${qty} 台需求`}
+                  aria-label={translateText(`${s.name}，${qty} 台需求`)}
                   aria-pressed={active}
                   data-dispatch-store={s.id}
                   className={`dd-map-store ${active ? "selected" : ""}`}
@@ -215,8 +224,11 @@ export default function DispatchDemandPanel({
                   onBlur={() => setHoverStore(null)}
                 >
                   <title>
-                    {s.name} · {qty} 台 /{" "}
-                    {orders.filter((o) => o.storeId === s.id).length} 笔订单
+                    {translateText(s.name)} · {qty}
+                    {translateText(" 台 /")}
+                    {translateText(" ")}
+                    {orders.filter((o) => o.storeId === s.id).length}
+                    {translateText(" 笔订单")}
                   </title>
                   <circle
                     cx={point.x}
@@ -275,49 +287,59 @@ export default function DispatchDemandPanel({
                   textAnchor="middle"
                   pointerEvents="none"
                 >
-                  {city}
+                  {translateText(city)}
                 </text>
               );
             })}
           </svg>
-          {hoverStore && (
-            <div className="dd-map-tooltip">
-              <strong>
-                {data.stores.find((s) => s.id === hoverStore)!.name}
-              </strong>
-              <span>
-                {quantity(hoverStore)} 台需求 ·{" "}
-                {orders.filter((o) => o.storeId === hoverStore).length} 笔订单
-              </span>
-            </div>
+          {translateText(
+            hoverStore && (
+              <div className="dd-map-tooltip">
+                <strong>
+                  {translateText(
+                    data.stores.find((s) => s.id === hoverStore)!.name,
+                  )}
+                </strong>
+                <span>
+                  {quantity(hoverStore)}
+                  {translateText(" 台需求 ·")}
+                  {translateText(" ")}
+                  {orders.filter((o) => o.storeId === hoverStore).length}
+                  {translateText(" 笔订单")}
+                </span>
+              </div>
+            ),
           )}
           <div className="dd-map-legend">
             <span>
               <i />
               <i />
               <i />
-              圆圈面积代表需求台数
+              {translateText("圆圈面积代表需求台数")}
             </span>
-            <small>点击圆圈查看门店</small>
+            <small>{translateText("点击圆圈查看门店")}</small>
           </div>
         </div>
         <div className="dd-model-panel">
           <header>
             <small>
-              {store.region} · {store.city}
+              {translateText(store.region)} · {translateText(store.city)}
             </small>
             <h3>
               <MapPin size={16} />
-              {store.name}
+              {translateText(store.name)}
             </h3>
             <span data-testid="dispatch-store-total">
-              {selected.reduce((n, o) => n + o.quantity, 0)} 台 /{" "}
-              {selected.length} 笔订单
+              {selected.reduce((n, o) => n + o.quantity, 0)}
+              {translateText(" 台 /")}
+              {translateText(" ")}
+              {selected.length}
+              {translateText(" 笔订单")}
             </span>
           </header>
           <div className="dd-bar-heading">
-            <strong>车型需求</strong>
-            <span>单位：台</span>
+            <strong>{translateText("车型需求")}</strong>
+            <span>{translateText("单位：台")}</span>
           </div>
           <div className="dd-bar-chart">
             <div className="dd-chart-grid">
@@ -331,7 +353,9 @@ export default function DispatchDemandPanel({
                   type="button"
                   key={m.model}
                   data-testid="dispatch-model-bar"
-                  aria-label={`${m.model}，${m.quantity} 台，查看配置需求`}
+                  aria-label={translateText(
+                    `${m.model}，${m.quantity} 台，查看配置需求`,
+                  )}
                   className="dd-model-column"
                   onMouseEnter={() => setHoverModel(m.model)}
                   onMouseLeave={() => setHoverModel(null)}
@@ -343,43 +367,59 @@ export default function DispatchDemandPanel({
                       <strong>{m.quantity}</strong>
                     </i>
                   </span>
-                  <span className="dd-model-name">{m.model}</span>
+                  <span className="dd-model-name">
+                    {translateText(m.model)}
+                  </span>
                 </button>
               ))}
             </div>
-            {!models.length && <p className="dd-empty">该门店暂无此类订单</p>}
-            {hoverModel && (
-              <div className="dd-config-tooltip" role="tooltip">
-                <strong>{hoverModel} · 配置需求</strong>
-                {configs.map((c) => (
-                  <div key={c.config}>
-                    <span>{c.config}</span>
-                    <b>{c.quantity} 台</b>
-                  </div>
-                ))}
-              </div>
+            {!models.length && (
+              <p className="dd-empty">{translateText("该门店暂无此类订单")}</p>
+            )}
+            {translateText(
+              hoverModel && (
+                <div className="dd-config-tooltip" role="tooltip">
+                  <strong>
+                    {translateText(hoverModel)}
+                    {translateText(" · 配置需求")}
+                  </strong>
+                  {configs.map((c) => (
+                    <div key={c.config}>
+                      <span>{translateText(c.config)}</span>
+                      <b>
+                        {c.quantity}
+                        {translateText(" 台")}
+                      </b>
+                    </div>
+                  ))}
+                </div>
+              ),
             )}
           </div>
           <p className="dd-chart-hint">
-            悬停或聚焦柱状图，查看配置与颜色需求。
+            {translateText("悬停或聚焦柱状图，查看配置与颜色需求。")}
           </p>
           <div className="dd-store-gap">
-            <span>区域缺货</span>
+            <span>{translateText("区域缺货")}</span>
             <strong>
               {
                 data.shortages.filter((s) => {
                   const v = data.vehicles.find((v) => v.id === s.vehicleId)!;
                   return selected.some((o) => o.id === v.orderId);
                 }).length
-              }{" "}
-              台
+              }
+              {translateText(" ")}
+              {translateText("台")}
             </strong>
-            <small>在下方逐车比较补齐方案</small>
+            <small>{translateText("在下方逐车比较补齐方案")}</small>
           </div>
         </div>
       </div>
       <p className="dd-section-note">
-        筛选联动需求地图与车型分布，下方调度建议保留今日全部有效订单。门店按城市中心展开；底图{" "}
+        {translateText(
+          "筛选联动需求地图与车型分布，下方调度建议保留今日全部有效订单。门店按城市中心展开；底图",
+        )}
+        {translateText(" ")}
         <a
           href="https://www.naturalearthdata.com/"
           target="_blank"
@@ -387,7 +427,8 @@ export default function DispatchDemandPanel({
         >
           Natural Earth
         </a>
-        ，城市{" "}
+        {translateText("，城市")}
+        {translateText(" ")}
         <a href="https://www.geonames.org/" target="_blank" rel="noreferrer">
           GeoNames
         </a>

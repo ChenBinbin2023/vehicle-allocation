@@ -1,4 +1,5 @@
 "use client";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
 
 import type { DailyPlan } from "@/lib/story/types";
 import { evaluateOrderSources } from "@/lib/story/decision-evidence";
@@ -14,6 +15,8 @@ export default function SourceDecisionGraph({
   plan: DailyPlan;
   orderId: string;
 }) {
+  const { t: translateText } = useI18n();
+
   const order = plan.orders.find((item) => item.id === orderId);
   if (!order) return null;
   const candidates = evaluateOrderSources(plan, orderId);
@@ -198,11 +201,11 @@ export default function SourceDecisionGraph({
   return (
     <RelationshipGraph
       key={orderId}
-      title={
+      title={translateText(
         order.type === "enterprise"
           ? "一笔大单，为什么需要三个来源"
-          : "从候选车源，到可执行订单"
-      }
+          : "从候选车源，到可执行订单",
+      )}
       subtitle="绿线进入可行集合，虚线停在条件检查；只有选中的组合才进入订单履约。"
       nodes={nodes}
       edges={edges}

@@ -1,4 +1,6 @@
 "use client";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
+
 import { Truck } from "lucide-react";
 import {
   arabianCountries,
@@ -67,6 +69,8 @@ export default function VesselOrderMap({
   mode: OrderPortMode;
   onStore: (id: string) => void;
 }) {
+  const { t: translateText } = useI18n();
+
   const routePoints = (t: OrderTrip) => {
     const port = orderPorts[t.portId];
     const [x, y] = projectArabianPoint(
@@ -91,11 +95,11 @@ export default function VesselOrderMap({
         className="voa-map"
         viewBox="0 0 760 550"
         role="group"
-        aria-label={
+        aria-label={translateText(
           layer === "orders"
             ? "沙特门店订单分布地图"
-            : "港口到门店的物流路线地图"
-        }
+            : "港口到门店的物流路线地图",
+        )}
       >
         <defs>
           <pattern
@@ -135,13 +139,13 @@ export default function VesselOrderMap({
           />
         ))}
         <text x="370" y="340" className="voa-country">
-          沙特阿拉伯
+          {translateText("沙特阿拉伯")}
         </text>
         <text x="82" y="335" className="voa-sea">
-          红海
+          {translateText("红海")}
         </text>
         <text x="601" y="174" className="voa-sea">
-          波斯湾
+          {translateText("波斯湾")}
         </text>
         {layer === "logistics" &&
           trips
@@ -173,7 +177,9 @@ export default function VesselOrderMap({
                 key={store.id}
                 role="button"
                 tabIndex={0}
-                aria-label={`${store.name}，${ordersAtStore.length} 笔订单，${sum(ordersAtStore)} 台`}
+                aria-label={translateText(
+                  `${store.name}，${ordersAtStore.length} 笔订单，${sum(ordersAtStore)} 台`,
+                )}
                 aria-pressed={active}
                 data-store-bubble={store.id}
                 onClick={() => onStore(store.id)}
@@ -186,8 +192,11 @@ export default function VesselOrderMap({
                 className="voa-bubble"
               >
                 <title>
-                  {store.name} · {ordersAtStore.length} 笔 /{" "}
-                  {sum(ordersAtStore)} 台
+                  {translateText(store.name)} · {ordersAtStore.length}
+                  {translateText(" 笔 /")}
+                  {translateText(" ")}
+                  {sum(ordersAtStore)}
+                  {translateText(" 台")}
                 </title>
                 {active && (
                   <circle
@@ -286,18 +295,22 @@ export default function VesselOrderMap({
                         y={labelY + 18}
                         className="voa-stop-label"
                       >
-                        {i + 1} · {stop.city} ·{" "}
-                        {
+                        {i + 1} · {translateText(stop.city)} ·
+                        {translateText(" ")}
+                        {translateText(
                           vesselOrders.stores.find((s) => s.id === stop.storeId)
-                            ?.shortName
-                        }
+                            ?.shortName,
+                        )}
                       </text>
                       <text
                         x={labelX + 8}
                         y={labelY + 37}
                         className="voa-stop-value"
                       >
-                        卸 {stop.quantity} 台 · {fmt(stop.cost)} SAR
+                        {translateText("卸 ")}
+                        {stop.quantity}
+                        {translateText(" 台 · ")}
+                        {translateText(fmt(stop.cost))} SAR
                       </text>
                     </g>
                   );
@@ -333,7 +346,7 @@ export default function VesselOrderMap({
                     textAnchor="end"
                     className="voa-port-label"
                   >
-                    {port.name}
+                    {translateText(port.name)}
                   </text>
                 </g>
               );
@@ -355,13 +368,13 @@ export default function VesselOrderMap({
               className="voa-city-label"
               pointerEvents="none"
             >
-              {city}
+              {translateText(city)}
             </text>
           );
         })}
         {layer === "logistics" && !trip && (
           <text x="380" y="290" textAnchor="middle" className="voa-city-label">
-            没有符合条件的物流车次
+            {translateText("没有符合条件的物流车次")}
           </text>
         )}
       </svg>
@@ -370,52 +383,56 @@ export default function VesselOrderMap({
           <>
             <span>
               <i />
-              直营门店
+              {translateText("直营门店")}
             </span>
             <span>
               <i className="authorized" />
-              授权门店
+              {translateText("授权门店")}
             </span>
-            <span>圆圈面积 ∝ 订单笔数</span>
+            <span>{translateText("圆圈面积 ∝ 订单笔数")}</span>
           </>
         ) : (
           <>
             <span>
               <i />
-              吉达发运
+              {translateText("吉达发运")}
             </span>
             {mode === "dual" && (
               <span>
                 <i className="authorized" />
-                达曼发运
+                {translateText("达曼发运")}
               </span>
             )}
-            <span>高亮：当前车次 / 数字：卸货顺序</span>
+            <span>{translateText("高亮：当前车次 / 数字：卸货顺序")}</span>
           </>
         )}
       </div>
       {layer === "logistics" && trip && (
         <div className="voa-map-trip-summary">
           <Truck size={15} />
-          <b>{trip.id}</b>
+          <b>{translateText(trip.id)}</b>
           <span>
-            {trip.quantity} 台 · {trip.stops.length} 个卸货点
+            {trip.quantity}
+            {translateText(" 台 · ")}
+            {trip.stops.length}
+            {translateText(" 个卸货点")}
           </span>
           <strong>
-            {fmt(trip.totalCost)} <small>SAR</small>
+            {translateText(fmt(trip.totalCost))} <small>SAR</small>
           </strong>
         </div>
       )}
       <p className="voa-map-note">
-        门店按城市中心展开，路线为示意连接。底图：
+        {translateText("门店按城市中心展开，路线为示意连接。底图：")}
         <a
           href="https://www.naturalearthdata.com/"
           target="_blank"
           rel="noreferrer"
         >
           Natural Earth
-        </a>{" "}
-        · 城市：
+        </a>
+        {translateText(" ")}
+        {translateText("· 城市：")}
         <a href="https://www.geonames.org/" target="_blank" rel="noreferrer">
           GeoNames
         </a>

@@ -1,4 +1,5 @@
 "use client";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
@@ -76,24 +77,30 @@ function Metric({
   accent?: boolean;
   range?: boolean;
 }) {
+  const { t: translateText } = useI18n();
+
   const unitStart = value.lastIndexOf(" ");
   return (
     <article
       className={`query-metric ${accent ? "accent" : ""} ${range ? "range" : ""}`}
       data-testid={testId}
     >
-      <small>{label}</small>
+      <small>{translateText(label)}</small>
       <strong>
-        {unitStart < 0 ? (
-          value
-        ) : (
-          <>
-            {value.slice(0, unitStart)}
-            <em className="query-metric-unit">{value.slice(unitStart + 1)}</em>
-          </>
+        {translateText(
+          unitStart < 0 ? (
+            value
+          ) : (
+            <>
+              {translateText(value.slice(0, unitStart))}
+              <em className="query-metric-unit">
+                {translateText(value.slice(unitStart + 1))}
+              </em>
+            </>
+          ),
         )}
       </strong>
-      <span>{note}</span>
+      <span>{translateText(note)}</span>
     </article>
   );
 }
@@ -108,16 +115,18 @@ function Panel({
   children: ReactNode;
   aside?: ReactNode;
 }) {
+  const { t: translateText } = useI18n();
+
   return (
     <section className="query-panel">
       <header>
         <div>
-          <h2>{title}</h2>
-          {subtitle && <p>{subtitle}</p>}
+          <h2>{translateText(title)}</h2>
+          {translateText(subtitle && <p>{translateText(subtitle)}</p>)}
         </div>
-        {aside}
+        {translateText(aside)}
       </header>
-      {children}
+      {translateText(children)}
     </section>
   );
 }
@@ -131,6 +140,8 @@ export default function SmartQueryWorkspace({
   focusedStep: number | null;
   focusRevision: number;
 }) {
+  const { t: translateText } = useI18n();
+
   const [tab, setTab] = useState<QueryTab>("sales");
   const [filters, setFilters] = useState<QueryFilters>(
     run.query?.filters ?? defaultQueryFilters,
@@ -267,181 +278,215 @@ export default function SmartQueryWorkspace({
   return (
     <div className="smart-query-workspace" data-testid="smart-query-workspace">
       <section className="query-context">
-        <h2>从销量到库存，再到每一趟运输</h2>
+        <h2>{translateText("从销量到库存，再到每一趟运输")}</h2>
         <span className={`query-run-status story-run-state ${run.status}`}>
           <i />
-          {run.status === "complete"
-            ? "已完成"
-            : run.status === "paused"
-              ? "已暂停"
-              : "分析中"}
+          {translateText(
+            run.status === "complete"
+              ? "已完成"
+              : run.status === "paused"
+                ? "已暂停"
+                : "分析中",
+          )}
         </span>
       </section>
-      <section className="query-filter-panel" aria-label="分析筛选">
+      <section
+        className="query-filter-panel"
+        aria-label={translateText("分析筛选")}
+      >
         <button
           type="button"
           className="query-filter-toggle"
-          aria-label={filtersOpen ? "收起分析筛选" : "展开分析筛选"}
+          aria-label={translateText(
+            filtersOpen ? "收起分析筛选" : "展开分析筛选",
+          )}
           aria-expanded={filtersOpen}
           onClick={() => setFiltersOpen((value) => !value)}
         >
-          <strong>分析筛选</strong>
+          <strong>{translateText("分析筛选")}</strong>
           <span>
-            {filters.region === "all"
-              ? "全部区域"
-              : filters.region.split(",").join(" + ")}
-            {" · "}
-            {filters.channel === "all"
-              ? "全部渠道"
-              : filters.channel === "二级展厅"
-                ? "授权店"
-                : filters.channel}
-            {" · "}
-            {filters.brand === "all" ? "全部品牌" : filters.brand}
-            {filters.vpc !== "all" &&
-              ` · ${filters.vpc
-                .split(",")
-                .map((id) => queryVpcLabels[id] ?? id)
-                .join(" + ")}`}
-            {filters.store !== "all" &&
-              ` · ${filters.store
-                .split(",")
-                .map(
-                  (id) =>
-                    scopeStores
-                      .find((store) => store.id === id)
-                      ?.name.replace("模拟", "") ?? id,
-                )
-                .join(" + ")}`}
-            {filters.dimension !== "total" && ` · 按${dimensionLabel}汇总`}
+            {translateText(
+              filters.region === "all"
+                ? "全部区域"
+                : filters.region.split(",").join(" + "),
+            )}
+            {translateText(" · ")}
+            {translateText(
+              filters.channel === "all"
+                ? "全部渠道"
+                : filters.channel === "二级展厅"
+                  ? "授权店"
+                  : filters.channel,
+            )}
+            {translateText(" · ")}
+            {translateText(
+              filters.brand === "all" ? "全部品牌" : filters.brand,
+            )}
+            {translateText(
+              filters.vpc !== "all" &&
+                ` · ${filters.vpc
+                  .split(",")
+                  .map((id) => queryVpcLabels[id] ?? id)
+                  .join(" + ")}`,
+            )}
+            {translateText(
+              filters.store !== "all" &&
+                ` · ${filters.store
+                  .split(",")
+                  .map(
+                    (id) =>
+                      scopeStores
+                        .find((store) => store.id === id)
+                        ?.name.replace("模拟", "") ?? id,
+                  )
+                  .join(" + ")}`,
+            )}
+            {translateText(
+              filters.dimension !== "total" && ` · 按${dimensionLabel}汇总`,
+            )}
           </span>
           <ChevronDown size={16} />
         </button>
         <div className="query-filters" hidden={!filtersOpen}>
           <label>
-            起始月份
+            {translateText("起始月份")}
             <select
-              aria-label="起始月份"
+              aria-label={translateText("起始月份")}
               value={filters.from}
               onChange={(event) => change("from", event.target.value)}
             >
               {!queryMonths.includes(filters.from) && (
                 <option value={filters.from}>
-                  {filters.from}（无月度数据）
+                  {translateText(filters.from)}
+                  {translateText("（无月度数据）")}
                 </option>
               )}
               {queryMonths.map((month) => (
-                <option key={month}>{month}</option>
+                <option key={month} value={month}>
+                  {translateText(month)}
+                </option>
               ))}
             </select>
           </label>
           <label>
-            截止月份
+            {translateText("截止月份")}
             <select
-              aria-label="截止月份"
+              aria-label={translateText("截止月份")}
               value={filters.to}
               onChange={(event) => change("to", event.target.value)}
             >
               {!queryMonths.includes(filters.to) && (
-                <option value={filters.to}>{filters.to}（无月度数据）</option>
+                <option value={filters.to}>
+                  {translateText(filters.to)}
+                  {translateText("（无月度数据）")}
+                </option>
               )}
               {queryMonths.map((month) => (
-                <option key={month}>{month}</option>
+                <option key={month} value={month}>
+                  {translateText(month)}
+                </option>
               ))}
             </select>
           </label>
           <label>
-            区域
+            {translateText("区域")}
             <select
-              aria-label="区域"
+              aria-label={translateText("区域")}
               value={filters.region}
               onChange={(event) => change("region", event.target.value)}
             >
-              <option value="all">全部区域</option>
+              <option value="all">{translateText("全部区域")}</option>
               {filters.region.includes(",") && (
                 <option value={filters.region}>
-                  {filters.region.split(",").join(" + ")}
+                  {translateText(filters.region.split(",").join(" + "))}
                 </option>
               )}
               {queryRegions.map((region) => (
-                <option key={region}>{region}</option>
+                <option key={region} value={region}>
+                  {translateText(region)}
+                </option>
               ))}
             </select>
           </label>
           <label>
-            服务 VPC
+            {translateText("服务 VPC")}
             <select
-              aria-label="服务 VPC"
+              aria-label={translateText("服务 VPC")}
               value={filters.vpc}
               onChange={(event) => change("vpc", event.target.value)}
             >
-              <option value="all">全部 VPC</option>
+              <option value="all">{translateText("全部 VPC")}</option>
               {filters.vpc.includes(",") && (
                 <option value={filters.vpc}>
-                  {filters.vpc
-                    .split(",")
-                    .map((id) => queryVpcLabels[id])
-                    .join(" + ")}
+                  {translateText(
+                    filters.vpc
+                      .split(",")
+                      .map((id) => queryVpcLabels[id])
+                      .join(" + "),
+                  )}
                 </option>
               )}
               {Object.entries(queryVpcLabels).map(([id, label]) => (
                 <option value={id} key={id}>
-                  {label}
+                  {translateText(label)}
                 </option>
               ))}
             </select>
           </label>
           <label>
-            渠道
+            {translateText("渠道")}
             <select
-              aria-label="渠道"
+              aria-label={translateText("渠道")}
               value={filters.channel}
               onChange={(event) => change("channel", event.target.value)}
             >
-              <option value="all">直营 + 授权</option>
-              <option value="直营">直营店</option>
-              <option value="二级展厅">授权店（L2）</option>
+              <option value="all">{translateText("直营 + 授权")}</option>
+              <option value="直营">{translateText("直营店")}</option>
+              <option value="二级展厅">{translateText("授权店（L2）")}</option>
             </select>
           </label>
           <label>
-            品牌
+            {translateText("品牌")}
             <select
-              aria-label="品牌"
+              aria-label={translateText("品牌")}
               value={filters.brand}
               onChange={(event) => change("brand", event.target.value)}
             >
-              <option value="all">全部品牌</option>
-              <option>丰田</option>
-              <option>雷克萨斯</option>
+              <option value="all">{translateText("全部品牌")}</option>
+              <option value={"丰田"}>{translateText("丰田")}</option>
+              <option value={"雷克萨斯"}>{translateText("雷克萨斯")}</option>
             </select>
           </label>
           <label className="query-store-filter">
-            门店
+            {translateText("门店")}
             <select
-              aria-label="门店"
+              aria-label={translateText("门店")}
               value={filters.store}
               onChange={(event) => change("store", event.target.value)}
             >
               <option value="all">
-                全部匹配门店 · {scopeStores.length} 家
+                {translateText("全部匹配门店 · ")}
+                {scopeStores.length}
+                {translateText(" 家")}
               </option>
               {filters.store !== "all" &&
                 !scopeStores.some((store) => store.id === filters.store) && (
                   <option value={filters.store}>
-                    已指定门店 · {filters.store.split(",").join(" + ")}
+                    {translateText("已指定门店 · ")}
+                    {translateText(filters.store.split(",").join(" + "))}
                   </option>
                 )}
               {scopeStores.map((store) => (
                 <option key={store.id} value={store.id}>
-                  {store.name.replace("模拟", "")}
+                  {translateText(store.name.replace("模拟", ""))}
                 </option>
               ))}
             </select>
           </label>
           <label>
-            汇总维度
+            {translateText("汇总维度")}
             <select
-              aria-label="汇总维度"
+              aria-label={translateText("汇总维度")}
               value={filters.dimension}
               onChange={(event) =>
                 change(
@@ -452,7 +497,7 @@ export default function SmartQueryWorkspace({
             >
               {dimensions.map((item) => (
                 <option key={item.id} value={item.id}>
-                  {item.title}
+                  {translateText(item.title)}
                 </option>
               ))}
             </select>
@@ -461,18 +506,23 @@ export default function SmartQueryWorkspace({
         <footer>
           <span data-testid="query-scope">
             <i />
-            {result.storeCount} 家门店 · {filters.from} — {filters.to}
+            {result.storeCount}
+            {translateText(" 家门店 · ")}
+            {translateText(filters.from)} — {translateText(filters.to)}
           </span>
-          <span>库存快照 {queryMetadata.stockDate}</span>
+          <span>
+            {translateText("库存快照 ")}
+            {translateText(queryMetadata.stockDate)}
+          </span>
           <div className="query-filter-actions">
             <button
               type="button"
               className="query-reset"
-              aria-label="重置筛选"
+              aria-label={translateText("重置筛选")}
               onClick={resetFilters}
             >
               <RotateCcw size={13} />
-              重置
+              {translateText("重置")}
             </button>
             <button
               type="button"
@@ -484,12 +534,16 @@ export default function SmartQueryWorkspace({
               }
             >
               <ArrowDownToLine size={13} />
-              导出明细
+              {translateText("导出明细")}
             </button>
           </div>
         </footer>
       </section>
-      <nav className="query-tabs" role="tablist" aria-label="智能问数分析视图">
+      <nav
+        className="query-tabs"
+        role="tablist"
+        aria-label={translateText("智能问数分析视图")}
+      >
         {tabs.map((item, index) => {
           const Icon = item.icon;
           const done =
@@ -528,10 +582,12 @@ export default function SmartQueryWorkspace({
             >
               <Icon size={19} />
               <div>
-                <strong>{item.title}</strong>
-                <small>{item.subtitle}</small>
+                <strong>{translateText(item.title)}</strong>
+                <small>{translateText(item.subtitle)}</small>
               </div>
-              <span>{done ? <Check size={13} /> : `0${index + 1}`}</span>
+              <span>
+                {translateText(done ? <Check size={13} /> : `0${index + 1}`)}
+              </span>
             </button>
           );
         })}
@@ -545,19 +601,25 @@ export default function SmartQueryWorkspace({
           <section className="query-generating" aria-live="polite">
             <LoaderCircle size={28} className="decision-spinner" />
             <h3>
-              {run.status === "paused"
-                ? "分析已暂停"
-                : `正在生成${tabs.find((item) => item.id === tab)!.title}`}
+              {translateText(
+                run.status === "paused"
+                  ? "分析已暂停"
+                  : `正在生成${tabs.find((item) => item.id === tab)!.title}`,
+              )}
             </h3>
-            <p>数据读取、口径校验与计算记录正在同步到 CUI。</p>
+            <p>
+              {translateText("数据读取、口径校验与计算记录正在同步到 CUI。")}
+            </p>
             <div>
               <i style={{ width: `${progress}%` }} />
             </div>
             <span>
-              {progress}% ·{" "}
-              {run.status === "paused"
-                ? "在 CUI 点击继续"
-                : "完成后可筛选与下钻"}
+              {progress}% ·{translateText(" ")}
+              {translateText(
+                run.status === "paused"
+                  ? "在 CUI 点击继续"
+                  : "完成后可筛选与下钻",
+              )}
             </span>
           </section>
         ) : result.storeCount === 0 ||
@@ -565,17 +627,21 @@ export default function SmartQueryWorkspace({
           <section className="query-empty" data-testid="query-empty">
             <Database size={25} />
             <h3>
-              {result.storeCount === 0
-                ? "当前筛选没有匹配门店"
-                : "所选期间没有可用月度数据"}
+              {translateText(
+                result.storeCount === 0
+                  ? "当前筛选没有匹配门店"
+                  : "所选期间没有可用月度数据",
+              )}
             </h3>
             <p>
-              {result.storeCount === 0
-                ? "调整区域、服务 VPC、渠道或品牌后重新查看。"
-                : "可用月度范围为 2025-01 至 2026-10；可切换库存 Tab 查看固定快照。"}
+              {translateText(
+                result.storeCount === 0
+                  ? "调整区域、服务 VPC、渠道或品牌后重新查看。"
+                  : "可用月度范围为 2025-01 至 2026-10；可切换库存 Tab 查看固定快照。",
+              )}
             </p>
             <button type="button" onClick={resetFilters}>
-              重置筛选
+              {translateText("重置筛选")}
             </button>
           </section>
         ) : (
@@ -606,9 +672,13 @@ export default function SmartQueryWorkspace({
                   />
                 </div>
                 <Panel
-                  title="月度销量趋势与预测"
+                  title={translateText("月度销量趋势与预测")}
                   subtitle="实线为历史模拟销量，虚线为 8—10 月模拟预测；缺失月份不作为零销量。"
-                  aside={<span className="query-tag">台 / 月</span>}
+                  aside={
+                    <span className="query-tag">
+                      {translateText("台 / 月")}
+                    </span>
+                  }
                 >
                   <QuerySalesTrend
                     key={`${filters.region}-${filters.vpc}-${filters.store}-${filters.channel}-${filters.brand}`}
@@ -621,25 +691,27 @@ export default function SmartQueryWorkspace({
                   <div className="query-insight">
                     <TrendingUp size={15} />
                     <p>
-                      <b>预测依据</b>
-                      {queryMetadata.forecastRule}
-                      用于演示趋势，不包含促销、节假日或供给变化。
+                      <b>{translateText("预测依据")}</b>
+                      {translateText(queryMetadata.forecastRule)}
+                      {translateText(
+                        "用于演示趋势，不包含促销、节假日或供给变化。",
+                      )}
                     </p>
                   </div>
                 </Panel>
                 <Panel
-                  title={`${dimensionLabel}销量汇总`}
+                  title={translateText(`${dimensionLabel}销量汇总`)}
                   subtitle="历史与预测分列；库存使用固定快照。"
                 >
                   <div className="query-table-wrap">
                     <table data-testid="query-sales-table">
                       <thead>
                         <tr>
-                          <th>{dimensionLabel}</th>
-                          <th>门店</th>
-                          <th>历史销量 / 台</th>
-                          <th>模拟预测 / 台</th>
-                          <th>当前实物 / 台</th>
+                          <th>{translateText(dimensionLabel)}</th>
+                          <th>{translateText("门店")}</th>
+                          <th>{translateText("历史销量 / 台")}</th>
+                          <th>{translateText("模拟预测 / 台")}</th>
+                          <th>{translateText("当前实物 / 台")}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -651,16 +723,18 @@ export default function SmartQueryWorkspace({
                                 onClick={() => drill(row.id)}
                                 disabled={filters.dimension === "total"}
                               >
-                                {row.label}
+                                {translateText(row.label)}
                                 <ArrowUpRight size={12} />
                               </button>
                             </td>
                             <td>{row.storeCount}</td>
-                            <td>{fmt(row.actual)}</td>
+                            <td>{translateText(fmt(row.actual))}</td>
                             <td className="query-forecast-value">
-                              {forecastCount ? fmt(row.forecast) : "—"}
+                              {translateText(
+                                forecastCount ? fmt(row.forecast) : "—",
+                              )}
                             </td>
-                            <td>{fmt(row.physical)}</td>
+                            <td>{translateText(fmt(row.physical))}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -668,41 +742,55 @@ export default function SmartQueryWorkspace({
                   </div>
                 </Panel>
                 <details className="query-monthly-detail">
-                  <summary>查看逐月渠道明细 · {months.length} 个月</summary>
+                  <summary>
+                    {translateText("查看逐月渠道明细 · ")}
+                    {months.length}
+                    {translateText(" 个月")}
+                  </summary>
                   <div className="query-table-wrap">
                     <table>
                       <thead>
                         <tr>
-                          <th>月份</th>
-                          <th>直营历史 / 台</th>
-                          <th>授权历史 / 台</th>
-                          <th>历史合计 / 台</th>
-                          <th>预测合计 / 台</th>
-                          <th>数据状态</th>
+                          <th>{translateText("月份")}</th>
+                          <th>{translateText("直营历史 / 台")}</th>
+                          <th>{translateText("授权历史 / 台")}</th>
+                          <th>{translateText("历史合计 / 台")}</th>
+                          <th>{translateText("预测合计 / 台")}</th>
+                          <th>{translateText("数据状态")}</th>
                         </tr>
                       </thead>
                       <tbody>
                         {result.monthly.map((row) => (
                           <tr key={row.month}>
-                            <td>{row.month}</td>
+                            <td>{translateText(row.month)}</td>
                             <td>
-                              {row.direct === null ? "—" : fmt(row.direct)}
+                              {translateText(
+                                row.direct === null ? "—" : fmt(row.direct),
+                              )}
                             </td>
                             <td>
-                              {row.authorized === null
-                                ? "—"
-                                : fmt(row.authorized)}
+                              {translateText(
+                                row.authorized === null
+                                  ? "—"
+                                  : fmt(row.authorized),
+                              )}
                             </td>
                             <td>
-                              {row.actual === null ? "—" : fmt(row.actual)}
+                              {translateText(
+                                row.actual === null ? "—" : fmt(row.actual),
+                              )}
                             </td>
                             <td className="query-forecast-value">
-                              {row.forecast === null ? "—" : fmt(row.forecast)}
+                              {translateText(
+                                row.forecast === null ? "—" : fmt(row.forecast),
+                              )}
                             </td>
                             <td>
-                              {row.actual !== null
-                                ? "历史模拟"
-                                : "历史缺失 / 模拟预测"}
+                              {translateText(
+                                row.actual !== null
+                                  ? "历史模拟"
+                                  : "历史缺失 / 模拟预测",
+                              )}
                             </td>
                           </tr>
                         ))}
@@ -747,56 +835,70 @@ export default function SmartQueryWorkspace({
                             channel.channel === "直营" ? "direct" : "authorized"
                           }
                         />
-                        <h3>{channel.label}</h3>
-                        <small>{channel.storeCount} 家</small>
+                        <h3>{translateText(channel.label)}</h3>
+                        <small>
+                          {channel.storeCount}
+                          {translateText(" 家")}
+                        </small>
                       </header>
                       <strong>
-                        {fmt(channel.physical)} <small>台实物</small>
+                        {translateText(fmt(channel.physical))}{" "}
+                        <small>{translateText("台实物")}</small>
                       </strong>
                       <div>
                         <span>
-                          可用<b>{fmt(channel.free)}</b>
+                          {translateText("可用")}
+                          <b>{translateText(fmt(channel.free))}</b>
                         </span>
                         <span>
-                          在途<b>{fmt(channel.transit)}</b>
+                          {translateText("在途")}
+                          <b>{translateText(fmt(channel.transit))}</b>
                         </span>
                         <span>
-                          可用覆盖<b>{fmt(channel.coverage, 1)} 周</b>
+                          {translateText("可用覆盖")}
+                          <b>
+                            {translateText(fmt(channel.coverage, 1))}
+                            {translateText(" 周")}
+                          </b>
                         </span>
                       </div>
                     </article>
                   ))}
                 </div>
                 <Panel
-                  title={`${dimensionLabel}库存结构`}
+                  title={translateText(`${dimensionLabel}库存结构`)}
                   subtitle="单日快照 · 不构造月度历史库存。91 天以上库龄为实物库存的子集。"
                   aside={
-                    <span className="query-tag">{queryMetadata.stockDate}</span>
+                    <span className="query-tag">
+                      {translateText(queryMetadata.stockDate)}
+                    </span>
                   }
                 >
                   <div className="query-chart-legend">
                     <span>
                       <i style={{ background: "#12836f" }} />
-                      可用
+                      {translateText("可用")}
                     </span>
                     <span>
                       <i style={{ background: "#d5913a" }} />
-                      已锁定
+                      {translateText("已锁定")}
                     </span>
                     <span>
                       <i style={{ background: "#acb8bc" }} />
-                      质检冻结
+                      {translateText("质检冻结")}
                     </span>
                   </div>
                   <div className="query-stock-bars">
                     {result.rows.slice(0, 10).map((row) => (
                       <div key={row.id}>
                         <button type="button" onClick={() => drill(row.id)}>
-                          {row.label}
+                          {translateText(row.label)}
                         </button>
                         <div
                           className="query-stock-track"
-                          title={`可用 ${row.free} / 锁定 ${row.locked} / 冻结 ${row.frozen}`}
+                          title={translateText(
+                            `可用 ${row.free} / 锁定 ${row.locked} / 冻结 ${row.frozen}`,
+                          )}
                           style={{
                             width: `${Math.max(1, (row.physical / Math.max(...result.rows.map((item) => item.physical), 1)) * 100)}%`,
                           }}
@@ -820,34 +922,36 @@ export default function SmartQueryWorkspace({
                             }}
                           />
                         </div>
-                        <strong>{fmt(row.physical)}</strong>
+                        <strong>{translateText(fmt(row.physical))}</strong>
                       </div>
                     ))}
                   </div>
                   {result.rows.length > 10 && (
                     <p className="query-footnote">
-                      图中展示前 10 家；下表保留全部 {result.rows.length}{" "}
-                      家门店。
+                      {translateText("图中展示前 10 家；下表保留全部 ")}
+                      {result.rows.length}
+                      {translateText(" ")}
+                      {translateText("家门店。")}
                     </p>
                   )}
                 </Panel>
                 <Panel
-                  title={`${dimensionLabel}库存明细`}
+                  title={translateText(`${dimensionLabel}库存明细`)}
                   subtitle="库存与销速按品牌匹配；授权店库存不代表已获回购或调拨授权。"
                 >
                   <div className="query-table-wrap">
                     <table data-testid="query-inventory-table">
                       <thead>
                         <tr>
-                          <th>{dimensionLabel}</th>
-                          <th>实物</th>
-                          <th>可用</th>
-                          <th>锁定</th>
-                          <th>冻结</th>
-                          <th>在途</th>
-                          <th>91天+</th>
-                          <th>可用覆盖 / 周</th>
-                          <th>补库缺口</th>
+                          <th>{translateText(dimensionLabel)}</th>
+                          <th>{translateText("实物")}</th>
+                          <th>{translateText("可用")}</th>
+                          <th>{translateText("锁定")}</th>
+                          <th>{translateText("冻结")}</th>
+                          <th>{translateText("在途")}</th>
+                          <th>{translateText("91天+")}</th>
+                          <th>{translateText("可用覆盖 / 周")}</th>
+                          <th>{translateText("补库缺口")}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -859,26 +963,26 @@ export default function SmartQueryWorkspace({
                                 onClick={() => drill(row.id)}
                                 disabled={filters.dimension === "total"}
                               >
-                                {row.label}
+                                {translateText(row.label)}
                                 <ArrowUpRight size={12} />
                               </button>
                             </td>
-                            <td>{fmt(row.physical)}</td>
-                            <td>{fmt(row.free)}</td>
-                            <td>{fmt(row.locked)}</td>
-                            <td>{fmt(row.frozen)}</td>
-                            <td>{fmt(row.transit)}</td>
-                            <td>{fmt(row.aged)}</td>
+                            <td>{translateText(fmt(row.physical))}</td>
+                            <td>{translateText(fmt(row.free))}</td>
+                            <td>{translateText(fmt(row.locked))}</td>
+                            <td>{translateText(fmt(row.frozen))}</td>
+                            <td>{translateText(fmt(row.transit))}</td>
+                            <td>{translateText(fmt(row.aged))}</td>
                             <td>
                               <span
                                 className={
                                   row.coverage < 2 ? "query-low-stock" : ""
                                 }
                               >
-                                {fmt(row.coverage, 1)}
+                                {translateText(fmt(row.coverage, 1))}
                               </span>
                             </td>
-                            <td>{fmt(row.gap)}</td>
+                            <td>{translateText(fmt(row.gap))}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -891,19 +995,25 @@ export default function SmartQueryWorkspace({
               <>
                 <div className="query-transport-controls">
                   <label>
-                    运输场景
+                    {translateText("运输场景")}
                     <select
-                      aria-label="运输场景"
+                      aria-label={translateText("运输场景")}
                       value={scenario}
                       onChange={(event) =>
                         setScenario(event.target.value as "dual" | "west")
                       }
                     >
-                      <option value="dual">双港口常态</option>
-                      <option value="west">仅吉达西部单港口</option>
+                      <option value="dual">
+                        {translateText("双港口常态")}
+                      </option>
+                      <option value="west">
+                        {translateText("仅吉达西部单港口")}
+                      </option>
                     </select>
                   </label>
-                  <span>8 台 / 车次 · 不满载仍按整趟计费</span>
+                  <span>
+                    {translateText("8 台 / 车次 · 不满载仍按整趟计费")}
+                  </span>
                 </div>
                 <div className="query-metrics">
                   <Metric
@@ -931,30 +1041,31 @@ export default function SmartQueryWorkspace({
                   />
                 </div>
                 <Panel
-                  title="陆路物流路线地图"
+                  title={translateText("陆路物流路线地图")}
                   subtitle="港口至城市网络 · 点击线路查看距离、报价与运力。"
                   aside={
                     <span className="query-tag">
-                      {activeTransport.routes.length} 条路线
+                      {activeTransport.routes.length}
+                      {translateText(" 条路线")}
                     </span>
                   }
                 >
                   <QueryRouteMap routes={activeTransport.routes} />
                 </Panel>
                 <Panel
-                  title="城市路线费用与运力"
+                  title={translateText("城市路线费用与运力")}
                   subtitle="固定场景路线报价与周运力；满载单台费 = 整趟报价 ÷ 8。"
                 >
                   <div className="query-table-wrap">
                     <table data-testid="query-route-table">
                       <thead>
                         <tr>
-                          <th>始发 → 城市</th>
+                          <th>{translateText("始发 → 城市")}</th>
                           <th>km</th>
-                          <th>整趟 / SAR</th>
-                          <th>满载单台 / SAR</th>
-                          <th>每周可用车次</th>
-                          <th>周运力 / 台</th>
+                          <th>{translateText("整趟 / SAR")}</th>
+                          <th>{translateText("满载单台 / SAR")}</th>
+                          <th>{translateText("每周可用车次")}</th>
+                          <th>{translateText("周运力 / 台")}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -962,16 +1073,19 @@ export default function SmartQueryWorkspace({
                           <tr key={route.id}>
                             <td>
                               <strong>
-                                {route.originId === "P-W" ? "吉达" : "达曼"} →{" "}
-                                {route.city}
+                                {translateText(
+                                  route.originId === "P-W" ? "吉达" : "达曼",
+                                )}{" "}
+                                →{translateText(" ")}
+                                {translateText(route.city)}
                               </strong>
-                              <small>{route.id}</small>
+                              <small>{translateText(route.id)}</small>
                             </td>
-                            <td>{fmt(route.km)}</td>
-                            <td>{fmt(route.cost)}</td>
-                            <td>{fmt(route.unitCost, 1)}</td>
-                            <td>{fmt(route.trucks)}</td>
-                            <td>{fmt(route.capacity)}</td>
+                            <td>{translateText(fmt(route.km))}</td>
+                            <td>{translateText(fmt(route.cost))}</td>
+                            <td>{translateText(fmt(route.unitCost, 1))}</td>
+                            <td>{translateText(fmt(route.trucks))}</td>
+                            <td>{translateText(fmt(route.capacity))}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -986,9 +1100,9 @@ export default function SmartQueryWorkspace({
       <footer className="query-version">
         <span>
           <Database size={12} />
-          {queryMetadata.snapshot}
+          {translateText(queryMetadata.snapshot)}
         </span>
-        <span>本地模拟数据 · 所有费用 SAR</span>
+        <span>{translateText("本地模拟数据 · 所有费用 SAR")}</span>
       </footer>
     </div>
   );

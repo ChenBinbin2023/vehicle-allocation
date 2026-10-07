@@ -1,20 +1,25 @@
+import { useI18n } from "@/lib/i18n/LocaleProvider";
 // Adapted from frontend_alpha: retain the reference Skill markdown renderer.
 function InlineThinkingMarkdown({ text }: { text: string }) {
+  const { t: translateText } = useI18n();
+
   const parts = text.split(/(`[^`\n]+`|\*\*[^*\n]+\*\*|\/[a-z][a-z0-9_-]*)/g);
   return (
     <>
       {parts.map((part, index) => {
         if (part.startsWith("`") && part.endsWith("`"))
-          return <code key={index}>{part.slice(1, -1)}</code>;
+          return <code key={index}>{translateText(part.slice(1, -1))}</code>;
         if (part.startsWith("**") && part.endsWith("**"))
-          return <strong key={index}>{part.slice(2, -2)}</strong>;
+          return (
+            <strong key={index}>{translateText(part.slice(2, -2))}</strong>
+          );
         if (/^\/[a-z][a-z0-9_-]*$/.test(part))
           return (
             <code className="markdown-skill" key={index}>
-              {part}
+              {translateText(part)}
             </code>
           );
-        return <span key={index}>{part}</span>;
+        return <span key={index}>{translateText(part)}</span>;
       })}
     </>
   );
@@ -29,6 +34,8 @@ export function ThinkingMarkdown({
   streaming: boolean;
   orderedBullets?: boolean;
 }) {
+  const { t: translateText } = useI18n();
+
   const blocks: Array<{ type: "line" | "code"; text: string }> = [];
   let codeLines: string[] | null = null;
 
@@ -61,7 +68,7 @@ export function ThinkingMarkdown({
           return (
             <pre key={index}>
               <code>
-                {block.text}
+                {translateText(block.text)}
                 {cursor}
               </code>
             </pre>
@@ -93,7 +100,9 @@ export function ThinkingMarkdown({
           bulletNumber += 1;
           return (
             <p className={orderedBullets ? "numbered" : "bullet"} key={index}>
-              <span>{orderedBullets ? `${bulletNumber}.` : "•"}</span>
+              <span>
+                {translateText(orderedBullets ? `${bulletNumber}.` : "•")}
+              </span>
               <span>
                 <InlineThinkingMarkdown text={line.slice(2)} />
                 {cursor}
@@ -104,7 +113,7 @@ export function ThinkingMarkdown({
         if (/^\d+\. /.test(line))
           return (
             <p className="numbered" key={index}>
-              <span>{line.match(/^\d+/)?.[0]}.</span>
+              <span>{translateText(line.match(/^\d+/)?.[0])}.</span>
               <span>
                 <InlineThinkingMarkdown text={line.replace(/^\d+\. /, "")} />
                 {cursor}
