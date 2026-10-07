@@ -1,6 +1,11 @@
 import type { CampaignState, StoryCommand, StoryStage } from "./types";
 import { latestDeliveryRun } from "./profit-run";
 import { latestStoreAllocation } from "./store-planning-run";
+import {
+  dispatchFulfillmentPrompt,
+  dispatchSelectionIssue,
+  dispatchSourceRun,
+} from "./dispatch-fulfillment";
 
 export type StorySkill = {
   command: StoryCommand;
@@ -17,6 +22,35 @@ export type SkillAvailability = {
 
 export const storySkills: StorySkill[] = [
   {
+    command: "/daily-dispatch",
+    title: "每日调拨计划",
+    description: "整理今日订单，逐车匹配车源、拼载配送并比较区域缺货方案",
+    stage: "dispatch",
+    defaultPrompt: "帮我整理今天需要处理的订单，并生成调度计划。",
+  },
+  {
+    command: "/shortage-fulfillment",
+    title: "缺货调度与采购订单",
+    description: "按逐车已选方案生成缺货配送建议和授权店采购订单",
+    stage: "dispatch",
+    defaultPrompt: dispatchFulfillmentPrompt,
+  },
+  {
+    command: "/query",
+    title: "基本统计",
+    description: "分析本船供需、历史船次、全网销速与门店库存",
+    stage: "statistics",
+    defaultPrompt:
+      "查看截至 2026-08-05 的本船供给、订单缺口、全网销速与库存基本统计。",
+  },
+  {
+    command: "/order-allocation",
+    title: "订单分车",
+    description: "按门店与车型分配订单，生成单港和双港物流建议",
+    stage: "orders",
+    defaultPrompt: "按门店和车型查看订单分车，并比较单港与双港物流方案。",
+  },
+  {
     command: "/crisis-brief",
     title: "单港影响研判",
     description: "识别达曼港关闭后，本船供需与东向运输风险",
@@ -26,12 +60,11 @@ export const storySkills: StorySkill[] = [
   },
   {
     command: "/vessel-allocation",
-    title: "2,500 台船次分车",
-    description:
-      "查看基本统计、门店订单和单/双港物流建议，再按门店销速与 WoS 注水分车",
+    title: "分车计划模拟",
+    description: "调整补库、物流与价格参数，模拟分车计划和经营结果",
     stage: "allocation",
     defaultPrompt:
-      "先展示截至2026-08-05的供需、销速和库存模拟基本统计，再展示订单分车与门店补库；总量=2500 预留比例=10% 基准WoS=4 级差=30%。",
+      "模拟门店补库分车计划；总量=2500 预留比例=10% 基准WoS=4 级差=10%。",
   },
   {
     command: "/delivery-plan",
@@ -73,26 +106,48 @@ export const storySkills: StorySkill[] = [
     defaultPrompt:
       "基于最新到店物流快照，分析销售情景的订单、车型及门店贡献利润，并拆解物流成本和亏损原因。",
   },
-  {
-    command: "/smart-query",
-    title: "智能问数",
-    description: "按区域、VPC 与门店分析销量预测、直营/授权库存及陆路运费",
-    stage: "query",
-    defaultPrompt:
-      "查看 2026 年各主要区域、VPC 和门店的月度销量与预测、直营店和授权店库存，并比较双港口与吉达单港的陆路运输成本。",
-  },
 ];
 
 export function resolveStorySkill(input: string): StorySkill | undefined {
-  const command = input.trim().split(/\s+/)[0];
+  const command = input.trim().split(/[\s，,]+/)[0];
+  if (command === "/skill")
+    return storySkills.find(
+      (skill) =>
+        skill.command ===
+        (/缺货/.test(input) && /选择|选定|已选|采购订单|采购单/.test(input)
+          ? "/shortage-fulfillment"
+          : "/daily-dispatch"),
+    );
+  // Restore historical smart-query canvases without exposing the retired command.
+  if (command === "/smart-query" || command === "/smart_query")
+    return {
+      command: "/smart-query",
+      title: "智能问数",
+      stage: "query",
+      description: "历史销量、库存与运费分析",
+      defaultPrompt: "分析销量、库存与陆路运输成本。",
+    };
   return storySkills.find((skill) => skill.command === command);
 }
 
 export function skillAvailability(
   command: StoryCommand,
   state: CampaignState,
+  dispatchRunId?: string,
 ): SkillAvailability {
-  if (command === "/crisis-brief" || command === "/smart-query")
+  if (command === "/shortage-fulfillment") {
+    const reason = dispatchSelectionIssue(
+      dispatchSourceRun(state, dispatchRunId)?.dispatch,
+    );
+    return reason ? { available: false, reason } : { available: true };
+  }
+  if (
+    command === "/crisis-brief" ||
+    command === "/smart-query" ||
+    command === "/query" ||
+    command === "/daily-dispatch" ||
+    command === "/order-allocation"
+  )
     return { available: true };
   if (command === "/profit-analysis")
     return latestDeliveryRun(state)

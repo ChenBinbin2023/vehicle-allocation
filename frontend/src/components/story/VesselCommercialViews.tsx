@@ -408,8 +408,9 @@ export function CommercialLogisticsView({
         </span>
         <strong>单车 {money(store.unitCost)} SAR</strong>
         <small>
-          基准 {money(store.baseUnitCost)} × {store.factor} · 本店{" "}
-          {store.quantity} 台 · 共 {money(store.cost)} SAR
+          8 台基准 {money(store.baseUnitCost)} × {store.factor} × 8 ÷{" "}
+          {result.logistics.truckCapacity} · 本店 {store.quantity} 台 · 共{" "}
+          {money(store.cost)} SAR
         </small>
       </div>
       {view === "costs" && (
@@ -450,8 +451,9 @@ export function CommercialLogisticsView({
         </div>
       )}
       <p className="vr-footnote">
-        路线为城市间示意。每班次装载不超过设定的 8–10
-        台；不足一车的尾班单列。中转路线暂按单车预算的 70% / 30%
+        路线为城市间示意。每班次装载不超过设定的 8–10 台；单车预算按 8
+        台满载基准 × 系数 × 8 ÷
+        板车容量摊销，尾班仍按单车预算计费。中转路线暂按单车预算的 70% / 30%
         分摊首程与末端，非承运商整车报价；末端没有实际订单和发车日期。北部、南部中心为模拟地点。
       </p>
     </section>
@@ -464,20 +466,21 @@ export function CommercialProfitView({
   model,
   onStore,
   onModel,
+  view,
 }: {
   result: CommercialResult;
   selected: string;
   model: string;
   onStore: (id: string) => void;
   onModel: (id: string) => void;
+  view: "unit" | "models" | "stores";
 }) {
-  const [tab, setTab] = useState("unit");
   const store = result.profit.stores.find((s) => s.id === selected)!;
   const rows = result.profit.rows.filter((r) => r.storeId === selected);
   const unit = rows.find((r) => r.model === model) ?? rows[0];
   const totals = result.profit.summary;
   const bars =
-    tab === "stores"
+    view === "stores"
       ? result.profit.stores
           .filter((s) => s.quantity)
           .map((s) => ({
@@ -491,10 +494,10 @@ export function CommercialProfitView({
           id: r.model,
           label: r.model,
           name: r.model,
-          a: tab === "unit" ? r.unitGross : r.revenue,
-          b: tab === "unit" ? r.unitNet : r.net,
+          a: view === "unit" ? r.unitGross : r.revenue,
+          b: view === "unit" ? r.unitNet : r.net,
         }));
-  const width = Math.max(660, bars.length * (tab === "stores" ? 60 : 85)),
+  const width = Math.max(660, bars.length * (view === "stores" ? 60 : 85)),
     left = 65,
     right = width - 20,
     top = 25,
@@ -509,7 +512,13 @@ export function CommercialProfitView({
       <header className="vr-panel-heading">
         <div>
           <small>PRICING & PROFIT</small>
-          <h3>门店 × 车型 · 利润模拟</h3>
+          <h3>
+            {view === "unit"
+              ? "单车毛利 / 净利"
+              : view === "models"
+                ? "本店车型总利润"
+                : "门店营业额 / 净利"}
+          </h3>
         </div>
         <span>单位 SAR · 补库全部售出假设</span>
       </header>
@@ -549,28 +558,12 @@ export function CommercialProfitView({
           ))}
         </dl>
       </div>
-      <div className="vc-mini-tabs" role="tablist" aria-label="利润图表">
-        {[
-          ["unit", "单车毛利 / 净利"],
-          ["models", "本店车型总利润"],
-          ["stores", "门店营业额 / 净利"],
-        ].map(([id, name]) => (
-          <button
-            type="button"
-            role="tab"
-            aria-selected={tab === id}
-            key={id}
-            onClick={() => setTab(id)}
-          >
-            {name}
-          </button>
-        ))}
-      </div>
       <div className="vc-chart-caption">
         <span>
           <i className="vc-dot blue" />
-          {tab === "unit" ? "单车毛利" : "营业额"} <i className="vc-dot teal" />
-          {tab === "unit" ? "单车净利" : "净利"}
+          {view === "unit" ? "单车毛利" : "营业额"}{" "}
+          <i className="vc-dot teal" />
+          {view === "unit" ? "单车净利" : "净利"}
         </span>
         <small>SAR · 横向滚动查看</small>
       </div>
@@ -609,12 +602,12 @@ export function CommercialProfitView({
                 tabIndex={0}
                 aria-label={r.name + " 利润"}
                 onClick={() =>
-                  tab === "stores" ? onStore(r.id) : onModel(r.id)
+                  view === "stores" ? onStore(r.id) : onModel(r.id)
                 }
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault();
-                    tab === "stores" ? onStore(r.id) : onModel(r.id);
+                    view === "stores" ? onStore(r.id) : onModel(r.id);
                   }
                 }}
               >
@@ -628,7 +621,7 @@ export function CommercialProfitView({
                     rx="2"
                     fill={v < 0 ? "#c27178" : k ? "#557b66" : "#9bb2a5"}
                     opacity={
-                      r.id === (tab === "stores" ? selected : model) ? 1 : 0.75
+                      r.id === (view === "stores" ? selected : model) ? 1 : 0.75
                     }
                   />
                 ))}
@@ -646,101 +639,138 @@ export function CommercialProfitView({
           })}
         </svg>
       </div>
-      <div className="vc-unit-profit">
-        <strong>
-          {unit.model} · {store.channel === "直营" ? "零售" : "批发"}系数 ×
-          {unit.priceFactor} · 补库 {unit.quantity} 台
-        </strong>
-        <dl>
-          {[
-            ["成交价格", unit.unitPrice],
-            ["采购价", unit.purchasePrice],
-            ["单车毛利", unit.unitGross],
-            ["单车物流", unit.unitLogistics],
-            ["单车固定费用", unit.unitFixed],
-            ["单车净利", unit.unitNet],
-          ].map(([label, value]) => (
-            <div key={label}>
-              <dt>{label}</dt>
-              <dd className={(value as number) < 0 ? "vc-negative" : ""}>
-                {money(value as number)}
-              </dd>
-            </div>
-          ))}
-        </dl>
-        <p>
-          单车毛利率 {rate(unit.unitGross / unit.unitPrice)} · 单车净利率{" "}
-          {rate(unit.unitNet / unit.unitPrice)} · 本车型净利 {money(unit.net)}{" "}
-          SAR
-        </p>
-      </div>
-      <div className="vr-table-scroll">
-        <table>
-          <thead>
-            <tr>
-              <th>本店车型</th>
-              <th>数量</th>
-              <th>成交价格</th>
-              <th>单车毛利</th>
-              <th>单车净利</th>
-              <th>净利率</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((r) => (
-              <tr key={r.model} data-selected={model === r.model}>
-                <td>
-                  <button type="button" onClick={() => onModel(r.model)}>
-                    {r.model}
-                  </button>
-                </td>
-                <td>{r.quantity}</td>
-                <td>{money(r.unitPrice)}</td>
-                <td>{money(r.unitGross)}</td>
-                <td className={r.unitNet < 0 ? "vc-negative" : ""}>
-                  {money(r.unitNet)}
-                </td>
-                <td>{rate(r.unitNet / r.unitPrice)}</td>
-              </tr>
+      {view === "unit" && (
+        <div className="vc-unit-profit">
+          <strong>
+            {unit.model} · {store.channel === "直营" ? "零售" : "批发"}系数 ×
+            {unit.priceFactor} · 补库 {unit.quantity} 台
+          </strong>
+          <dl>
+            {[
+              ["成交价格", unit.unitPrice],
+              ["采购价", unit.purchasePrice],
+              ["单车毛利", unit.unitGross],
+              ["单车物流", unit.unitLogistics],
+              ["单车固定费用", unit.unitFixed],
+              ["单车净利", unit.unitNet],
+            ].map(([label, value]) => (
+              <div key={label}>
+                <dt>{label}</dt>
+                <dd className={(value as number) < 0 ? "vc-negative" : ""}>
+                  {money(value as number)}
+                </dd>
+              </div>
             ))}
-          </tbody>
-        </table>
-      </div>
-      <details className="vc-cost-details">
-        <summary>全部门店经营汇总</summary>
-        <div className="vr-table-scroll vc-editor-scroll">
+          </dl>
+          <p>
+            单车毛利率 {rate(unit.unitGross / unit.unitPrice)} · 单车净利率{" "}
+            {rate(unit.unitNet / unit.unitPrice)} · 本车型净利 {money(unit.net)}{" "}
+            SAR
+          </p>
+        </div>
+      )}
+      {view !== "stores" && (
+        <div className="vr-table-scroll">
           <table>
             <thead>
               <tr>
-                <th>门店</th>
+                <th>本店车型</th>
                 <th>数量</th>
-                <th>营业额</th>
-                <th>毛利</th>
-                <th>净利</th>
+                {view === "unit" ? (
+                  <>
+                    <th>成交价格</th>
+                    <th>单车毛利</th>
+                    <th>单车净利</th>
+                  </>
+                ) : (
+                  <>
+                    <th>营业额</th>
+                    <th>毛利</th>
+                    <th>物流成本</th>
+                    <th>固定费用</th>
+                    <th>净利</th>
+                  </>
+                )}
                 <th>净利率</th>
               </tr>
             </thead>
             <tbody>
-              {result.profit.stores.map((s) => (
-                <tr key={s.id}>
+              {rows.map((r) => (
+                <tr key={r.model} data-selected={model === r.model}>
                   <td>
-                    <button type="button" onClick={() => onStore(s.id)}>
-                      {s.name} · {s.channel}
+                    <button type="button" onClick={() => onModel(r.model)}>
+                      {r.model}
                     </button>
                   </td>
-                  <td>{s.quantity}</td>
-                  <td>{money(s.revenue)}</td>
-                  <td>{money(s.gross)}</td>
-                  <td className={s.net < 0 ? "vc-negative" : ""}>
-                    {money(s.net)}
+                  <td>{r.quantity}</td>
+                  {view === "unit" ? (
+                    <>
+                      <td>{money(r.unitPrice)}</td>
+                      <td>{money(r.unitGross)}</td>
+                    </>
+                  ) : (
+                    <>
+                      <td>{money(r.revenue)}</td>
+                      <td>{money(r.gross)}</td>
+                      <td>{money(r.logistics)}</td>
+                      <td>{money(r.fixed)}</td>
+                    </>
+                  )}
+                  <td
+                    className={
+                      (view === "unit" ? r.unitNet : r.net) < 0
+                        ? "vc-negative"
+                        : ""
+                    }
+                  >
+                    {money(view === "unit" ? r.unitNet : r.net)}
                   </td>
-                  <td>{rate(s.margin)}</td>
+                  <td>
+                    {rate(view === "unit" ? r.unitNet / r.unitPrice : r.margin)}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-      </details>
+      )}
+      {view === "stores" && (
+        <div className="vc-cost-details">
+          <h4>全部门店经营汇总</h4>
+          <div className="vr-table-scroll vc-editor-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>门店</th>
+                  <th>数量</th>
+                  <th>营业额</th>
+                  <th>毛利</th>
+                  <th>净利</th>
+                  <th>净利率</th>
+                </tr>
+              </thead>
+              <tbody>
+                {result.profit.stores.map((s) => (
+                  <tr key={s.id}>
+                    <td>
+                      <button type="button" onClick={() => onStore(s.id)}>
+                        {s.name} · {s.channel}
+                      </button>
+                    </td>
+                    <td>{s.quantity}</td>
+                    <td>{money(s.revenue)}</td>
+                    <td>{money(s.gross)}</td>
+                    <td className={s.net < 0 ? "vc-negative" : ""}>
+                      {money(s.net)}
+                    </td>
+                    <td>{rate(s.margin)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
       <p className="vr-footnote">
         授权店按批发收入测算供货方利润；直营店按零售收入并扣固定费用，授权店不扣固定费用。同车型计入各店实际物流后，直营单车净利高于授权。门店净利率
         = 全车型净利合计 ÷ 营业额合计，不取车型利率的平均。0

@@ -11,6 +11,7 @@ const fmt = (n: number) =>
   n.toLocaleString("zh-CN", { maximumFractionDigits: 2 });
 export default function VesselCommercialParameters({
   tab,
+  truckCapacity,
   input,
   result,
   selected,
@@ -21,6 +22,7 @@ export default function VesselCommercialParameters({
   onModel,
 }: {
   tab: string;
+  truckCapacity: number;
   input: CommercialParameters;
   result: VesselReplenishment;
   selected: string;
@@ -75,7 +77,12 @@ export default function VesselCommercialParameters({
         (input.simulation?.regions[s.region] ?? 1),
     );
     const costs = result.stores.map(
-      (s, i) => input.logistics[s.id].baseUnitCost * factors[i],
+      (s, i) =>
+        Math.round(
+          ((input.logistics[s.id].baseUnitCost * factors[i] * 8) /
+            truckCapacity) *
+            100,
+        ) / 100,
     );
     const maximum = Math.max(100, ...costs.filter(Number.isFinite)) * 1.15;
     const maxFactor = Math.max(2, ...factors.filter(Number.isFinite));
@@ -94,7 +101,7 @@ export default function VesselCommercialParameters({
               <tr>
                 <th>门店 / 渠道</th>
                 <th>
-                  基准单车成本
+                  8 台满载基准
                   <br />
                   SAR
                 </th>
@@ -247,7 +254,8 @@ export default function VesselCommercialParameters({
             <p className="vr-footnote">
               初始成本参考单港线路报价 ÷ 8
               加示例服务费用。可逐店修改；完整单车预算包含中转及末端调拨。图中显示实时参数，最终系数
-              = 门店系数 × 所属大区系数。
+              = 门店系数 × 所属大区系数；最终单车预算 = 基准成本 × 最终系数 × 8
+              ÷ 板车容量（当前 {truckCapacity} 台）。尾班按单车预算计费。
             </p>
           </div>
         ) : (

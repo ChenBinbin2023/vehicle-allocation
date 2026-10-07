@@ -2,70 +2,136 @@
 
 import { useState } from "react";
 import {
+  ChartNoAxesColumnIncreasing,
   ChevronDown,
   ChevronRight,
-  Database,
   FolderKanban,
   LayoutDashboard,
   MessageSquare,
+  MoreHorizontal,
+  PanelLeftClose,
+  PanelLeftOpen,
   Plus,
+  Puzzle,
+  Search,
 } from "lucide-react";
-import type { Session } from "@/lib/sessions";
+import type { Folder, Session } from "@/lib/sessions";
 
-export type WorkspaceView = "task" | "overview" | "data";
-
+export type WorkspaceView = "task" | "overview" | "data" | "plugins";
 export default function WorkspaceSidebar({
   sessions,
+  folders,
   activeId,
+  activeFolderId,
   view,
+  collapsed,
+  onToggle,
   onView,
   onSelectSession,
   onNewSession,
 }: {
   sessions: Session[];
+  folders: Folder[];
   activeId: string;
+  activeFolderId: string;
   view: WorkspaceView;
+  collapsed: boolean;
+  onToggle: () => void;
   onView: (view: WorkspaceView) => void;
   onSelectSession: (id: string) => void;
-  onNewSession: () => void;
+  onNewSession: (folderId?: string) => void;
 }) {
-  const [expanded, setExpanded] = useState(true);
+  const [closed, setClosed] = useState<string[]>([]);
+  const [moreOpen, setMoreOpen] = useState(false);
   return (
     <aside className="story-sidebar" data-testid="workspace-sidebar">
       <div className="story-brand">
-        <span>AT</span>
-        <div>
-          <strong>ATLAS</strong>
-          <small>Supply Chain Workspace</small>
-        </div>
-      </div>
-      <div className="workspace-quick-actions">
-        <button type="button" onClick={onNewSession} aria-label="新建 Session">
-          <Plus size={16} />
-          <span>新任务</span>
+        <ChartNoAxesColumnIncreasing size={24} strokeWidth={2.5} />
+        <strong>供应链决策智能</strong>
+        <button
+          type="button"
+          aria-label={collapsed ? "展开导航" : "收起导航"}
+          onClick={onToggle}
+        >
+          {collapsed ? (
+            <PanelLeftOpen size={15} />
+          ) : (
+            <PanelLeftClose size={15} />
+          )}
         </button>
       </div>
+      <nav className="workspace-quick-actions" aria-label="快捷操作">
+        <button
+          type="button"
+          onClick={() => onNewSession("global")}
+          aria-label="新任务"
+        >
+          <MessageSquare size={17} />
+          <span>新任务</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => onView("plugins")}
+          aria-label="插件"
+        >
+          <Puzzle size={17} />
+          <span>插件</span>
+        </button>
+        <div className="workspace-more">
+          <button
+            type="button"
+            onClick={() => setMoreOpen(!moreOpen)}
+            aria-expanded={moreOpen}
+            aria-label="更多"
+          >
+            <MoreHorizontal size={17} />
+            <span>更多</span>
+          </button>
+          {moreOpen && (
+            <div className="workspace-more-menu">
+              <button
+                type="button"
+                onClick={() => {
+                  onView("data");
+                  setMoreOpen(false);
+                }}
+              >
+                数据与业务规则
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  onView("overview");
+                  setMoreOpen(false);
+                }}
+              >
+                工作台总览
+              </button>
+            </div>
+          )}
+        </div>
+      </nav>
       <section className="workspace-sidebar-section">
-        <div className="workspace-section-label">工作空间</div>
+        <div className="workspace-section-label">
+          工作空间 <Search size={13} />
+        </div>
         <nav aria-label="工作空间">
           <button
             type="button"
-            aria-label="供应链工作台"
-            title="供应链工作台"
             className={view === "overview" ? "active" : ""}
             onClick={() => onView("overview")}
+            aria-label="供应链工作台"
           >
             <LayoutDashboard size={16} />
             <span>供应链工作台</span>
           </button>
           <button
             type="button"
-            aria-label="数据与业务规则"
-            title="数据与业务规则"
             className={view === "data" ? "active" : ""}
             onClick={() => onView("data")}
+            aria-label="数据与业务规则"
           >
-            <Database size={16} />
+            <FolderKanban size={16} />
             <span>数据与业务规则</span>
           </button>
         </nav>
@@ -78,47 +144,91 @@ export default function WorkspaceSidebar({
           项目{" "}
           <button
             type="button"
-            aria-label="新建项目任务"
-            onClick={onNewSession}
+            aria-label="在分车计划中新建任务"
+            onClick={() => onNewSession("single-port")}
           >
-            <Plus size={13} />
+            <Plus size={14} />
           </button>
         </div>
-        <button
-          type="button"
-          className="workspace-project-title"
-          aria-label="ALJ · 沙特供应链"
-          title="ALJ · 沙特供应链"
-          aria-expanded={expanded}
-          onClick={() => setExpanded((value) => !value)}
-        >
-          {expanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
-          <FolderKanban size={15} />
-          <strong>ALJ · 沙特供应链</strong>
-        </button>
-        {expanded && (
-          <div className="workspace-session-tree">
-            {sessions.map((session) => (
-              <button
-                type="button"
-                key={session.id}
-                className={
-                  activeId === session.id && view === "task" ? "active" : ""
-                }
-                onClick={() => {
-                  onView("task");
-                  onSelectSession(session.id);
-                }}
+        {folders.map((folder) => {
+          const expanded = !closed.includes(folder.id);
+          return (
+            <div
+              className="workspace-project"
+              key={folder.id}
+              data-folder-id={folder.id}
+            >
+              <div
+                className={`workspace-project-row ${activeFolderId === folder.id && view === "task" ? "active" : ""}`}
               >
-                <MessageSquare size={13} />
-                <span>{session.title}</span>
-                {session.snapshot.campaign.runs.some(
-                  (run) => run.status === "running",
-                ) && <i />}
-              </button>
-            ))}
-          </div>
-        )}
+                <button
+                  type="button"
+                  className="workspace-project-expand"
+                  aria-label={`${expanded ? "收起" : "展开"}${folder.name}`}
+                  aria-expanded={expanded}
+                  onClick={() =>
+                    setClosed((current) =>
+                      expanded
+                        ? [...current, folder.id]
+                        : current.filter((id) => id !== folder.id),
+                    )
+                  }
+                >
+                  {expanded ? (
+                    <ChevronDown size={12} />
+                  ) : (
+                    <ChevronRight size={12} />
+                  )}
+                </button>
+                <button
+                  type="button"
+                  className="workspace-project-title"
+                  aria-label={folder.name}
+                  onClick={() => onNewSession(folder.id)}
+                >
+                  <FolderKanban size={15} />
+                  <strong>{folder.name}</strong>
+                </button>
+                <button
+                  type="button"
+                  className="workspace-project-add"
+                  aria-label={`在${folder.name}中新建任务`}
+                  onClick={() => onNewSession(folder.id)}
+                >
+                  <Plus size={14} />
+                </button>
+              </div>
+              {expanded && (
+                <div className="workspace-session-tree">
+                  {sessions
+                    .filter((session) => session.folderId === folder.id)
+                    .map((session) => (
+                      <button
+                        type="button"
+                        key={session.id}
+                        data-testid="workspace-session"
+                        className={
+                          activeId === session.id && view === "task"
+                            ? "active"
+                            : ""
+                        }
+                        onClick={() => {
+                          onView("task");
+                          onSelectSession(session.id);
+                        }}
+                      >
+                        <MessageSquare size={13} />
+                        <span>{session.title}</span>
+                        {session.snapshot.campaign.runs.some(
+                          (run) => run.status === "running",
+                        ) && <i />}
+                      </button>
+                    ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </section>
       <div className="workspace-account">
         <span>OM</span>
@@ -126,7 +236,7 @@ export default function WorkspaceSidebar({
           <strong>Omar</strong>
           <small>全国供应链负责人</small>
         </div>
-        <span className="workspace-account-status" title="本地演示数据" />
+        <ChevronDown size={13} />
       </div>
     </aside>
   );

@@ -201,19 +201,20 @@ test("changed supply and reservation flow into the overview and order logistics 
     overview.models.reduce((n, m) => n + m.supply, 0),
     2000,
   );
-  const run = startStoryRun(
-    "/vessel-allocation",
-    "补庫 总量=2000",
-    createCampaignState(),
-  );
+  const run = startStoryRun("/query", "补庫 总量=2000", createCampaignState());
   assert.match(
     run.events.find((e) => e.operation === "vessel.overview.read")?.detail ??
       "",
     /2,000/,
   );
+  const orderRun = startStoryRun(
+    "/order-allocation",
+    "补庫 总量=2000",
+    createCampaignState(),
+  );
   assert.match(
-    run.events.find((e) => e.operation === "vessel.orders.logistics")?.detail ??
-      "",
+    orderRun.events.find((e) => e.operation === "vessel.orders.logistics")
+      ?.detail ?? "",
     /1,523/,
   );
 });

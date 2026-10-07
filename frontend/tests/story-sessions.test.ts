@@ -6,16 +6,21 @@ import {
   WORKSPACE_STORAGE,
   addSession,
   createWorkspace,
+  freshSnapshot,
   restoreWorkspace,
 } from "../src/lib/sessions";
 
-test("v3 workspace starts with a clean Jeddah single-port campaign", () => {
+test("v3 workspace starts without sessions and provides a clean campaign for drafts", () => {
   const workspace = createWorkspace();
-  const snapshot = workspace.sessions[0].snapshot;
+  const snapshot = freshSnapshot();
 
   assert.equal(workspace.version, 3);
-  assert.equal(WORKSPACE_STORAGE, "atlas-single-port-workspace-v3");
-  assert.equal(workspace.sessions[0].title, "吉达单港供应保障");
+  assert.equal(WORKSPACE_STORAGE, "atlas-supply-chain-workspace-v3");
+  assert.equal(workspace.sessions.length, 0);
+  assert.deepEqual(
+    workspace.folders.map((folder) => folder.name),
+    ["全局", "分车计划"],
+  );
   assert.equal(snapshot.campaign.vessel.vehicles.length, 1800);
   assert.equal(snapshot.campaign.runs.length, 0);
   assert.equal(snapshot.messages.length, 0);
@@ -23,7 +28,11 @@ test("v3 workspace starts with a clean Jeddah single-port campaign", () => {
 });
 
 test("v3 workspace keeps campaign state isolated between sessions", () => {
-  let workspace = createWorkspace();
+  let workspace = addSession(
+    createWorkspace(),
+    "single-port",
+    "第一个船次演练",
+  );
   const folderId = workspace.folders[0].id;
   workspace.sessions[0].snapshot.campaign.auditTrail.push({
     id: "AUDIT-ONE",
@@ -38,7 +47,11 @@ test("v3 workspace keeps campaign state isolated between sessions", () => {
 });
 
 test("pauses active story run while restoring a valid v3 workspace", () => {
-  const workspace = createWorkspace();
+  const workspace = addSession(
+    createWorkspace(),
+    "single-port",
+    "第一个船次演练",
+  );
   const snapshot = workspace.sessions[0].snapshot;
   snapshot.campaign.runs = [
     startStoryRun("/crisis-brief", "分析单港影响", snapshot.campaign),
@@ -48,7 +61,10 @@ test("pauses active story run while restoring a valid v3 workspace", () => {
   const restored = restoreWorkspace(JSON.stringify(workspace));
 
   assert.equal(restored.sessions[0].snapshot.campaign.runs[0].status, "paused");
-  assert.equal(restored.sessions[0].snapshot.campaign.activeRunId, snapshot.campaign.runs[0].id);
+  assert.equal(
+    restored.sessions[0].snapshot.campaign.activeRunId,
+    snapshot.campaign.runs[0].id,
+  );
 });
 
 test("drops legacy story snapshots and invalid JSON into a clean v3 workspace", () => {
@@ -58,8 +74,7 @@ test("drops legacy story snapshots and invalid JSON into a clean v3 workspace", 
   const fromInvalid = restoreWorkspace("{not-json");
 
   assert.equal(fromLegacy.version, 3);
-  assert.equal(fromLegacy.sessions[0].snapshot.campaign.crisis, null);
-  assert.equal(fromLegacy.sessions[0].snapshot.campaign.runs.length, 0);
+  assert.equal(fromLegacy.sessions.length, 0);
   assert.equal(fromInvalid.version, 3);
-  assert.equal(fromInvalid.sessions[0].title, "吉达单港供应保障");
+  assert.equal(fromInvalid.sessions.length, 0);
 });

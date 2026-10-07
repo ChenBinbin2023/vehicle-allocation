@@ -1,5 +1,9 @@
 import network from "../store-planning-data.json";
-import { vesselOverview } from "./vessel-overview";
+import {
+  vesselInventoryVersion,
+  vesselOverview,
+  vesselStoreModelStocks,
+} from "./vessel-overview";
 import { vesselOrders, planOrderTrips } from "./vessel-orders";
 import type { StoreAllocation } from "./store-planning";
 
@@ -45,6 +49,8 @@ export type ReplenishmentStore = (typeof vesselOverview.stores)[number] & {
   models: ReplenishmentModelRow[];
 };
 export type VesselReplenishment = {
+  /** Missing in snapshots saved before the opening-inventory revision. */
+  sourceVersion?: string;
   parameters: ReplenishmentParameters;
   stores: ReplenishmentStore[];
   models: {
@@ -83,7 +89,7 @@ export function defaultReplenishmentParameters(): ReplenishmentParameters {
     supply: 2500,
     reserveRatio: 0.1,
     baseWos: 4,
-    channelGap: 0.3,
+    channelGap: 0.1,
     directTargetFactor: 1,
     performanceTargetFactor: 1.1,
     pairingEnabled: true,
@@ -185,12 +191,8 @@ export function calculateVesselReplenishment(
     );
     const demandKey =
       s.channel === "直营" ? "directDemand4Weeks" : "authorizedDemand4Weeks";
-    const stockKey = s.channel === "直营" ? "directStock" : "authorizedStock";
     const totalDemand = supported.reduce((n, m) => n + m[demandKey], 0);
-    const stock = apportion(
-      s.stock,
-      supported.map((m) => m[stockKey]),
-    );
+    const stock = vesselStoreModelStocks(s);
     const adjustedWeeklySales = s.weeklySales * factor.salesFactor;
     const targetWeeks =
       p.baseWos *
@@ -215,10 +217,10 @@ export function calculateVesselReplenishment(
       pairedQty: 0,
       directQty: 0,
       vpcQty: 0,
-      models: supported.map((m, i) => ({
+      models: supported.map((m) => ({
         model: m.model,
         brand: m.brand,
-        stock: stock[i],
+        stock: stock[m.model],
         weeklySales:
           totalDemand > 0
             ? (adjustedWeeklySales * m[demandKey]) / totalDemand
@@ -335,6 +337,7 @@ export function calculateVesselReplenishment(
     (m) => (m.retained = m.supply - m.reserved - m.orders - m.replenishment),
   );
   return {
+    sourceVersion: vesselInventoryVersion,
     parameters: structuredClone(p),
     stores,
     models,
@@ -403,7 +406,7 @@ export function replenishmentAllocation(
       sku: "本船订单与门店补库",
       brand: "丰田 / 雷克萨斯",
       source: {
-        snapshot: "VESSEL_20260805_V2",
+        snapshot: result.sourceVersion ?? vesselInventoryVersion,
         stockDate: "2026-08-05",
         nature: "模拟订单与门店库存",
       },

@@ -8,6 +8,68 @@ import {
   defaultReplenishmentParameters,
   replenishmentAllocation,
 } from "../src/lib/story/vessel-replenishment";
+import {
+  calculateCommercial,
+  defaultCommercialParameters,
+} from "../src/lib/story/vessel-commercial";
+import { hydrateVesselScenario } from "../src/lib/story/vessel-scenario";
+
+test("larger trucks reduce the per-car logistics budget and the same saving reaches net profit and every trip", () => {
+  const parameters = defaultReplenishmentParameters();
+  parameters.commercial = defaultCommercialParameters();
+  for (const row of Object.values(parameters.commercial.logistics)) {
+    row.baseUnitCost = 800;
+    row.factor = 1.25;
+  }
+  const original = structuredClone(parameters);
+  const eight = calculateCommercial(calculateVesselReplenishment(parameters));
+  for (const [truckCapacity, unitCost] of [
+    [9, 888.89],
+    [10, 800],
+  ]) {
+    const result = calculateCommercial(
+      calculateVesselReplenishment({
+        ...parameters,
+        truckCapacity,
+      }),
+    );
+    assert.ok(result.profit.rows.every((r) => r.unitLogistics === unitCost));
+    assert.equal(result.profit.summary.quantity, eight.profit.summary.quantity);
+    assert.equal(result.profit.summary.revenue, eight.profit.summary.revenue);
+    const saving = eight.logistics.totalCost - result.logistics.totalCost;
+    assert.ok(saving > 0);
+    assert.ok(
+      Math.abs(result.profit.summary.net - eight.profit.summary.net - saving) <
+        0.01,
+    );
+    assert.ok(
+      Math.abs(
+        result.logistics.trips.reduce((n, t) => n + t.cost, 0) -
+          result.logistics.totalCost,
+      ) < 0.01,
+    );
+  }
+  assert.deepEqual(parameters, original);
+});
+
+test("saved capacity scenarios refresh old commercial calculations without changing version parameters", () => {
+  const parameters = { ...defaultReplenishmentParameters(), truckCapacity: 10 };
+  const old = run(parameters);
+  if (old.planning?.kind !== "allocation") assert.fail("Missing allocation");
+  const originalVersions = structuredClone(old.planning.versions);
+  // Simulate a snapshot saved by the former per-car calculation, which ignored capacity.
+  delete (old.planning.commercial as unknown as Record<string, unknown>)
+    .calculationVersion;
+  old.planning.commercial!.logistics.totalCost = 999999;
+  const next = hydrateVesselScenario(old);
+  if (next.planning?.kind !== "allocation") assert.fail("Missing allocation");
+  assert.notEqual(next.planning.commercial!.logistics.totalCost, 999999);
+  assert.equal(next.planning.versionId, "V1");
+  assert.deepEqual(next.planning.versions, originalVersions);
+  assert.equal(next.planning.replenishment!.parameters.truckCapacity, 10);
+  assert.equal(old.planning.commercial!.logistics.totalCost, 999999);
+  assert.equal(hydrateVesselScenario(next), next);
+});
 
 function run(parameters = defaultReplenishmentParameters()) {
   return startStoryRun(
@@ -30,21 +92,21 @@ function scenario() {
 }
 test("Tab3 budgets each allocated car once and separates first-leg supply from order-triggered last-mile trips", () => {
   const s = scenario();
-  assert.equal(s.commercial.logistics.quantity, 512);
-  assert.equal(s.commercial.logistics.direct, 145);
-  assert.equal(s.commercial.logistics.viaHub, 367);
+  assert.equal(s.commercial.logistics.quantity, 506);
+  assert.equal(s.commercial.logistics.direct, 132);
+  assert.equal(s.commercial.logistics.viaHub, 374);
   const trips = s.commercial.logistics.trips;
   assert.equal(
     trips
       .filter((t: any) => t.stage !== "last-mile")
       .reduce((n: number, t: any) => n + t.quantity, 0),
-    512,
+    506,
   );
   assert.equal(
     trips
       .filter((t: any) => t.stage === "last-mile")
       .reduce((n: number, t: any) => n + t.quantity, 0),
-    367,
+    374,
   );
   assert.ok(
     trips.every((t: any) => t.quantity > 0 && t.quantity <= t.capacity),
@@ -119,7 +181,7 @@ test("store and model summaries conserve revenue and use total net profit divide
   for (const groups of [profit.stores, profit.models]) {
     assert.equal(
       groups.reduce((n: number, r: any) => n + r.quantity, 0),
-      512,
+      506,
     );
     assert.ok(
       Math.abs(

@@ -259,16 +259,20 @@ export default function ReplenishmentGraph({
       value: "× " + fmt(commercial.input.logistics[store.id].factor, 2),
       rule: true,
       formula:
-        "本店基准单车物流成本 × 高低峰系数；直营与授权使用同一物流规则。",
+        "本店 8 台满载基准单车物流成本 × 高低峰系数 × 8 ÷ 板车容量；直营与授权使用同一物流规则。",
     },
     {
       id: "unit-logistics",
       label: ["单车物流", "成本"],
       value: money(unit.unitLogistics),
       formula:
-        "本店基准 " +
+        "本店 8 台满载基准 " +
         money(commercial.input.logistics[store.id].baseUnitCost) +
-        " × 系数 = " +
+        " × 系数 " +
+        fmt(commercial.input.logistics[store.id].factor, 2) +
+        " × 8 ÷ " +
+        p.truckCapacity +
+        " = " +
         money(unit.unitLogistics) +
         "。包含直送或中转与末端调拨的完整单车预算。",
     },

@@ -35,7 +35,8 @@ export type WorkspaceData = {
   activeId: string;
 };
 
-export const WORKSPACE_STORAGE = "atlas-single-port-workspace-v3";
+// Keep the supply-chain entry separate from cached sessions in the old demo.
+export const WORKSPACE_STORAGE = "atlas-supply-chain-workspace-v3";
 
 const id = () =>
   `item-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 9)}`;
@@ -53,20 +54,19 @@ export function freshSnapshot(): SessionSnapshot {
 export function createWorkspace(): WorkspaceData {
   return {
     version: 3,
-    folders: [{ id: "single-port", name: "单港供应保障" }],
-    sessions: [
-      {
-        id: "first-session",
-        folderId: "single-port",
-        title: "吉达单港供应保障",
-        snapshot: freshSnapshot(),
-      },
+    folders: [
+      { id: "global", name: "全局" },
+      { id: "single-port", name: "分车计划" },
     ],
-    activeId: "first-session",
+    sessions: [],
+    activeId: "",
   };
 }
 
-export function addFolder(workspace: WorkspaceData, name: string): WorkspaceData {
+export function addFolder(
+  workspace: WorkspaceData,
+  name: string,
+): WorkspaceData {
   if (!name.trim()) throw new Error("请输入文件夹名称");
   return {
     ...workspace,
@@ -105,8 +105,7 @@ export function restoreWorkspace(
       value?.version !== 3 ||
       !Array.isArray(value.folders) ||
       value.folders.length === 0 ||
-      !Array.isArray(value.sessions) ||
-      value.sessions.length === 0
+      !Array.isArray(value.sessions)
     ) {
       return createWorkspace();
     }
@@ -125,14 +124,21 @@ export function restoreWorkspace(
             : [],
         },
       }));
-    if (sessions.length === 0) return createWorkspace();
+    const folders = value.folders.map((folder) =>
+      folder.id === "single-port" ? { ...folder, name: "分车计划" } : folder,
+    );
+    if (!folders.some((folder) => folder.id === "global"))
+      folders.unshift({ id: "global", name: "全局" });
     return {
       version: 3,
-      folders: value.folders,
+      folders,
       sessions,
-      activeId: sessions.some((session) => session.id === value.activeId)
-        ? value.activeId
-        : sessions[0].id,
+      activeId:
+        value.activeId === ""
+          ? ""
+          : sessions.some((session) => session.id === value.activeId)
+            ? value.activeId
+            : (sessions[0]?.id ?? ""),
     };
   } catch {
     return createWorkspace();

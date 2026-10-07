@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 
-test("tab3 reserves vehicles, shows both movable diagrams, and saves a rerun that can be replayed", async ({
+test("simulation reserves vehicles, shows both movable diagrams, and saves a rerun that can be replayed", async ({
   page,
 }) => {
   const errors: string[] = [];
@@ -11,7 +11,6 @@ test("tab3 reserves vehicles, shows both movable diagrams, and saves a rerun tha
   await page.getByTestId("story-command").fill("/vessel-allocation 基本统计");
   await page.getByTestId("story-command").press("Enter");
   await page.clock.runFor(12000);
-  await page.getByRole("tab", { name: "分车计划模拟", exact: true }).click();
   const workspace = page.getByTestId("vessel-replenishment");
   await expect(workspace).toBeVisible();
   await workspace.locator(".vs-advanced > summary").click();
@@ -49,7 +48,7 @@ test("tab3 reserves vehicles, shows both movable diagrams, and saves a rerun tha
   await workspace
     .getByRole("button", { name: "查看最终水位", exact: true })
     .click();
-  await expect(page.getByTestId("water-assigned")).toHaveText("512");
+  await expect(page.getByTestId("water-assigned")).toHaveText("506");
   await page.getByLabel("注水进度", { exact: true }).press("Home");
   await expect(page.getByTestId("water-assigned")).toHaveText("0");
   await page.getByLabel("预留比例", { exact: true }).fill("20");
@@ -59,8 +58,8 @@ test("tab3 reserves vehicles, shows both movable diagrams, and saves a rerun tha
     .click();
   await page.clock.runFor(12000);
   await expect(
-    page.getByRole("tab", { name: "分车计划模拟", exact: true }),
-  ).toHaveAttribute("aria-selected", "true");
+    page.locator('[data-skill-command="/vessel-allocation"]'),
+  ).toBeVisible();
   await expect(page.getByTestId("replenishment-reserved")).toHaveText("500");
   await expect(page.getByTestId("replenishment-budget")).toHaveText("358");
   const downloadEvent = page.waitForEvent("download");
@@ -77,7 +76,7 @@ test("tab3 reserves vehicles, shows both movable diagrams, and saves a rerun tha
   expect(errors).toEqual([]);
 });
 
-test("changed totals stay consistent across tabs and an authorized-only prefix identifies the active channel", async ({
+test("changed totals stay consistent across independent skills and an authorized-only prefix identifies the active channel", async ({
   page,
 }) => {
   await page.goto("/");
@@ -88,14 +87,20 @@ test("changed totals stay consistent across tabs and an authorized-only prefix i
   await page.getByTestId("story-command").press("Enter");
   await page.clock.runFor(12000);
   await expect(page.getByTestId("replenishment-budget")).toHaveText("277");
-  await page.getByRole("tab", { name: "基本统计", exact: true }).click();
+  await page.getByTestId("story-command").fill("/query 查看基本统计");
+  await page.getByTestId("story-command").press("Enter");
+  await page.clock.runFor(9000);
   await expect(
     page.getByTestId("vessel-overview").locator(".vo-kpis article").first(),
   ).toContainText("2,000");
   await expect(
     page.getByTestId("vessel-overview").locator(".vo-kpis article").nth(1),
   ).toContainText("171");
-  await page.getByRole("tab", { name: "订单分车", exact: true }).click();
+  await page
+    .getByTestId("story-command")
+    .fill("/order-allocation 查看订单分车");
+  await page.getByTestId("story-command").press("Enter");
+  await page.clock.runFor(9000);
   const downloadEvent = page.waitForEvent("download");
   await page
     .getByRole("button", { name: "导出订单与物流快照", exact: true })
@@ -109,7 +114,8 @@ test("changed totals stay consistent across tabs and an authorized-only prefix i
       0,
     ),
   ).toBe(1523);
-  await page.getByRole("tab", { name: "分车计划模拟", exact: true }).click();
+  await page.getByTestId("canvas-history-toggle").click();
+  await page.locator('[data-run-command="/vessel-allocation"]').click();
   await page.locator(".vs-advanced > summary").click();
   await page
     .getByLabel("精细 · 直营目标 WoS 系数", { exact: true })

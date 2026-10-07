@@ -12,6 +12,7 @@ test.beforeEach(async ({ page }) => {
 test("overview uses the source stores and reflects the saved supply scenario", async ({
   page,
 }) => {
+  await page.getByRole("button", { name: "供应链工作台", exact: true }).click();
   await expect(page.getByTestId("workspace-overview")).toContainText(
     "79 家门店",
   );
@@ -28,7 +29,6 @@ test("paused runs keep parameter reruns disabled until resumed", async ({
   await page.getByTestId("story-command").fill("/vessel-allocation 模拟");
   await page.getByTestId("story-command").press("Enter");
   await page.clock.runFor(3800);
-  await page.getByRole("tab", { name: "分车计划模拟", exact: true }).click();
   await page.getByRole("button", { name: "暂停", exact: true }).click();
   await page.locator(".vs-advanced > summary").click();
   await expect(
@@ -39,7 +39,6 @@ test("paused runs keep parameter reruns disabled until resumed", async ({
   ).toBeDisabled();
   await page.getByRole("button", { name: "继续", exact: true }).click();
   await page.clock.runFor(8000);
-  await page.getByRole("tab", { name: "分车计划模拟", exact: true }).click();
   if ((await page.locator(".vs-advanced").getAttribute("open")) === null)
     await page.locator(".vs-advanced > summary").click();
   await page
@@ -49,7 +48,7 @@ test("paused runs keep parameter reruns disabled until resumed", async ({
     page.getByRole("button", { name: "运行模拟", exact: true }),
   ).toBeEnabled();
 });
-test("ontology uses ellipses and straight dependencies, CUI links into graph and water playback", async ({
+test("ontology uses ellipses and straight dependencies, with selectable graph nodes and water playback", async ({
   page,
 }) => {
   const errors: string[] = [];
@@ -68,15 +67,11 @@ test("ontology uses ellipses and straight dependencies, CUI links into graph and
   await expect(page.getByTestId("graph-inspector")).toContainText(
     "订单车先保障",
   );
-  await page
-    .getByTestId("story-cui-event")
-    .filter({ hasText: "读取订单、销速与自由库存" })
-    .getByRole("button", { name: /查看分车图谱/ })
-    .click();
+  await graph.getByRole("button", { name: /需求合并/ }).click();
   await expect(page.getByTestId("graph-inspector")).toContainText(
     "需求合并宽表",
   );
-  await page.getByRole("button", { name: /查看分车计划模拟/ }).click();
+  await page.getByRole("tab", { name: "分车计划模拟", exact: true }).click();
   await expect(page.getByRole("tab", { name: "分车计划模拟" })).toHaveAttribute(
     "aria-selected",
     "true",

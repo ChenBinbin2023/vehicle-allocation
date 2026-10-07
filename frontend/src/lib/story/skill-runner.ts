@@ -8,6 +8,9 @@ import { resolveStorySkill, skillAvailability } from "./skill-catalog";
 import { startProfitRun } from "./profit-run";
 import { startQueryRun } from "./query-run";
 import { startDailyTransferRun } from "./daily-transfer-run";
+import { startDailyDispatchRun } from "./daily-dispatch-run";
+import { startDispatchFulfillmentRun } from "./dispatch-fulfillment-run";
+import { startVesselSkillRun } from "./vessel-skill-run";
 import {
   startStorePlanningRun,
   type PlanningRunOptions,
@@ -80,7 +83,11 @@ const blockTitles: Record<StoryCommand, Array<[string, string]>> = {
     ["daily-execution", "发货、签收与库存更新"],
   ],
   "/daily-transfer": [],
+  "/daily-dispatch": [],
+  "/shortage-fulfillment": [],
   "/smart-query": [],
+  "/query": [],
+  "/order-allocation": [],
   "/profit-analysis": [],
 };
 
@@ -223,11 +230,32 @@ export function startStoryRun(
   const skill = resolveStorySkill(command)!;
   const availability = skillAvailability(command, state);
   const id = `RUN-${command.slice(1).toUpperCase()}-${state.version}-${state.runs.length + 1}`;
+  if (command === "/daily-dispatch")
+    return startDailyDispatchRun(id, prompt || skill.defaultPrompt, state);
+  if (command === "/shortage-fulfillment")
+    return startDispatchFulfillmentRun(
+      id,
+      prompt || skill.defaultPrompt,
+      state,
+      planningOptions.dispatchRunId,
+    );
   if (command === "/profit-analysis")
     return startProfitRun(id, prompt, state, planningOptions);
   if (command === "/smart-query")
     return startQueryRun(id, prompt || skill.defaultPrompt, state);
-  if (command === "/vessel-allocation" || command === "/delivery-plan")
+  if (
+    command === "/query" ||
+    command === "/order-allocation" ||
+    command === "/vessel-allocation"
+  )
+    return startVesselSkillRun(
+      id,
+      command,
+      prompt || skill.defaultPrompt,
+      state,
+      planningOptions,
+    );
+  if (command === "/delivery-plan")
     return startStorePlanningRun(
       id,
       command,
@@ -328,8 +356,10 @@ export function advanceStoryRun(run: StoryRun, milliseconds: number): StoryRun {
     ...run,
     elapsed,
     status: complete ? "complete" : "running",
+    ...(complete ? { completedAt: new Date().toISOString() } : {}),
     resultVersion: complete
-      ? run.inputVersion + (run.query || run.planning || run.profit ? 0 : 1)
+      ? run.inputVersion +
+        (run.query || run.planning || run.profit || run.dispatch ? 0 : 1)
       : null,
     answer: complete
       ? (run.profit?.result.summaryText ??
@@ -433,7 +463,12 @@ export function applyStoryRunResult(
   if (run.status !== "complete" || state.version !== run.inputVersion) {
     return state;
   }
-  if (run.command === "/smart-query" || run.planning || run.profit) {
+  if (
+    run.command === "/smart-query" ||
+    run.planning ||
+    run.profit ||
+    run.dispatch
+  ) {
     const saved = { ...run, resultVersion: state.version };
     return {
       ...state,

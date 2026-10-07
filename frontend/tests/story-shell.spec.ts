@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { WORKSPACE_STORAGE } from "../src/lib/sessions";
 
 test.beforeEach(async ({ page }) => {
   await page.goto("/");
@@ -23,15 +24,15 @@ test("clean story shell starts every segment from the CUI skill picker", async (
 
   await expect(page.getByTestId("workspace-sidebar")).toBeVisible();
   await expect(page.getByTestId("workspace-project-tree")).toContainText(
-    "ALJ · 沙特供应链",
+    "分车计划",
   );
   await expect(page.getByTestId("story-progress")).toHaveCount(0);
-  await expect(page.getByTestId("workspace-overview")).toBeVisible();
+  await expect(page.getByTestId("cui-welcome")).toBeVisible();
   await expect(page.getByTestId("story-run-block")).toHaveCount(0);
 
   const command = page.getByTestId("story-command");
   await command.fill("/");
-  await expect(page.getByTestId("story-skill-option")).toHaveCount(8);
+  await expect(page.getByTestId("story-skill-option")).toHaveCount(11);
 
   await page
     .getByTestId("story-skill-option")
@@ -53,17 +54,19 @@ test("mobile canvas stays contained and opens the CUI as a right overlay", async
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
-  await expect(page.getByTestId("mobile-chat-toggle")).toBeVisible();
+  await expect(page.getByTestId("story-command")).toBeVisible();
   const dimensions = await page.evaluate(() => ({
     viewport: window.innerWidth,
     page: document.documentElement.scrollWidth,
   }));
   expect(dimensions.page).toBeLessThanOrEqual(dimensions.viewport);
 
+  await page.getByRole("button", { name: "供应链工作台", exact: true }).click();
+  await page.getByRole("button", { name: "关闭 CUI", exact: true }).click();
   await page.getByTestId("mobile-chat-toggle").click();
   await expect(page.locator(".story-chat")).toHaveClass(/open/);
   await page.getByTestId("story-command").fill("/");
-  await expect(page.getByTestId("story-skill-option")).toHaveCount(8);
+  await expect(page.getByTestId("story-skill-option")).toHaveCount(11);
 });
 
 test("tablet width uses the compact overlay without horizontal clipping", async ({
@@ -71,7 +74,7 @@ test("tablet width uses the compact overlay without horizontal clipping", async 
 }) => {
   await page.setViewportSize({ width: 1024, height: 768 });
   await page.goto("/");
-  await expect(page.getByTestId("mobile-chat-toggle")).toBeVisible();
+  await expect(page.getByTestId("story-command")).toBeVisible();
   const dimensions = await page.evaluate(() => ({
     viewport: window.innerWidth,
     page: document.documentElement.scrollWidth,
@@ -102,7 +105,7 @@ test("reload preserves streamed blocks and pauses an active story run", async ({
   await page.clock.runFor(200);
   await expect
     .poll(() =>
-      page.evaluate(async () => {
+      page.evaluate(async (key) => {
         return new Promise<number>((resolve) => {
           const open = indexedDB.open("atlas-single-port-workspace", 1);
           open.onerror = () => resolve(0);
@@ -110,7 +113,7 @@ test("reload preserves streamed blocks and pauses an active story run", async ({
             const request = open.result
               .transaction("snapshots")
               .objectStore("snapshots")
-              .get("atlas-single-port-workspace-v3");
+              .get(key);
             request.onerror = () => resolve(0);
             request.onsuccess = () =>
               resolve(
@@ -119,29 +122,32 @@ test("reload preserves streamed blocks and pauses an active story run", async ({
               );
           };
         });
-      }),
+      }, WORKSPACE_STORAGE),
     )
     .toBe(1);
   const persistedStatus = await page.evaluate(
-    async () =>
+    async (key) =>
       new Promise<string>((resolve) => {
         const open = indexedDB.open("atlas-single-port-workspace", 1);
         open.onsuccess = () => {
           const request = open.result
             .transaction("snapshots")
             .objectStore("snapshots")
-            .get("atlas-single-port-workspace-v3");
+            .get(key);
           request.onsuccess = () =>
             resolve(
               request.result.sessions[0].snapshot.campaign.runs[0].status,
             );
         };
       }),
+    WORKSPACE_STORAGE,
   );
   expect(persistedStatus).toBe("running");
 
   await page.reload();
   await expect(page.locator(".story-run-state")).toContainText("已暂停");
   await expect(page.locator(".story-block")).toHaveCount(visibleAtSave);
-  await expect(page.getByRole("button", { name: "继续" })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "继续", exact: true }),
+  ).toBeVisible();
 });

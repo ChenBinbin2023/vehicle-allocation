@@ -9,6 +9,10 @@ test("contains only the new story and no legacy business entrypoints", () => {
   assert.deepEqual(
     storySkills.map((skill) => skill.command),
     [
+      "/daily-dispatch",
+      "/shortage-fulfillment",
+      "/query",
+      "/order-allocation",
       "/crisis-brief",
       "/vessel-allocation",
       "/delivery-plan",
@@ -16,7 +20,6 @@ test("contains only the new story and no legacy business entrypoints", () => {
       "/daily-rebalance",
       "/daily-transfer",
       "/profit-analysis",
-      "/smart-query",
     ],
   );
 

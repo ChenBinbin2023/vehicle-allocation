@@ -6,9 +6,18 @@ import {
 } from "@/lib/story/vessel-scenario";
 
 import { useEffect, useLayoutEffect, useState } from "react";
-import { MessageSquare } from "lucide-react";
-import type { Session, SessionSnapshot, StoryMessage } from "@/lib/sessions";
-import { resolveStorySkill } from "@/lib/story/skill-catalog";
+import { MessageSquare, X, Sparkles } from "lucide-react";
+import type {
+  Folder,
+  Session,
+  SessionSnapshot,
+  StoryMessage,
+} from "@/lib/sessions";
+import { resolveStorySkill, storySkills } from "@/lib/story/skill-catalog";
+import {
+  chooseDispatchOptions,
+  dispatchFulfillmentPrompt,
+} from "@/lib/story/dispatch-fulfillment";
 import {
   advanceStoryRun,
   applyStoryRunResult,
@@ -25,17 +34,21 @@ import StreamingCanvas from "./StreamingCanvas";
 export default function StoryWorkspace({
   session,
   sessions,
+  folders,
   snapshot,
   onSnapshot,
   onSelectSession,
   onNewSession,
+  onProjectChange,
 }: {
   session: Session;
   sessions: Session[];
+  folders: Folder[];
   snapshot: SessionSnapshot;
   onSnapshot: (id: string, snapshot: SessionSnapshot) => void;
   onSelectSession: (id: string) => void;
-  onNewSession: () => void;
+  onNewSession: (folderId?: string) => void;
+  onProjectChange: (folderId: string) => void;
 }) {
   const [campaign, setCampaign] = useState(() => ({
     ...snapshot.campaign,
@@ -51,15 +64,17 @@ export default function StoryWorkspace({
   );
   const [chatOpen, setChatOpen] = useState(true);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [workspaceView, setWorkspaceView] = useState<WorkspaceView>(
-    snapshot.activeStage === "welcome" ? "overview" : "task",
+  const [workspaceView, setWorkspaceView] = useState<WorkspaceView>("task");
+  const [canvasOpen, setCanvasOpen] = useState(
+    snapshot.campaign.runs.length > 0,
   );
   const [focusedStep, setFocusedStep] = useState<number | null>(null);
   const [focusRevision, setFocusRevision] = useState(0);
   const busy = campaign.runs.some((run) => run.status === "running");
 
   useEffect(() => {
-    if (window.innerWidth <= 1100) setChatOpen(false);
+    if (window.innerWidth <= 1100 && snapshot.campaign.runs.length)
+      setChatOpen(false);
   }, []);
 
   useLayoutEffect(() => {
@@ -101,13 +116,29 @@ export default function StoryWorkspace({
   }, [busy]);
 
   function submit(value: string, options: PlanningRunOptions = {}) {
+    value = value.trim();
+    if (!value) return;
     if (
       campaign.runs.some(
         (run) => run.status === "running" || run.status === "paused",
       )
     )
       return;
-    const skill = resolveStorySkill(value);
+    const skill =
+      resolveStorySkill(value) ??
+      (!value.startsWith("/")
+        ? resolveStorySkill(
+            /缺货/.test(value) && /选择|选定|已选|采购订单|采购单/.test(value)
+              ? "/shortage-fulfillment"
+              : /每日调拨|调度计划|今天.*订单|今日.*订单/.test(value)
+                ? "/daily-dispatch"
+                : /模拟|补库|WoS|预留比例|价格系数|物流系数/.test(value)
+                  ? "/vessel-allocation"
+                  : /订单分车|分配订单|订单物流/.test(value)
+                    ? "/order-allocation"
+                    : "/query",
+          )
+        : undefined);
     const now = Date.now();
     if (!skill) {
       setMessages((current) => [
@@ -124,8 +155,20 @@ export default function StoryWorkspace({
       return;
     }
     const prompt =
-      value.slice(skill.command.length).trim() || skill.defaultPrompt;
-    const run = startStoryRun(skill.command, prompt, campaign, options);
+      (value.startsWith("/")
+        ? value.replace(/^\/[^\s，,]+[\s，,]*/, "")
+        : value) || skill.defaultPrompt;
+    const viewedDispatch = campaign.runs.find(
+      (r) => r.id === viewedRunId && r.dispatch,
+    );
+    const run = startStoryRun(skill.command, prompt, campaign, {
+      ...options,
+      ...(skill.command === "/shortage-fulfillment" &&
+      !options.dispatchRunId &&
+      viewedDispatch
+        ? { dispatchRunId: viewedDispatch.id }
+        : {}),
+    });
     if (run.status === "blocked") {
       setMessages((current) => [
         ...current,
@@ -151,20 +194,16 @@ export default function StoryWorkspace({
       {
         id: now + 1,
         role: "agent",
-        title: `${skill.title}已启动`,
-        text:
-          skill.command === "/smart-query"
-            ? "我会从本地数据读取销量、库存和路线费用，逐步生成三个分析视图。思考、规划与工具调用均为演示记录，可点击查看对应结果。"
-            : skill.command === "/vessel-allocation"
-              ? "我会先生成截至 2026-08-05 的模拟基本统计，展示本船车型、订单缺口和全网销速库存。工作台可切换分车图谱、分车计划模拟与门店结果；点击过程记录可返回基本统计。"
-              : "我会读取业务快照，展示采用的规则、候选方案与校验结果。点击过程记录可以查看画布中的对应依据。",
+        text: "",
         storyRunId: run.id,
+        createdAt: new Date(now).toISOString(),
       },
     ]);
     setActiveStage(skill.stage);
     setViewedRunId(run.id);
     setFocusedStep(null);
     setWorkspaceView("task");
+    setCanvasOpen(true);
     setDraft("");
   }
 
@@ -175,6 +214,7 @@ export default function StoryWorkspace({
     setActiveStage(skill.stage);
     setViewedRunId(runId);
     setWorkspaceView("task");
+    setCanvasOpen(true);
     setFocusedStep(step);
     setFocusRevision((value) => value + 1);
   }
@@ -241,66 +281,99 @@ export default function StoryWorkspace({
 
   return (
     <div
-      className={`story-shell${sidebarCollapsed ? " sidebar-collapsed" : ""}${chatOpen ? "" : " chat-closed"}`}
+      className={`story-shell${sidebarCollapsed ? " sidebar-collapsed" : ""}${chatOpen ? "" : " chat-closed"}${!canvasOpen ? " cui-only" : ""}`}
       data-testid="story-shell"
     >
       <WorkspaceSidebar
         sessions={sessions}
+        folders={folders}
         activeId={session.id}
+        activeFolderId={session.folderId}
+        collapsed={sidebarCollapsed}
+        onToggle={() => setSidebarCollapsed((value) => !value)}
         view={workspaceView}
-        onView={setWorkspaceView}
+        onView={(view) => {
+          setWorkspaceView(view);
+          if (view !== "plugins") setCanvasOpen(true);
+        }}
         onSelectSession={onSelectSession}
         onNewSession={onNewSession}
       />
-      <StreamingCanvas
-        campaign={campaign}
-        activeStage={activeStage}
-        viewedRunId={viewedRunId}
-        onSelectRun={selectRun}
-        focusedStep={focusedStep}
-        focusRevision={focusRevision}
-        workspaceView={workspaceView}
-        sessionTitle={session.title}
-        sidebarCollapsed={sidebarCollapsed}
-        onToggleSidebar={() => setSidebarCollapsed((value) => !value)}
-        onChangeDammamSafety={changeDammamSafety}
-        busy={busy || campaign.runs.some((run) => run.status === "paused")}
-        onRunProfit={(profitInput, deliveryRunId) =>
-          submit(
-            "/profit-analysis 按已选物流快照和当前销售情景分析贡献利润。",
-            { profitInput, deliveryRunId },
-          )
-        }
-        onSaveScenario={(runId, action) => {
-          setCampaign((current) => ({
-            ...current,
-            runs: current.runs.map((run) => {
-              if (run.id !== runId || run.status !== "complete") return run;
-              return action.versionId
-                ? selectVesselScenarioVersion(run, action.versionId)
-                : action.parameters
-                  ? reviseVesselScenario(
-                      run,
-                      action.parameters,
-                      action.reason ?? "参数调整",
-                    )
-                  : run;
-            }),
-          }));
-        }}
-        onRunPlanning={(command, input, allocationRunId) => {
-          const detail =
-            "supply" in input
-              ? input.replenishment
-                ? `门店补库 总量=${input.replenishment.supply} 预留比例=${input.replenishment.reserveRatio * 100}% 级差=${input.replenishment.channelGap * 100}%；按当前参数重跑。`
-                : `供给=${input.supply} 直营WoS=${input.targetDirect} 授权WoS=${input.targetAuthorized}；按当前门店快照模拟。`
-              : `${input.mode === "single" ? "单港" : "双港"}到店模拟；D2接车=${input.stores.find((s) => s.id === "D2")?.firstCapacity ?? 0}；按当前接车和 VPC 容量重算。`;
-          submit(command + " " + detail, { input, allocationRunId });
-        }}
-        onApprove={(decisionId) =>
-          setCampaign((current) => approveDailyDecision(current, decisionId))
-        }
-      />
+      {canvasOpen && (
+        <StreamingCanvas
+          campaign={campaign}
+          activeStage={activeStage}
+          viewedRunId={viewedRunId}
+          onSelectRun={selectRun}
+          focusedStep={focusedStep}
+          focusRevision={focusRevision}
+          workspaceView={workspaceView}
+          sessionTitle={session.title}
+          sidebarCollapsed={sidebarCollapsed}
+          onToggleSidebar={() => setSidebarCollapsed((value) => !value)}
+          onCloseCanvas={() => {
+            setCanvasOpen(false);
+            setChatOpen(true);
+            setWorkspaceView("task");
+          }}
+          onChangeDammamSafety={changeDammamSafety}
+          busy={busy || campaign.runs.some((run) => run.status === "paused")}
+          onSelectDispatch={(runId, selections) => {
+            if (
+              campaign.runs.some(
+                (r) => r.status === "running" || r.status === "paused",
+              )
+            )
+              return;
+            setCampaign((current) => ({
+              ...current,
+              runs: current.runs.map((run) =>
+                run.id === runId ? chooseDispatchOptions(run, selections) : run,
+              ),
+            }));
+          }}
+          onGenerateDispatch={(dispatchRunId) =>
+            submit(`/shortage-fulfillment ${dispatchFulfillmentPrompt}`, {
+              dispatchRunId,
+            })
+          }
+          onRunProfit={(profitInput, deliveryRunId) =>
+            submit(
+              "/profit-analysis 按已选物流快照和当前销售情景分析贡献利润。",
+              { profitInput, deliveryRunId },
+            )
+          }
+          onSaveScenario={(runId, action) => {
+            setCampaign((current) => ({
+              ...current,
+              runs: current.runs.map((run) => {
+                if (run.id !== runId || run.status !== "complete") return run;
+                return action.versionId
+                  ? selectVesselScenarioVersion(run, action.versionId)
+                  : action.parameters
+                    ? reviseVesselScenario(
+                        run,
+                        action.parameters,
+                        action.reason ?? "参数调整",
+                      )
+                    : run;
+              }),
+            }));
+          }}
+          onRunPlanning={(command, input, allocationRunId) => {
+            const detail =
+              "supply" in input
+                ? input.replenishment
+                  ? `门店补库 总量=${input.replenishment.supply} 预留比例=${input.replenishment.reserveRatio * 100}% 级差=${input.replenishment.channelGap * 100}%；按当前参数重跑。`
+                  : `供给=${input.supply} 直营WoS=${input.targetDirect} 授权WoS=${input.targetAuthorized}；按当前门店快照模拟。`
+                : `${input.mode === "single" ? "单港" : "双港"}到店模拟；D2接车=${input.stores.find((s) => s.id === "D2")?.firstCapacity ?? 0}；按当前接车和 VPC 容量重算。`;
+            submit(command + " " + detail, { input, allocationRunId });
+          }}
+          onApprove={(decisionId) =>
+            setCampaign((current) => approveDailyDecision(current, decisionId))
+          }
+        />
+      )}
       <button
         type="button"
         className="story-mobile-chat-toggle"
@@ -311,16 +384,72 @@ export default function StoryWorkspace({
         <MessageSquare size={17} />
       </button>
       <StoryChat
+        dispatchRunId={
+          campaign.runs.find((run) => run.id === viewedRunId && run.dispatch)
+            ?.id
+        }
+        fullWidth={!canvasOpen}
+        folders={folders}
+        folderId={session.folderId}
+        onProjectChange={onProjectChange}
+        onPlugins={() => setWorkspaceView("plugins")}
+        onOpenCanvas={() => setCanvasOpen(true)}
         campaign={campaign}
         messages={messages}
         draft={draft}
         onDraft={setDraft}
         onSubmit={submit}
         onToggleRun={toggleRun}
-        onViewEvidence={selectRun}
-        open={chatOpen}
+        open={!canvasOpen || chatOpen}
         onClose={() => setChatOpen(false)}
       />
+      {workspaceView === "plugins" && (
+        <div
+          className="workspace-plugin-backdrop"
+          onClick={() => setWorkspaceView("task")}
+        >
+          <section
+            className="workspace-plugin-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-label="插件与 Skills"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <header>
+              <div>
+                <small>BUILT-IN SKILLS</small>
+                <h2>插件与 Skills</h2>
+                <p>选择能力，在当前项目开始任务。</p>
+              </div>
+              <button
+                type="button"
+                aria-label="关闭插件"
+                onClick={() => setWorkspaceView("task")}
+              >
+                <X size={18} />
+              </button>
+            </header>
+            <div>
+              {storySkills.map((skill) => (
+                <button
+                  type="button"
+                  key={skill.command}
+                  onClick={() => {
+                    setDraft(`${skill.command} ${skill.defaultPrompt}`);
+                    setWorkspaceView("task");
+                    setChatOpen(true);
+                  }}
+                >
+                  <Sparkles size={18} />
+                  <strong>{skill.title}</strong>
+                  <code>{skill.command}</code>
+                  <p>{skill.description}</p>
+                </button>
+              ))}
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   );
 }

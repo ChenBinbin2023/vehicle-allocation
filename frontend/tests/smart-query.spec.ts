@@ -16,12 +16,7 @@ test("CUI streams the query into three linked analytical tabs", async ({
   page,
 }) => {
   const command = page.getByTestId("story-command");
-  await command.fill("/");
-  const option = page
-    .getByTestId("story-skill-option")
-    .filter({ hasText: "/smart-query" });
-  await expect(option).toBeVisible();
-  await option.click();
+  await command.fill("/smart-query 查看月度销量、库存和陆路运输成本");
   await expect(page.getByTestId("smart-query-workspace")).toHaveCount(0);
   await command.press("Enter");
   await expect(page.getByRole("tab", { name: /销量与预测/ })).toBeVisible();
@@ -32,7 +27,7 @@ test("CUI streams the query into three linked analytical tabs", async ({
   await expect(page.locator(".query-run-status")).toContainText("已完成", {
     timeout: 15000,
   });
-  await expect(page.locator(".story-chat-body")).toContainText("调用工具");
+  await expect(page.locator(".story-chat-body")).toContainText("ReadFile");
   await expect(page.locator(".story-chat-body")).toContainText("执行计划");
   await expect(page.locator(".story-run-answer")).toContainText("6,709");
 
@@ -54,7 +49,7 @@ test("CUI streams the query into three linked analytical tabs", async ({
   await expect(page.getByTestId("query-capacity")).toContainText("3,226");
   await page.getByLabel("运输场景").selectOption("west");
   await expect(page.getByTestId("query-capacity")).toContainText("1,865");
-  await page.getByRole("button", { name: "查看库存与渠道" }).click();
+  await page.getByRole("tab", { name: /库存与渠道/ }).click();
   await expect(page.getByRole("tab", { name: /库存与渠道/ })).toHaveAttribute(
     "aria-selected",
     "true",
@@ -237,7 +232,6 @@ test("query reports an empty intersection without stale totals or page overflow"
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.reload();
-  await page.getByTestId("mobile-chat-toggle").click();
   await page.getByTestId("story-command").fill("/smart-query 查询销售库存物流");
   await page.getByTestId("story-command").press("Enter");
   await page.getByRole("button", { name: "关闭 CUI" }).click();

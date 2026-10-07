@@ -6,7 +6,11 @@ import {
   advanceStoryRun,
   applyStoryRunResult,
 } from "../src/lib/story/skill-runner";
-import { createWorkspace, WORKSPACE_STORAGE } from "../src/lib/sessions";
+import {
+  addSession,
+  createWorkspace,
+  WORKSPACE_STORAGE,
+} from "../src/lib/sessions";
 import type { Page } from "@playwright/test";
 
 // The independently tested execution/rebalance fixture predates the new store simulation.
@@ -24,7 +28,11 @@ export function dailyCampaign() {
   return applyStoryRunResult(state, advanceStoryRun(run, run.duration));
 }
 export async function seedPublishedCampaign(page: Page) {
-  const workspace = createWorkspace();
+  const workspace = addSession(
+    createWorkspace(),
+    "single-port",
+    "吉达单港供应保障",
+  );
   workspace.sessions[0].snapshot.campaign = publishedCampaign();
   await page.evaluate(
     async ({ key, workspace }) => {

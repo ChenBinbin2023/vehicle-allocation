@@ -1419,12 +1419,80 @@
   display: block;
   font-size: 9px;
   color: #7e9185;
-  margin: 5px 0 16px;
+  margin: 5px 0 26px;
+  font-variant-numeric: tabular-nums;
+}
+.vs-metric-delta small {
+  display: block;
+  font-size: 9px;
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+}
+.vs-chart-toolbar button {
+  border: 1px solid #d7e4db;
+  border-radius: 5px;
+  background: white;
+  color: #52735f;
+  font-size: 10px;
+  padding: 4px 7px;
+  cursor: pointer;
+}
+.vs-chart-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 0 0 13px;
+  font-size: 10px;
+  color: #829488;
+}
+.vs-chart-toolbar > div {
+  display: flex;
+  gap: 3px;
+}
+.vs-chart-toolbar button[aria-pressed="true"] {
+  background: #edf3ef;
+  color: #365b47;
+  border-color: #b6ccbd;
+}
+.vs-metric-scale {
+  position: absolute;
+  inset: -18px 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  pointer-events: none;
+  font-size: 9px;
+  color: #8c9d8e;
+  font-variant-numeric: tabular-nums;
+}
+.vs-chart-clipped {
+  position: absolute;
+  top: 2px;
+  left: 0;
+  right: 0;
+  font-size: 8px;
+  color: #ab8059;
+  background: #fffaf0;
+}
+.vs-live-plan {
+  display: flex;
+  justify-content: space-between;
+  gap: 7px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+  padding: 9px 11px;
+  border: 1px solid #e2e9e3;
+  border-radius: 6px;
+  font-size: 11px;
+  color: #55745e;
+  background: #f8faf8;
   font-variant-numeric: tabular-nums;
 }
 .vs-bar-area {
   height: 315px;
-  margin: 0 0 13px;
+  margin: 0 0 30px;
   position: relative;
 }
 .vs-metric-track {
@@ -1471,6 +1539,16 @@
   display: block;
   text-align: right;
   padding-bottom: 2px;
+}
+.vs-zero-line {
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  border-bottom: 1px solid #9ca99e;
+  font-size: 8px;
+  text-align: left;
+  color: #77877b;
+  pointer-events: none;
 }
 .vs-financial-bars h4 {
   font-size: 11px;
@@ -1615,6 +1693,11 @@
   border-color: #cfdfd3;
   background: #e9f2ec;
   box-shadow: inset 0 -1px #c6d9cd;
+}
+.vessel-simulation .vs-profit-section .vs-section-tabs button {
+  min-height: 28px;
+  padding: 4px 9px;
+  line-height: 18px;
 }
 .vessel-simulation .vs-plan-toolbar .vc-mini-tabs {
   margin: 0;

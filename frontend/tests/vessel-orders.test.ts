@@ -105,9 +105,9 @@ test("partial trucks charge a whole trip and split order references without dupl
   assert.equal(planOrderTrips([store], [], "single").trips.length, 0);
 });
 
-test("allocation CUI exposes order statistics and selectable logistics advice backed by tab2 totals", () => {
+test("order CUI exposes statistics and selectable logistics advice backed by its result totals", () => {
   const run = startStoryRun(
-    "/vessel-allocation",
+    "/order-allocation",
     "订单分车 物流建议 双港",
     createCampaignState(),
   );

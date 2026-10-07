@@ -27,6 +27,10 @@ test("story skills resolve without mutating campaign state", () => {
   assert.deepEqual(
     storySkills.map((skill) => skill.command),
     [
+      "/daily-dispatch",
+      "/shortage-fulfillment",
+      "/query",
+      "/order-allocation",
       "/crisis-brief",
       "/vessel-allocation",
       "/delivery-plan",
@@ -34,7 +38,6 @@ test("story skills resolve without mutating campaign state", () => {
       "/daily-rebalance",
       "/daily-transfer",
       "/profit-analysis",
-      "/smart-query",
     ],
   );
   assert.equal(

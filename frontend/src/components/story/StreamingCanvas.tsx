@@ -9,6 +9,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Ship,
+  X,
 } from "lucide-react";
 import { resolveStorySkill } from "@/lib/story/skill-catalog";
 import { visibleStoryBlocks } from "@/lib/story/skill-runner";
@@ -34,6 +35,8 @@ import RebalanceDecisionModel from "./RebalanceDecisionModel";
 import WorkspaceOverview from "./WorkspaceOverview";
 import type { WorkspaceView } from "./WorkspaceSidebar";
 import SmartQueryWorkspace from "./SmartQueryWorkspace";
+import VesselSkillWorkspace from "./VesselSkillWorkspace";
+import DailyDispatchWorkspace from "./DailyDispatchWorkspace";
 
 const stageCommand = {
   crisis: "/crisis-brief",
@@ -42,7 +45,10 @@ const stageCommand = {
   execution: "/arrival-execution",
   rebalance: "/daily-rebalance",
   transfer: "/daily-transfer",
+  dispatch: "/daily-dispatch",
   query: "/smart-query",
+  statistics: "/query",
+  orders: "/order-allocation",
   profit: "/profit-analysis",
 } as const;
 
@@ -59,11 +65,16 @@ export default function StreamingCanvas({
   sessionTitle,
   sidebarCollapsed,
   onToggleSidebar,
+  onCloseCanvas,
   busy,
   onRunPlanning,
   onSaveScenario,
   onRunProfit,
+  onSelectDispatch,
+  onGenerateDispatch,
 }: {
+  onSelectDispatch: (runId: string, selections: Record<string, string>) => void;
+  onGenerateDispatch: (runId: string) => void;
   onSaveScenario?: SaveVesselScenario;
   onRunProfit: (
     input: ProfitScenario | undefined,
@@ -81,6 +92,7 @@ export default function StreamingCanvas({
   sessionTitle: string;
   sidebarCollapsed: boolean;
   onToggleSidebar: () => void;
+  onCloseCanvas: () => void;
   busy: boolean;
   onRunPlanning: (
     command: StoryCommand,
@@ -94,8 +106,10 @@ export default function StreamingCanvas({
   const stageRuns =
     activeStage === "welcome"
       ? []
-      : campaign.runs.filter(
-          (item) => item.command === stageCommand[activeStage],
+      : campaign.runs.filter((item) =>
+          activeStage === "dispatch"
+            ? Boolean(item.dispatch)
+            : item.command === stageCommand[activeStage],
         );
   const run =
     stageRuns.find((item) => item.id === viewedRunId) ?? stageRuns.at(-1);
@@ -152,7 +166,7 @@ export default function StreamingCanvas({
           <button
             type="button"
             className="workspace-sidebar-toggle"
-            aria-label={sidebarCollapsed ? "展开导航" : "收起导航"}
+            aria-label="切换导航"
             title={sidebarCollapsed ? "展开导航" : "收起导航"}
             aria-expanded={!sidebarCollapsed}
             onClick={onToggleSidebar}
@@ -168,6 +182,13 @@ export default function StreamingCanvas({
           <strong>{sessionTitle}</strong>
         </div>
         <div className="canvas-history-control" ref={historyRef}>
+          <button
+            type="button"
+            aria-label="关闭 GUI 画布"
+            onClick={onCloseCanvas}
+          >
+            <X size={16} />
+          </button>
           <button
             type="button"
             aria-label="画布历史"
@@ -231,42 +252,71 @@ export default function StreamingCanvas({
           />
         ) : (
           <>
-            {run.command !== "/smart-query" && !run.planning && !run.profit && (
-              <>
-                <header className="story-canvas-head">
-                  <div>
-                    <span>{run.command}</span>
-                    <h1>{resolveStorySkill(run.command)?.title}</h1>
-                    <p>{run.prompt.replace(run.command, "").trim()}</p>
+            {run.command !== "/smart-query" &&
+              !run.planning &&
+              !run.profit &&
+              !run.dispatch && (
+                <>
+                  <header className="story-canvas-head">
+                    <div>
+                      <span>{run.command}</span>
+                      <h1>{resolveStorySkill(run.command)?.title}</h1>
+                      <p>{run.prompt.replace(run.command, "").trim()}</p>
+                    </div>
+                    <div
+                      className={`story-run-state ${stale ? "stale" : run.status}`}
+                    >
+                      <i />
+                      {stale
+                        ? "输入已变更"
+                        : run.status === "complete"
+                          ? "已完成"
+                          : run.status === "paused"
+                            ? "已暂停"
+                            : "Agent 运行中"}
+                    </div>
+                  </header>
+                  <div className="story-canvas-meta">
+                    <span>
+                      <Ship size={14} />
+                      JEDDAH HORIZON · 1,800 台
+                    </span>
+                    <span>
+                      <Clock3 size={14} />
+                      {run.businessDate}
+                    </span>
+                    <span>输入版本 v{run.inputVersion}</span>
+                    <span>本地演示快照</span>
                   </div>
-                  <div
-                    className={`story-run-state ${stale ? "stale" : run.status}`}
-                  >
-                    <i />
-                    {stale
-                      ? "输入已变更"
-                      : run.status === "complete"
-                        ? "已完成"
-                        : run.status === "paused"
-                          ? "已暂停"
-                          : "Agent 运行中"}
-                  </div>
-                </header>
-                <div className="story-canvas-meta">
-                  <span>
-                    <Ship size={14} />
-                    JEDDAH HORIZON · 1,800 台
-                  </span>
-                  <span>
-                    <Clock3 size={14} />
-                    {run.businessDate}
-                  </span>
-                  <span>输入版本 v{run.inputVersion}</span>
-                  <span>本地演示快照</span>
-                </div>
-              </>
-            )}
-            {run.profit ? (
+                </>
+              )}
+            {run.dispatch ? (
+              <DailyDispatchWorkspace
+                key={run.id}
+                run={run}
+                focusedStep={focusedStep}
+                focusRevision={focusRevision}
+                disabled={busy || run.status !== "complete"}
+                onSelect={(selections) => onSelectDispatch(run.id, selections)}
+                onGenerate={() => onGenerateDispatch(run.id)}
+              />
+            ) : run.command === "/query" ||
+              run.command === "/order-allocation" ||
+              (run.command === "/vessel-allocation" &&
+                run.planning?.kind === "allocation" &&
+                run.planning.replenishment &&
+                run.blocks.some((block) =>
+                  block.type.startsWith("simulation-"),
+                )) ? (
+              <VesselSkillWorkspace
+                key={run.id}
+                run={run}
+                busy={busy}
+                focusedStep={focusedStep}
+                focusRevision={focusRevision}
+                onSaveScenario={onSaveScenario}
+              />
+            ) : run.profit ? (
               <ProfitWorkspace
                 key={run.id}
                 run={run}

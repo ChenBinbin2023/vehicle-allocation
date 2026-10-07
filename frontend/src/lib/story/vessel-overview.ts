@@ -1,7 +1,10 @@
+import network from "../store-planning-data.json";
+
 /** Independent retrospective simulation for the vessel-allocation overview.
  * Units are vehicles. Source sales proxies are never asserted to be actual imports.
  */
 export type VesselOverviewData = {
+  inventoryVersion: string;
   snapshotDate: string;
   months: string[];
   weeklyWindow: { start: string; end: string; weeks: number };
@@ -66,7 +69,10 @@ export type VesselOverviewData = {
   };
 };
 
+export const vesselInventoryVersion = "VESSEL_20260805_STOCK_15_35_V1";
+
 export const vesselOverview: VesselOverviewData = {
+  inventoryVersion: vesselInventoryVersion,
   snapshotDate: "2026-08-05",
   months: [
     "2025-07",
@@ -114,7 +120,7 @@ export const vesselOverview: VesselOverviewData = {
     "门店周均销速取2026-06-08至2026-08-02的8个完整周。源周明细只到2026-07-26；2026-07-27至2026-08-02每店重建为此前4周合计/4，按四舍五入取整数，再和前7周合计/8。授权源周明细本身为月报拆周，非实测周报。",
     "四周需求按每店周均销速×4四舍五入到整数后汇总；车型及品牌需求用模拟车系份额按最大余数分摊，直营/授权总量不变。已承诺订单包含在未来四周销售需求中，不与四周需求相加。",
     "订单缺口=max(渠道车型已承诺订单-渠道车型本船预留量,0)，不跨车型或渠道抵销；本船供给虽有总体余量，少数高需求车系仍有2–4%的订单缺口。",
-    "2026-08-05门店库存依据八周销速与1.15–3.10周覆盖假设独立重建，未复制2026-09-29库存、在途或冻结量。四周补库缺口=max(渠道车型四周需求-门店库存-渠道车型本船预留量,0)，订单不重复扣减。",
+    "2026-08-05门店期初库存按八周周均销速×4周基准目标×15%–35%满足率独立重建，按门店编码稳定分散并四舍五入到整数台。车型库存按门店可经营品牌和渠道车型需求占比以最大余数分摊，三个Tab共用同一库存口径；未复制2026-09-29库存、在途或冻结量。四周补库缺口=max(渠道车型四周需求-门店库存-渠道车型本船预留量,0)，订单不重复扣减。",
     "VPC库存为独立模拟、未分到门店的既有实物，当前船次尚未纳入VPC或门店库存；VPC库存单列不计入本次门店补库可用量，因此与门店库存互不重复。未建VIN、冻结和跨库调拨细目。",
     "区域与VPC月销是同一79店模拟销量的不同维度，不能相加。VPC覆盖映射假设为JED=西部+南部、DMM=东部、RUH=中部+北部；RUH为内陆处理点，其历史曲线非进口卸船量。",
     "预计可售卖周数=(本船供给+门店库存+VPC库存)/(未来4周销售需求/4)。三款主要车型按未来4周需求降序选择；VPC车型库存按需求占比、以最大余数法模拟分摊到整数台。假设本船与现有库存均可售，不另加未来到货；这是需求覆盖估算，不是实际售罄日期。",
@@ -133,11 +139,11 @@ export const vesselOverview: VesselOverviewData = {
       directOrderShortage: 0,
       authorizedOrderShortage: 0,
       directDemand4Weeks: 1266,
-      directStock: 803,
-      directReplenishmentShortage: 36,
+      directStock: 321,
+      directReplenishmentShortage: 518,
       authorizedDemand4Weeks: 547,
-      authorizedStock: 363,
-      authorizedReplenishmentShortage: 1,
+      authorizedStock: 141,
+      authorizedReplenishmentShortage: 223,
     },
     {
       model: "Yaris",
@@ -150,11 +156,11 @@ export const vesselOverview: VesselOverviewData = {
       directOrderShortage: 0,
       authorizedOrderShortage: 0,
       directDemand4Weeks: 978,
-      directStock: 589,
-      directReplenishmentShortage: 53,
+      directStock: 250,
+      directReplenishmentShortage: 392,
       authorizedDemand4Weeks: 422,
-      authorizedStock: 266,
-      authorizedReplenishmentShortage: 12,
+      authorizedStock: 106,
+      authorizedReplenishmentShortage: 172,
     },
     {
       model: "Hilux",
@@ -167,11 +173,11 @@ export const vesselOverview: VesselOverviewData = {
       directOrderShortage: 0,
       authorizedOrderShortage: 0,
       directDemand4Weeks: 748,
-      directStock: 427,
-      directReplenishmentShortage: 104,
+      directStock: 191,
+      directReplenishmentShortage: 340,
       authorizedDemand4Weeks: 323,
-      authorizedStock: 193,
-      authorizedReplenishmentShortage: 37,
+      authorizedStock: 86,
+      authorizedReplenishmentShortage: 144,
     },
     {
       model: "Corolla",
@@ -184,11 +190,11 @@ export const vesselOverview: VesselOverviewData = {
       directOrderShortage: 0,
       authorizedOrderShortage: 0,
       directDemand4Weeks: 691,
-      directStock: 424,
-      directReplenishmentShortage: 141,
+      directStock: 175,
+      directReplenishmentShortage: 390,
       authorizedDemand4Weeks: 298,
-      authorizedStock: 191,
-      authorizedReplenishmentShortage: 53,
+      authorizedStock: 76,
+      authorizedReplenishmentShortage: 168,
     },
     {
       model: "Land Cruiser 300",
@@ -201,11 +207,11 @@ export const vesselOverview: VesselOverviewData = {
       directOrderShortage: 10,
       authorizedOrderShortage: 6,
       directDemand4Weeks: 576,
-      directStock: 174,
-      directReplenishmentShortage: 304,
+      directStock: 147,
+      directReplenishmentShortage: 331,
       authorizedDemand4Weeks: 248,
-      authorizedStock: 78,
-      authorizedReplenishmentShortage: 128,
+      authorizedStock: 66,
+      authorizedReplenishmentShortage: 140,
     },
     {
       model: "Prado 250",
@@ -218,11 +224,11 @@ export const vesselOverview: VesselOverviewData = {
       directOrderShortage: 6,
       authorizedOrderShortage: 4,
       directDemand4Weeks: 518,
-      directStock: 175,
-      directReplenishmentShortage: 266,
+      directStock: 135,
+      directReplenishmentShortage: 306,
       authorizedDemand4Weeks: 224,
-      authorizedStock: 79,
-      authorizedReplenishmentShortage: 112,
+      authorizedStock: 58,
+      authorizedReplenishmentShortage: 133,
     },
     {
       model: "RAV4 Hybrid",
@@ -235,11 +241,11 @@ export const vesselOverview: VesselOverviewData = {
       directOrderShortage: 8,
       authorizedOrderShortage: 4,
       directDemand4Weeks: 460,
-      directStock: 148,
-      directReplenishmentShortage: 242,
+      directStock: 116,
+      directReplenishmentShortage: 274,
       authorizedDemand4Weeks: 199,
-      authorizedStock: 67,
-      authorizedReplenishmentShortage: 102,
+      authorizedStock: 54,
+      authorizedReplenishmentShortage: 115,
     },
     {
       model: "Fortuner",
@@ -252,11 +258,11 @@ export const vesselOverview: VesselOverviewData = {
       directOrderShortage: 0,
       authorizedOrderShortage: 0,
       directDemand4Weeks: 345,
-      directStock: 170,
-      directReplenishmentShortage: 49,
+      directStock: 91,
+      directReplenishmentShortage: 128,
       authorizedDemand4Weeks: 149,
-      authorizedStock: 77,
-      authorizedReplenishmentShortage: 18,
+      authorizedStock: 45,
+      authorizedReplenishmentShortage: 50,
     },
     {
       model: "Highlander",
@@ -269,11 +275,11 @@ export const vesselOverview: VesselOverviewData = {
       directOrderShortage: 0,
       authorizedOrderShortage: 0,
       directDemand4Weeks: 173,
-      directStock: 93,
-      directReplenishmentShortage: 0,
+      directStock: 45,
+      directReplenishmentShortage: 37,
       authorizedDemand4Weeks: 75,
-      authorizedStock: 42,
-      authorizedReplenishmentShortage: 0,
+      authorizedStock: 17,
+      authorizedReplenishmentShortage: 19,
     },
     {
       model: "Lexus LX 600",
@@ -286,11 +292,11 @@ export const vesselOverview: VesselOverviewData = {
       directOrderShortage: 6,
       authorizedOrderShortage: 2,
       directDemand4Weeks: 198,
-      directStock: 64,
-      directReplenishmentShortage: 80,
+      directStock: 23,
+      directReplenishmentShortage: 121,
       authorizedDemand4Weeks: 22,
-      authorizedStock: 7,
-      authorizedReplenishmentShortage: 9,
+      authorizedStock: 0,
+      authorizedReplenishmentShortage: 16,
     },
     {
       model: "Lexus ES 300h",
@@ -303,11 +309,11 @@ export const vesselOverview: VesselOverviewData = {
       directOrderShortage: 0,
       authorizedOrderShortage: 0,
       directDemand4Weeks: 269,
-      directStock: 168,
-      directReplenishmentShortage: 29,
+      directStock: 29,
+      directReplenishmentShortage: 168,
       authorizedDemand4Weeks: 31,
-      authorizedStock: 20,
-      authorizedReplenishmentShortage: 3,
+      authorizedStock: 0,
+      authorizedReplenishmentShortage: 23,
     },
     {
       model: "Lexus RX 350h",
@@ -320,11 +326,11 @@ export const vesselOverview: VesselOverviewData = {
       directOrderShortage: 0,
       authorizedOrderShortage: 0,
       directDemand4Weeks: 198,
-      directStock: 111,
-      directReplenishmentShortage: 28,
+      directStock: 19,
+      directReplenishmentShortage: 120,
       authorizedDemand4Weeks: 22,
-      authorizedStock: 13,
-      authorizedReplenishmentShortage: 3,
+      authorizedStock: 0,
+      authorizedReplenishmentShortage: 16,
     },
     {
       model: "Lexus NX 350h",
@@ -337,11 +343,11 @@ export const vesselOverview: VesselOverviewData = {
       directOrderShortage: 4,
       authorizedOrderShortage: 2,
       directDemand4Weeks: 127,
-      directStock: 56,
-      directReplenishmentShortage: 21,
+      directStock: 14,
+      directReplenishmentShortage: 63,
       authorizedDemand4Weeks: 14,
-      authorizedStock: 7,
-      authorizedReplenishmentShortage: 2,
+      authorizedStock: 0,
+      authorizedReplenishmentShortage: 9,
     },
   ],
   supplyHistory: [
@@ -418,7 +424,7 @@ export const vesselOverview: VesselOverviewData = {
       orders: 1238,
       orderShortage: 34,
       demand4Weeks: 6547,
-      replenishmentShortage: 1832,
+      replenishmentShortage: 3188,
     },
     {
       channel: "授权",
@@ -426,7 +432,7 @@ export const vesselOverview: VesselOverviewData = {
       orders: 456,
       orderShortage: 18,
       demand4Weeks: 2574,
-      replenishmentShortage: 684,
+      replenishmentShortage: 1228,
     },
   ],
   vpcs: [
@@ -462,7 +468,7 @@ export const vesselOverview: VesselOverviewData = {
     {
       id: "CENTRAL",
       name: "中部",
-      stock: 1271,
+      stock: 602,
       monthlySales: [
         6204, 6584, 6721, 6945, 6886, 7712, 5452, 5476, 4853, 4448, 3784, 3129,
         2554,
@@ -471,7 +477,7 @@ export const vesselOverview: VesselOverviewData = {
     {
       id: "WEST",
       name: "西部",
-      stock: 1544,
+      stock: 815,
       monthlySales: [
         7461, 7937, 8132, 8180, 8031, 9309, 6778, 6581, 5652, 5401, 4584, 3938,
         3060,
@@ -480,7 +486,7 @@ export const vesselOverview: VesselOverviewData = {
     {
       id: "EAST",
       name: "东部",
-      stock: 1145,
+      stock: 458,
       monthlySales: [
         4443, 4747, 4952, 5117, 4997, 5651, 4168, 3969, 3450, 3254, 2690, 2320,
         1824,
@@ -489,7 +495,7 @@ export const vesselOverview: VesselOverviewData = {
     {
       id: "NORTH",
       name: "北部",
-      stock: 239,
+      stock: 93,
       monthlySales: [
         1154, 1267, 1231, 1362, 1348, 1511, 1017, 1047, 964, 891, 682, 587, 456,
       ],
@@ -497,7 +503,7 @@ export const vesselOverview: VesselOverviewData = {
     {
       id: "SOUTH",
       name: "南部",
-      stock: 606,
+      stock: 237,
       monthlySales: [
         2352, 2726, 2555, 2736, 2662, 3179, 2234, 2226, 1872, 1754, 1507, 1286,
         1007,
@@ -511,8 +517,8 @@ export const vesselOverview: VesselOverviewData = {
       shortName: "D01",
       channel: "直营",
       region: "中部",
-      weeklySales: 89.0,
-      stock: 102,
+      weeklySales: 89,
+      stock: 64,
     },
     {
       id: "MOCK-D-008",
@@ -521,7 +527,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "直营",
       region: "西部",
       weeklySales: 79.125,
-      stock: 138,
+      stock: 79,
     },
     {
       id: "MOCK-D-009",
@@ -529,8 +535,8 @@ export const vesselOverview: VesselOverviewData = {
       shortName: "D09",
       channel: "直营",
       region: "西部",
-      weeklySales: 71.0,
-      stock: 82,
+      weeklySales: 71,
+      stock: 74,
     },
     {
       id: "MOCK-D-007",
@@ -539,7 +545,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "直营",
       region: "西部",
       weeklySales: 68.75,
-      stock: 213,
+      stock: 66,
     },
     {
       id: "MOCK-D-015",
@@ -548,7 +554,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "直营",
       region: "东部",
       weeklySales: 68.125,
-      stock: 211,
+      stock: 52,
     },
     {
       id: "MOCK-D-003",
@@ -557,7 +563,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "直营",
       region: "中部",
       weeklySales: 64.75,
-      stock: 126,
+      stock: 52,
     },
     {
       id: "MOCK-D-019",
@@ -566,7 +572,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "直营",
       region: "西部",
       weeklySales: 64.375,
-      stock: 126,
+      stock: 59,
     },
     {
       id: "MOCK-D-028",
@@ -575,7 +581,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "直营",
       region: "南部",
       weeklySales: 61.25,
-      stock: 141,
+      stock: 47,
     },
     {
       id: "MOCK-D-002",
@@ -584,7 +590,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "直营",
       region: "中部",
       weeklySales: 60.625,
-      stock: 97,
+      stock: 46,
     },
     {
       id: "MOCK-D-012",
@@ -592,8 +598,8 @@ export const vesselOverview: VesselOverviewData = {
       shortName: "D12",
       channel: "直营",
       region: "东部",
-      weeklySales: 59.0,
-      stock: 136,
+      weeklySales: 59,
+      stock: 78,
     },
     {
       id: "MOCK-D-010",
@@ -602,7 +608,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "直营",
       region: "西部",
       weeklySales: 53.25,
-      stock: 85,
+      stock: 66,
     },
     {
       id: "MOCK-D-017",
@@ -610,8 +616,8 @@ export const vesselOverview: VesselOverviewData = {
       shortName: "D17",
       channel: "直营",
       region: "西部",
-      weeklySales: 52.0,
-      stock: 60,
+      weeklySales: 52,
+      stock: 44,
     },
     {
       id: "MOCK-D-004",
@@ -620,7 +626,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "直营",
       region: "中部",
       weeklySales: 50.625,
-      stock: 116,
+      stock: 43,
     },
     {
       id: "MOCK-D-013",
@@ -628,8 +634,8 @@ export const vesselOverview: VesselOverviewData = {
       shortName: "D13",
       channel: "直营",
       region: "东部",
-      weeklySales: 47.0,
-      stock: 120,
+      weeklySales: 47,
+      stock: 32,
     },
     {
       id: "MOCK-D-005",
@@ -638,7 +644,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "直营",
       region: "中部",
       weeklySales: 45.75,
-      stock: 117,
+      stock: 40,
     },
     {
       id: "MOCK-D-020",
@@ -647,7 +653,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "直营",
       region: "西部",
       weeklySales: 44.75,
-      stock: 103,
+      stock: 50,
     },
     {
       id: "MOCK-D-014",
@@ -656,7 +662,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "直营",
       region: "东部",
       weeklySales: 43.625,
-      stock: 124,
+      stock: 31,
     },
     {
       id: "MOCK-D-022",
@@ -665,7 +671,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "直营",
       region: "东部",
       weeklySales: 43.5,
-      stock: 124,
+      stock: 52,
     },
     {
       id: "MOCK-D-016",
@@ -674,7 +680,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "直营",
       region: "东部",
       weeklySales: 41.75,
-      stock: 73,
+      stock: 33,
     },
     {
       id: "MOCK-D-011",
@@ -683,7 +689,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "直营",
       region: "西部",
       weeklySales: 41.125,
-      stock: 80,
+      stock: 53,
     },
     {
       id: "MOCK-D-027",
@@ -692,7 +698,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "直营",
       region: "北部",
       weeklySales: 40.75,
-      stock: 79,
+      stock: 29,
     },
     {
       id: "MOCK-D-023",
@@ -701,7 +707,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "直营",
       region: "中部",
       weeklySales: 39.75,
-      stock: 123,
+      stock: 49,
     },
     {
       id: "MOCK-D-024",
@@ -710,7 +716,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "直营",
       region: "中部",
       weeklySales: 38.875,
-      stock: 68,
+      stock: 50,
     },
     {
       id: "MOCK-D-006",
@@ -719,7 +725,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "直营",
       region: "中部",
       weeklySales: 37.375,
-      stock: 107,
+      stock: 34,
     },
     {
       id: "MOCK-D-029",
@@ -728,7 +734,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "直营",
       region: "南部",
       weeklySales: 37.125,
-      stock: 95,
+      stock: 30,
     },
     {
       id: "MOCK-D-026",
@@ -736,8 +742,8 @@ export const vesselOverview: VesselOverviewData = {
       shortName: "D26",
       channel: "直营",
       region: "北部",
-      weeklySales: 37.0,
-      stock: 59,
+      weeklySales: 37,
+      stock: 25,
     },
     {
       id: "MOCK-D-018",
@@ -746,7 +752,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "直营",
       region: "西部",
       weeklySales: 36.875,
-      stock: 59,
+      stock: 32,
     },
     {
       id: "MOCK-D-034",
@@ -755,7 +761,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "直营",
       region: "东部",
       weeklySales: 36.625,
-      stock: 59,
+      stock: 42,
     },
     {
       id: "MOCK-D-021",
@@ -764,7 +770,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "直营",
       region: "西部",
       weeklySales: 36.5,
-      stock: 93,
+      stock: 42,
     },
     {
       id: "MOCK-D-025",
@@ -773,7 +779,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "直营",
       region: "中部",
       weeklySales: 30.75,
-      stock: 35,
+      stock: 41,
     },
     {
       id: "MOCK-D-032",
@@ -782,7 +788,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "直营",
       region: "南部",
       weeklySales: 30.75,
-      stock: 54,
+      stock: 33,
     },
     {
       id: "MOCK-D-033",
@@ -791,7 +797,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "直营",
       region: "西部",
       weeklySales: 28.5,
-      stock: 33,
+      stock: 32,
     },
     {
       id: "MOCK-D-030",
@@ -800,7 +806,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "直营",
       region: "南部",
       weeklySales: 28.25,
-      stock: 81,
+      stock: 28,
     },
     {
       id: "MOCK-D-031",
@@ -809,7 +815,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "直营",
       region: "南部",
       weeklySales: 26.75,
-      stock: 83,
+      stock: 28,
     },
     {
       id: "MOCK-L2-010",
@@ -818,7 +824,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "授权",
       region: "西部",
       weeklySales: 22.5,
-      stock: 57,
+      stock: 23,
     },
     {
       id: "MOCK-L2-004",
@@ -827,7 +833,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "授权",
       region: "中部",
       weeklySales: 20.375,
-      stock: 63,
+      stock: 26,
     },
     {
       id: "MOCK-L2-009",
@@ -836,7 +842,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "授权",
       region: "西部",
       weeklySales: 19.375,
-      stock: 45,
+      stock: 16,
     },
     {
       id: "MOCK-L2-001",
@@ -845,7 +851,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "授权",
       region: "中部",
       weeklySales: 19.125,
-      stock: 44,
+      stock: 22,
     },
     {
       id: "MOCK-L2-019",
@@ -854,7 +860,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "授权",
       region: "东部",
       weeklySales: 18.5,
-      stock: 53,
+      stock: 13,
     },
     {
       id: "MOCK-L2-030",
@@ -863,7 +869,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "授权",
       region: "中部",
       weeklySales: 18.25,
-      stock: 21,
+      stock: 14,
     },
     {
       id: "MOCK-L2-013",
@@ -871,8 +877,8 @@ export const vesselOverview: VesselOverviewData = {
       shortName: "A13",
       channel: "授权",
       region: "西部",
-      weeklySales: 18.0,
-      stock: 32,
+      weeklySales: 18,
+      stock: 20,
     },
     {
       id: "MOCK-L2-006",
@@ -881,7 +887,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "授权",
       region: "中部",
       weeklySales: 17.875,
-      stock: 21,
+      stock: 12,
     },
     {
       id: "MOCK-L2-012",
@@ -890,7 +896,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "授权",
       region: "西部",
       weeklySales: 17.5,
-      stock: 54,
+      stock: 19,
     },
     {
       id: "MOCK-L2-015",
@@ -899,7 +905,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "授权",
       region: "东部",
       weeklySales: 15.875,
-      stock: 25,
+      stock: 19,
     },
     {
       id: "MOCK-L2-018",
@@ -908,7 +914,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "授权",
       region: "东部",
       weeklySales: 15.75,
-      stock: 40,
+      stock: 21,
     },
     {
       id: "MOCK-L2-005",
@@ -917,7 +923,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "授权",
       region: "中部",
       weeklySales: 15.5,
-      stock: 27,
+      stock: 20,
     },
     {
       id: "MOCK-L2-025",
@@ -926,7 +932,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "授权",
       region: "西部",
       weeklySales: 15.375,
-      stock: 35,
+      stock: 17,
     },
     {
       id: "MOCK-L2-022",
@@ -935,7 +941,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "授权",
       region: "西部",
       weeklySales: 15.25,
-      stock: 18,
+      stock: 15,
     },
     {
       id: "MOCK-L2-021",
@@ -944,7 +950,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "授权",
       region: "西部",
       weeklySales: 15.125,
-      stock: 26,
+      stock: 14,
     },
     {
       id: "MOCK-L2-002",
@@ -953,7 +959,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "授权",
       region: "中部",
       weeklySales: 14.875,
-      stock: 38,
+      stock: 18,
     },
     {
       id: "MOCK-L2-017",
@@ -962,7 +968,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "授权",
       region: "东部",
       weeklySales: 14.875,
-      stock: 34,
+      stock: 19,
     },
     {
       id: "MOCK-L2-020",
@@ -971,7 +977,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "授权",
       region: "东部",
       weeklySales: 14.875,
-      stock: 46,
+      stock: 13,
     },
     {
       id: "MOCK-L2-007",
@@ -980,7 +986,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "授权",
       region: "中部",
       weeklySales: 14.75,
-      stock: 24,
+      stock: 11,
     },
     {
       id: "MOCK-L2-024",
@@ -989,7 +995,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "授权",
       region: "西部",
       weeklySales: 14.75,
-      stock: 29,
+      stock: 15,
     },
     {
       id: "MOCK-L2-003",
@@ -998,7 +1004,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "授权",
       region: "中部",
       weeklySales: 14.625,
-      stock: 42,
+      stock: 18,
     },
     {
       id: "MOCK-L2-032",
@@ -1007,7 +1013,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "授权",
       region: "中部",
       weeklySales: 13.875,
-      stock: 27,
+      stock: 12,
     },
     {
       id: "MOCK-L2-008",
@@ -1016,7 +1022,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "授权",
       region: "中部",
       weeklySales: 13.75,
-      stock: 27,
+      stock: 10,
     },
     {
       id: "MOCK-L2-041",
@@ -1025,7 +1031,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "授权",
       region: "南部",
       weeklySales: 13.75,
-      stock: 32,
+      stock: 9,
     },
     {
       id: "MOCK-L2-031",
@@ -1034,7 +1040,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "授权",
       region: "中部",
       weeklySales: 13.5,
-      stock: 22,
+      stock: 11,
     },
     {
       id: "MOCK-L2-011",
@@ -1043,7 +1049,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "授权",
       region: "西部",
       weeklySales: 13.375,
-      stock: 38,
+      stock: 14,
     },
     {
       id: "MOCK-L2-014",
@@ -1052,7 +1058,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "授权",
       region: "西部",
       weeklySales: 13.375,
-      stock: 15,
+      stock: 16,
     },
     {
       id: "MOCK-L2-039",
@@ -1061,7 +1067,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "授权",
       region: "南部",
       weeklySales: 13.125,
-      stock: 21,
+      stock: 15,
     },
     {
       id: "MOCK-L2-023",
@@ -1070,7 +1076,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "授权",
       region: "西部",
       weeklySales: 12.875,
-      stock: 21,
+      stock: 13,
     },
     {
       id: "MOCK-L2-027",
@@ -1079,7 +1085,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "授权",
       region: "西部",
       weeklySales: 12.875,
-      stock: 37,
+      stock: 15,
     },
     {
       id: "MOCK-L2-016",
@@ -1088,7 +1094,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "授权",
       region: "东部",
       weeklySales: 12.625,
-      stock: 25,
+      stock: 16,
     },
     {
       id: "MOCK-L2-042",
@@ -1097,7 +1103,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "授权",
       region: "南部",
       weeklySales: 12.625,
-      stock: 32,
+      stock: 9,
     },
     {
       id: "MOCK-L2-040",
@@ -1106,7 +1112,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "授权",
       region: "南部",
       weeklySales: 12.5,
-      stock: 24,
+      stock: 17,
     },
     {
       id: "MOCK-L2-044",
@@ -1115,7 +1121,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "授权",
       region: "西部",
       weeklySales: 12.5,
-      stock: 39,
+      stock: 10,
     },
     {
       id: "MOCK-L2-038",
@@ -1124,7 +1130,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "授权",
       region: "南部",
       weeklySales: 12.125,
-      stock: 14,
+      stock: 13,
     },
     {
       id: "MOCK-L2-028",
@@ -1132,8 +1138,8 @@ export const vesselOverview: VesselOverviewData = {
       shortName: "A28",
       channel: "授权",
       region: "东部",
-      weeklySales: 12.0,
-      stock: 37,
+      weeklySales: 12,
+      stock: 14,
     },
     {
       id: "MOCK-L2-034",
@@ -1142,7 +1148,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "授权",
       region: "北部",
       weeklySales: 11.625,
-      stock: 30,
+      stock: 11,
     },
     {
       id: "MOCK-L2-029",
@@ -1150,8 +1156,8 @@ export const vesselOverview: VesselOverviewData = {
       shortName: "A29",
       channel: "授权",
       region: "东部",
-      weeklySales: 11.0,
-      stock: 19,
+      weeklySales: 11,
+      stock: 14,
     },
     {
       id: "MOCK-L2-045",
@@ -1159,8 +1165,8 @@ export const vesselOverview: VesselOverviewData = {
       shortName: "A45",
       channel: "授权",
       region: "东部",
-      weeklySales: 11.0,
-      stock: 19,
+      weeklySales: 11,
+      stock: 9,
     },
     {
       id: "MOCK-L2-033",
@@ -1169,7 +1175,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "授权",
       region: "中部",
       weeklySales: 10.375,
-      stock: 24,
+      stock: 9,
     },
     {
       id: "MOCK-L2-026",
@@ -1178,7 +1184,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "授权",
       region: "西部",
       weeklySales: 10.125,
-      stock: 26,
+      stock: 11,
     },
     {
       id: "MOCK-L2-043",
@@ -1187,7 +1193,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "授权",
       region: "南部",
       weeklySales: 10.125,
-      stock: 29,
+      stock: 8,
     },
     {
       id: "MOCK-L2-037",
@@ -1196,7 +1202,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "授权",
       region: "北部",
       weeklySales: 9.875,
-      stock: 17,
+      stock: 10,
     },
     {
       id: "MOCK-L2-035",
@@ -1205,7 +1211,7 @@ export const vesselOverview: VesselOverviewData = {
       channel: "授权",
       region: "北部",
       weeklySales: 9.25,
-      stock: 26,
+      stock: 9,
     },
     {
       id: "MOCK-L2-036",
@@ -1213,8 +1219,8 @@ export const vesselOverview: VesselOverviewData = {
       shortName: "A36",
       channel: "授权",
       region: "北部",
-      weeklySales: 9.0,
-      stock: 28,
+      weeklySales: 9,
+      stock: 9,
     },
   ],
   summary: {
@@ -1224,10 +1230,10 @@ export const vesselOverview: VesselOverviewData = {
     orders: 1694,
     orderShortage: 52,
     demand4Weeks: 9121,
-    replenishmentShortage: 2516,
-    storeStock: 4805,
+    replenishmentShortage: 4416,
+    storeStock: 2205,
     vpcStock: 1060,
-    supplyChangePercent: -13.669064748201443,
+    supplyChangePercent: 19.90407673860912,
   },
 };
 
@@ -1248,6 +1254,35 @@ vesselOverview.summary.replenishmentShortage = vesselOverview.channels.reduce(
 const previousVessel = vesselOverview.supplyHistory.at(-2)!;
 vesselOverview.summary.supplyChangePercent =
   (2500 / (previousVessel.toyota + previousVessel.lexus) - 1) * 100;
+
+/** Shared integer model inventory for overview totals and store replenishment. */
+export function vesselStoreModelStocks(
+  store: VesselOverviewData["stores"][number],
+  data: VesselOverviewData = vesselOverview,
+) {
+  const brands = network.stores.find((s) => s.id === store.id)!.brands;
+  const models = data.models.filter((m) => brands.includes(m.brand));
+  const demandKey =
+    store.channel === "直营" ? "directDemand4Weeks" : "authorizedDemand4Weeks";
+  const demand = models.reduce((n, m) => n + m[demandKey], 0);
+  const rows = models.map((m, index) => {
+    const exact = demand > 0 ? (store.stock * m[demandKey]) / demand : 0;
+    return {
+      model: m.model,
+      index,
+      stock: Math.floor(exact),
+      remainder: exact - Math.floor(exact),
+    };
+  });
+  const remaining = store.stock - rows.reduce((n, row) => n + row.stock, 0);
+  if (demand > 0) {
+    const priority = [...rows].sort(
+      (a, b) => b.remainder - a.remainder || a.index - b.index,
+    );
+    for (let i = 0; i < remaining; i++) priority[i].stock++;
+  }
+  return Object.fromEntries(rows.map((row) => [row.model, row.stock]));
+}
 
 export function calculateVesselCoverage(data: VesselOverviewData) {
   const available =

@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 
-test("allocation opens the eleven-chart overview and CUI can return to it", async ({
+test("query opens the eleven-chart overview and canvas history can return to it", async ({
   page,
 }) => {
   const errors: string[] = [];
@@ -9,13 +9,11 @@ test("allocation opens the eleven-chart overview and CUI can return to it", asyn
   await page.setViewportSize({ width: 1366, height: 900 });
   await page.goto("/");
   await page.clock.install();
-  await page.getByTestId("story-command").fill("/vessel-allocation 基本统计");
+  await page.getByTestId("story-command").fill("/query 基本统计");
   await page.getByTestId("story-command").press("Enter");
   await page.clock.runFor(8000);
 
-  await expect(
-    page.getByRole("tab", { name: "基本统计", exact: true }),
-  ).toHaveAttribute("aria-selected", "true");
+  await expect(page.locator('[data-skill-command="/query"]')).toBeVisible();
   const overview = page.getByTestId("vessel-overview");
   await expect(overview).toBeVisible();
   await expect(overview).toContainText("2026-08-05");
@@ -25,10 +23,10 @@ test("allocation opens the eleven-chart overview and CUI can return to it", asyn
   await expect(overview).toContainText("霍尔木兹");
   await expect(overview).toContainText("模拟");
   const coverage = page.getByTestId("overview-sellable-weeks");
-  await expect(coverage.locator("strong")).toHaveText("3.7周");
-  await expect(coverage).toContainText("8,365");
+  await expect(coverage.locator("strong")).toHaveText("2.5周");
+  await expect(coverage).toContainText("5,765");
   await expect(coverage.locator(".vo-coverage-models")).toHaveText(
-    "Camry4.4 周Yaris4.3 周Hilux3.9 周",
+    "Camry2.8 周Yaris2.9 周Hilux2.7 周",
   );
   const kpiTops = await overview
     .locator(".vo-kpis article")
@@ -57,23 +55,16 @@ test("allocation opens the eleven-chart overview and CUI can return to it", asyn
   expect(exported.simulation).toBe(true);
   expect(exported.overview.snapshotDate).toBe("2026-08-05");
   expect(exported.overview.stores).toHaveLength(79);
-  await page.getByRole("tab", { name: "订单分车", exact: true }).click();
-  await expect(page.getByTestId("vessel-orders")).toBeVisible();
   await page
-    .getByRole("button", { name: /查看基本统计/ })
-    .first()
-    .click();
+    .getByTestId("story-command")
+    .fill("/order-allocation 查看订单分车");
+  await page.getByTestId("story-command").press("Enter");
+  await page.clock.runFor(9000);
+  await expect(page.getByTestId("vessel-orders")).toBeVisible();
+  await page.getByTestId("canvas-history-toggle").click();
+  await page.locator('[data-run-command="/query"]').click();
   await expect(overview).toBeVisible();
-  await page.getByRole("tab", { name: "基本统计", exact: true }).press("End");
-  await expect(
-    page.getByRole("tab", { name: "门店结果", exact: true }),
-  ).toHaveAttribute("aria-selected", "true");
-  await page.getByRole("tab", { name: "门店结果", exact: true }).press("Home");
-  await expect(overview).toBeVisible();
-  await page.getByRole("tab", { name: "门店结果", exact: true }).click();
-  await expect(
-    page.getByTestId("store-allocation-table").locator("tbody tr"),
-  ).toHaveCount(79);
+  await expect(page.getByRole("tablist", { name: "分车分析" })).toHaveCount(0);
   expect(errors).toEqual([]);
 });
 
@@ -82,7 +73,7 @@ test("both store charts retain all 79 stores in the same rank order on mobile", 
 }) => {
   await page.goto("/");
   await page.clock.install();
-  await page.getByTestId("story-command").fill("/vessel-allocation 基本统计");
+  await page.getByTestId("story-command").fill("/query 基本统计");
   await page.getByTestId("story-command").press("Enter");
   await page.clock.runFor(8000);
   const sales = page.getByTestId("overview-chart-store-sales");

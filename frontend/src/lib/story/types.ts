@@ -8,7 +8,11 @@ export type StoryCommand =
   | "/arrival-execution"
   | "/daily-rebalance"
   | "/daily-transfer"
+  | "/daily-dispatch"
+  | "/shortage-fulfillment"
   | "/smart-query"
+  | "/query"
+  | "/order-allocation"
   | "/profit-analysis";
 
 export type StoryStage =
@@ -18,7 +22,10 @@ export type StoryStage =
   | "execution"
   | "rebalance"
   | "transfer"
+  | "dispatch"
   | "query"
+  | "statistics"
+  | "orders"
   | "profit";
 
 export type DemandCategory =
@@ -280,6 +287,7 @@ export type StoryEvent = {
   detail: string;
   duration: number;
   operation?: string;
+  guiBlock?: string;
   sources?: string[];
   canvasTab?: QueryTab;
   planningTab?:
@@ -328,6 +336,7 @@ export type StoryRun = {
   status: StoryRunStatus;
   elapsed: number;
   duration: number;
+  completedAt?: string;
   events: StoryEvent[];
   blocks: StoryBlock[];
   decisions: string[];
@@ -340,6 +349,7 @@ export type StoryRun = {
   planning?: import("./store-planning").PlanningSnapshot;
   planningSummary?: string;
   profit?: import("./profit-analysis").ProfitSnapshot;
+  dispatch?: import("./daily-dispatch").DispatchSnapshot;
 };
 
 export type AuditEntry = {

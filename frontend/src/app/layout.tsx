@@ -12,6 +12,8 @@ import "@/styles/vessel-workspace.css";
 import "@/styles/vessel-overview.css";
 import "@/styles/vessel-orders.css";
 import "@/styles/vessel-replenishment.css";
+import "@/styles/skill-entry.css";
+import "@/styles/daily-dispatch.css";
 export const metadata: Metadata = {
   title: "ATLAS · 吉达单港供应保障 Agent",
   description:

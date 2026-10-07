@@ -5,6 +5,7 @@ import VesselOrderMap from "./VesselOrderMap";
 import OrderStoreSearch from "./OrderStoreSearch";
 import OrderLogisticsCosts from "./OrderLogisticsCosts";
 import VesselSectionHeading from "./VesselSectionHeading";
+import { StreamBlock } from "./SkillStream";
 import { Anchor, ArrowRight, MapPin, Package, Truck } from "lucide-react";
 
 import {
@@ -241,316 +242,322 @@ export default function VesselOrdersDashboard({
         </div>
         <span>{vesselOrders.snapshotDate} · 模拟订单与物流建议</span>
       </header>
-      <section className="voa-section" aria-label="订单概览">
-        <VesselSectionHeading
-          number="01"
-          english="ORDER ALLOCATION OVERVIEW"
-          title="订单概览"
-          note="先保障当前订单，再规划运输；本船数量与预留参数同步。"
-        />
-        <div className="voa-kpis">
-          {[
-            [
-              "订单需求",
-              `${fmt(sum(visibleOrders))} 台`,
-              `${fmt(visibleOrders.length)} 笔订单 · ${stores.length} 家门店`,
-            ],
-            [
-              "本船已分配",
-              `${fmt(sum(visibleOrders, "allocated"))} 台`,
-              "按渠道与车型预留量保障订单",
-            ],
-            [
-              "待补供给",
-              `${fmt(sum(visibleOrders) - sum(visibleOrders, "allocated"))} 台`,
-              "缺口订单保留，不进入物流车次",
-            ],
-            [
-              mode === "single" ? "单港物流建议" : "双港物流建议",
-              `${fmt(plan.trips.length)} 车次`,
-              `${fmt(plan.totalCost)} SAR · 全网 ${fmt(plan.quantity)} 台`,
-            ],
-          ].map(([label, value, note]) => (
-            <article key={label}>
-              <span>{label}</span>
-              <strong>{value}</strong>
-              <small>{note}</small>
-            </article>
-          ))}
-        </div>
-      </section>
-      <section className="voa-section" aria-label="订单与物流路线">
-        <VesselSectionHeading
-          number="02"
-          english="ORDER & LOGISTICS PLANNING"
-          title="订单与物流路线"
-          note="筛选门店需求，切换订单与物流图层，查看每个班次的卸货与成本。"
-        />
-        <div className="voa-section-body">
-          <div className="voa-filters">
-            <label>
-              渠道
-              <select
-                aria-label="订单渠道"
-                value={channel}
-                onChange={(e) => {
-                  setChannel(e.target.value);
-                  setPage(0);
-                }}
-              >
-                <option>全部</option>
-                <option>直营</option>
-                <option>授权</option>
-              </select>
-            </label>
-            <label>
-              品牌
-              <select
-                aria-label="订单品牌"
-                value={brand}
-                onChange={(e) => {
-                  setBrand(e.target.value);
-                  setPage(0);
-                }}
-              >
-                <option>全部</option>
-                <option>丰田</option>
-                <option>雷克萨斯</option>
-              </select>
-            </label>
-            <OrderStoreSearch
-              stores={searchableStores}
-              value={search}
-              onChange={(value) => {
-                setSearch(value);
-                setPage(0);
-              }}
-              onSelectStore={setSelectedStore}
-            />
-            {(channel !== "全部" || brand !== "全部" || search) && (
-              <button
-                onClick={() => {
-                  setChannel("全部");
-                  setBrand("全部");
-                  setSearch("");
-                  setPage(0);
-                }}
-              >
-                清除筛选
-              </button>
-            )}
+      <StreamBlock name="orders-summary">
+        <section className="voa-section" aria-label="订单概览">
+          <VesselSectionHeading
+            number="01"
+            english="ORDER ALLOCATION OVERVIEW"
+            title="订单概览"
+            note="先保障当前订单，再规划运输；本船数量与预留参数同步。"
+          />
+          <div className="voa-kpis">
+            {[
+              [
+                "订单需求",
+                `${fmt(sum(visibleOrders))} 台`,
+                `${fmt(visibleOrders.length)} 笔订单 · ${stores.length} 家门店`,
+              ],
+              [
+                "本船已分配",
+                `${fmt(sum(visibleOrders, "allocated"))} 台`,
+                "按渠道与车型预留量保障订单",
+              ],
+              [
+                "待补供给",
+                `${fmt(sum(visibleOrders) - sum(visibleOrders, "allocated"))} 台`,
+                "缺口订单保留，不进入物流车次",
+              ],
+              [
+                mode === "single" ? "单港物流建议" : "双港物流建议",
+                `${fmt(plan.trips.length)} 车次`,
+                `${fmt(plan.totalCost)} SAR · 全网 ${fmt(plan.quantity)} 台`,
+              ],
+            ].map(([label, value, note]) => (
+              <article key={label}>
+                <span>{label}</span>
+                <strong>{value}</strong>
+                <small>{note}</small>
+              </article>
+            ))}
           </div>
-          <div className="voa-layout">
-            <section className="voa-map-panel">
-              <header>
-                <div className="voa-layer-toggle">
-                  <button
-                    aria-pressed={layer === "orders"}
-                    onClick={() => setLayer("orders")}
-                  >
-                    <MapPin size={15} />
-                    门店订单
-                  </button>
-                  <button
-                    aria-pressed={layer === "logistics"}
-                    onClick={() => setLayer("logistics")}
-                  >
-                    <Truck size={15} />
-                    物流建议
-                  </button>
-                </div>
-                <small>
-                  {layer === "orders"
-                    ? "点击圆圈，查看门店订单"
-                    : "选择车次，查看卸货路线"}
-                </small>
-              </header>
-              {layer === "logistics" && (
-                <div className="voa-port-toggle">
-                  <button
-                    aria-pressed={mode === "single"}
-                    onClick={() => {
-                      setMode("single");
-                      setSelectedTrip("");
-                      setPage(0);
-                    }}
-                  >
-                    单港 · 吉达
-                  </button>
-                  <button
-                    aria-pressed={mode === "dual"}
-                    onClick={() => {
-                      setMode("dual");
-                      setSelectedTrip("");
-                      setPage(0);
-                    }}
-                  >
-                    双港 · 吉达 + 达曼
-                  </button>
-                </div>
-              )}
-              <VesselOrderMap
-                stores={stores}
-                orders={visibleOrders}
-                layer={layer}
-                storeId={store?.id ?? ""}
-                trips={trips}
-                trip={trip}
-                mode={mode}
-                onStore={setSelectedStore}
-              />
-            </section>
-            <aside className="voa-inspector">
-              {layer === "orders" ? (
-                <div
-                  data-testid="order-store-inspector"
-                  data-store-id={store?.id ?? ""}
+        </section>
+      </StreamBlock>
+      <StreamBlock name="orders-routes">
+        <section className="voa-section" aria-label="订单与物流路线">
+          <VesselSectionHeading
+            number="02"
+            english="ORDER & LOGISTICS PLANNING"
+            title="订单与物流路线"
+            note="筛选门店需求，切换订单与物流图层，查看每个班次的卸货与成本。"
+          />
+          <div className="voa-section-body">
+            <div className="voa-filters">
+              <label>
+                渠道
+                <select
+                  aria-label="订单渠道"
+                  value={channel}
+                  onChange={(e) => {
+                    setChannel(e.target.value);
+                    setPage(0);
+                  }}
                 >
-                  <header className="voa-store-heading">
-                    <span>
-                      <Package size={15} />
-                      门店订单
-                    </span>
-                    <select
-                      aria-label="查看订单门店"
-                      value={store?.id ?? ""}
-                      onChange={(e) => setSelectedStore(e.target.value)}
-                    >
-                      {stores.map((s) => (
-                        <option key={s.id} value={s.id}>
-                          {s.shortName} · {s.name}
-                        </option>
-                      ))}
-                    </select>
-                    <h3>{store?.name ?? "无匹配门店"}</h3>
-                    <p>
-                      {store
-                        ? `${store.city} · ${store.channel} · ${store.id}`
-                        : "调整筛选条件后查看订单。"}
-                    </p>
-                    <strong>
-                      {fmt(sum(currentOrders))}
-                      <small> 台 / {currentOrders.length} 笔订单</small>
-                    </strong>
-                  </header>
-                  <Bars
-                    orders={currentOrders}
-                    dimension="model"
-                    title="按车型数量统计"
-                    testId="order-model-chart"
-                  />
-                  <Bars
-                    orders={currentOrders}
-                    dimension="type"
-                    title="按订单类型统计"
-                    testId="order-type-chart"
-                  />
-                </div>
-              ) : (
-                <>
-                  <section
-                    className="voa-trip-list"
-                    data-testid="order-trip-list"
-                  >
-                    <header>
-                      <div>
-                        <h3>
-                          建议车次 <small>{trips.length}</small>
-                        </h3>
-                        <p>全车明细 · 点击联动地图</p>
-                      </div>
-                      <select
-                        aria-label="车次类型"
-                        value={tripKind}
-                        onChange={(e) => {
-                          setTripKind(e.target.value);
-                          setSelectedTrip("");
-                          setPage(0);
-                        }}
-                      >
-                        <option value="all">全部车次</option>
-                        <option value="multi">多点卸货</option>
-                        <option value="direct">单点直送</option>
-                      </select>
-                    </header>
-                    <div className="voa-trip-items">
-                      {trips
-                        .slice(activePage * 8, (activePage + 1) * 8)
-                        .map((t) => (
-                          <button
-                            key={t.id}
-                            data-trip-id={t.id}
-                            aria-pressed={trip?.id === t.id}
-                            onClick={() => selectTrip(t.id)}
-                          >
-                            <span>
-                              <b>{t.id}</b>
-                              <small>
-                                {t.stops.length > 1
-                                  ? `${t.stops.length} 点卸货`
-                                  : "直送"}
-                              </small>
-                              <strong>{t.quantity} 台</strong>
-                            </span>
-                            <span className="voa-trip-route">
-                              {t.portName} →{" "}
-                              {t.stops
-                                .map(
-                                  (s) =>
-                                    `${s.city} ${vesselOrders.stores.find((store) => store.id === s.storeId)?.shortName}`,
-                                )
-                                .join(" → ")}
-                            </span>
-                            <span className="voa-trip-cost">
-                              <span>{fmt(t.totalCost)} SAR</span>
-                              <small>
-                                {fmt(t.unitCost, 1)} SAR / 台 ·{" "}
-                                {
-                                  new Set(
-                                    t.stops.flatMap((s) =>
-                                      s.orders.map((o) => o.orderId),
-                                    ),
-                                  ).size
-                                }{" "}
-                                笔订单
-                              </small>
-                            </span>
-                          </button>
-                        ))}
-                      {!trips.length && (
-                        <p className="voa-empty">没有符合筛选条件的车次。</p>
-                      )}
-                    </div>
-                    {pageCount > 1 && (
-                      <footer>
-                        <button
-                          aria-label="上一页车次"
-                          disabled={activePage === 0}
-                          onClick={() => setPage(activePage - 1)}
-                        >
-                          上一页
-                        </button>
-                        <span>
-                          {activePage + 1} / {pageCount}
-                        </span>
-                        <button
-                          aria-label="下一页车次"
-                          disabled={activePage + 1 >= pageCount}
-                          onClick={() => setPage(activePage + 1)}
-                        >
-                          下一页
-                        </button>
-                      </footer>
-                    )}
-                  </section>
-                  {trip && <TripDetail trip={trip} />}
-                </>
+                  <option>全部</option>
+                  <option>直营</option>
+                  <option>授权</option>
+                </select>
+              </label>
+              <label>
+                品牌
+                <select
+                  aria-label="订单品牌"
+                  value={brand}
+                  onChange={(e) => {
+                    setBrand(e.target.value);
+                    setPage(0);
+                  }}
+                >
+                  <option>全部</option>
+                  <option>丰田</option>
+                  <option>雷克萨斯</option>
+                </select>
+              </label>
+              <OrderStoreSearch
+                stores={searchableStores}
+                value={search}
+                onChange={(value) => {
+                  setSearch(value);
+                  setPage(0);
+                }}
+                onSelectStore={setSelectedStore}
+              />
+              {(channel !== "全部" || brand !== "全部" || search) && (
+                <button
+                  onClick={() => {
+                    setChannel("全部");
+                    setBrand("全部");
+                    setSearch("");
+                    setPage(0);
+                  }}
+                >
+                  清除筛选
+                </button>
               )}
-            </aside>
+            </div>
+            <div className="voa-layout">
+              <section className="voa-map-panel">
+                <header>
+                  <div className="voa-layer-toggle">
+                    <button
+                      aria-pressed={layer === "orders"}
+                      onClick={() => setLayer("orders")}
+                    >
+                      <MapPin size={15} />
+                      门店订单
+                    </button>
+                    <button
+                      aria-pressed={layer === "logistics"}
+                      onClick={() => setLayer("logistics")}
+                    >
+                      <Truck size={15} />
+                      物流建议
+                    </button>
+                  </div>
+                  <small>
+                    {layer === "orders"
+                      ? "点击圆圈，查看门店订单"
+                      : "选择车次，查看卸货路线"}
+                  </small>
+                </header>
+                {layer === "logistics" && (
+                  <div className="voa-port-toggle">
+                    <button
+                      aria-pressed={mode === "single"}
+                      onClick={() => {
+                        setMode("single");
+                        setSelectedTrip("");
+                        setPage(0);
+                      }}
+                    >
+                      单港 · 吉达
+                    </button>
+                    <button
+                      aria-pressed={mode === "dual"}
+                      onClick={() => {
+                        setMode("dual");
+                        setSelectedTrip("");
+                        setPage(0);
+                      }}
+                    >
+                      双港 · 吉达 + 达曼
+                    </button>
+                  </div>
+                )}
+                <VesselOrderMap
+                  stores={stores}
+                  orders={visibleOrders}
+                  layer={layer}
+                  storeId={store?.id ?? ""}
+                  trips={trips}
+                  trip={trip}
+                  mode={mode}
+                  onStore={setSelectedStore}
+                />
+              </section>
+              <aside className="voa-inspector">
+                {layer === "orders" ? (
+                  <div
+                    data-testid="order-store-inspector"
+                    data-store-id={store?.id ?? ""}
+                  >
+                    <header className="voa-store-heading">
+                      <span>
+                        <Package size={15} />
+                        门店订单
+                      </span>
+                      <select
+                        aria-label="查看订单门店"
+                        value={store?.id ?? ""}
+                        onChange={(e) => setSelectedStore(e.target.value)}
+                      >
+                        {stores.map((s) => (
+                          <option key={s.id} value={s.id}>
+                            {s.shortName} · {s.name}
+                          </option>
+                        ))}
+                      </select>
+                      <h3>{store?.name ?? "无匹配门店"}</h3>
+                      <p>
+                        {store
+                          ? `${store.city} · ${store.channel} · ${store.id}`
+                          : "调整筛选条件后查看订单。"}
+                      </p>
+                      <strong>
+                        {fmt(sum(currentOrders))}
+                        <small> 台 / {currentOrders.length} 笔订单</small>
+                      </strong>
+                    </header>
+                    <Bars
+                      orders={currentOrders}
+                      dimension="model"
+                      title="按车型数量统计"
+                      testId="order-model-chart"
+                    />
+                    <Bars
+                      orders={currentOrders}
+                      dimension="type"
+                      title="按订单类型统计"
+                      testId="order-type-chart"
+                    />
+                  </div>
+                ) : (
+                  <>
+                    <section
+                      className="voa-trip-list"
+                      data-testid="order-trip-list"
+                    >
+                      <header>
+                        <div>
+                          <h3>
+                            建议车次 <small>{trips.length}</small>
+                          </h3>
+                          <p>全车明细 · 点击联动地图</p>
+                        </div>
+                        <select
+                          aria-label="车次类型"
+                          value={tripKind}
+                          onChange={(e) => {
+                            setTripKind(e.target.value);
+                            setSelectedTrip("");
+                            setPage(0);
+                          }}
+                        >
+                          <option value="all">全部车次</option>
+                          <option value="multi">多点卸货</option>
+                          <option value="direct">单点直送</option>
+                        </select>
+                      </header>
+                      <div className="voa-trip-items">
+                        {trips
+                          .slice(activePage * 8, (activePage + 1) * 8)
+                          .map((t) => (
+                            <button
+                              key={t.id}
+                              data-trip-id={t.id}
+                              aria-pressed={trip?.id === t.id}
+                              onClick={() => selectTrip(t.id)}
+                            >
+                              <span>
+                                <b>{t.id}</b>
+                                <small>
+                                  {t.stops.length > 1
+                                    ? `${t.stops.length} 点卸货`
+                                    : "直送"}
+                                </small>
+                                <strong>{t.quantity} 台</strong>
+                              </span>
+                              <span className="voa-trip-route">
+                                {t.portName} →{" "}
+                                {t.stops
+                                  .map(
+                                    (s) =>
+                                      `${s.city} ${vesselOrders.stores.find((store) => store.id === s.storeId)?.shortName}`,
+                                  )
+                                  .join(" → ")}
+                              </span>
+                              <span className="voa-trip-cost">
+                                <span>{fmt(t.totalCost)} SAR</span>
+                                <small>
+                                  {fmt(t.unitCost, 1)} SAR / 台 ·{" "}
+                                  {
+                                    new Set(
+                                      t.stops.flatMap((s) =>
+                                        s.orders.map((o) => o.orderId),
+                                      ),
+                                    ).size
+                                  }{" "}
+                                  笔订单
+                                </small>
+                              </span>
+                            </button>
+                          ))}
+                        {!trips.length && (
+                          <p className="voa-empty">没有符合筛选条件的车次。</p>
+                        )}
+                      </div>
+                      {pageCount > 1 && (
+                        <footer>
+                          <button
+                            aria-label="上一页车次"
+                            disabled={activePage === 0}
+                            onClick={() => setPage(activePage - 1)}
+                          >
+                            上一页
+                          </button>
+                          <span>
+                            {activePage + 1} / {pageCount}
+                          </span>
+                          <button
+                            aria-label="下一页车次"
+                            disabled={activePage + 1 >= pageCount}
+                            onClick={() => setPage(activePage + 1)}
+                          >
+                            下一页
+                          </button>
+                        </footer>
+                      )}
+                    </section>
+                    {trip && <TripDetail trip={trip} />}
+                  </>
+                )}
+              </aside>
+            </div>
           </div>
-        </div>
-      </section>
-      <OrderLogisticsCosts summary={costSummary} />
+        </section>
+      </StreamBlock>
+      <StreamBlock name="orders-costs">
+        <OrderLogisticsCosts summary={costSummary} />
+      </StreamBlock>
       <details className="voa-assumptions">
         <summary>订单分车与物流计算口径</summary>
         <p>

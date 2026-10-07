@@ -8,7 +8,7 @@ test.beforeEach(async ({ page }) => {
   await page.goto("/");
   await page.clock.install();
 });
-test("map exposes routes and saved batches, costs and CUI links into profit views", async ({
+test("map exposes routes and saved batches, costs and selectable profit views", async ({
   page,
 }) => {
   const errors: string[] = [];
@@ -36,7 +36,7 @@ test("map exposes routes and saved batches, costs and CUI links into profit view
     page.getByTestId("map-batch-table").locator("tbody tr"),
   ).not.toHaveCount(0);
   await expect(map).toContainText("无真实承运班次号");
-  await page.getByRole("button", { name: /查看路线地图/ }).click();
+  await page.getByRole("tab", { name: "路线地图", exact: true }).click();
   await expect(
     page.getByRole("tab", { name: "路线地图", exact: true }),
   ).toHaveAttribute("aria-selected", "true");
@@ -57,9 +57,7 @@ test("map exposes routes and saved batches, costs and CUI links into profit view
   await page.clock.runFor(6500);
   await expect(page.getByTestId("profit-workspace")).toBeVisible();
   if (process.env.H_VISUAL_REVIEW) {
-    await page
-      .getByRole("button", { name: /查看门店利润/ })
-      .scrollIntoViewIfNeeded();
+    await page.getByTestId("profit-workspace").scrollIntoViewIfNeeded();
     await page.screenshot({
       path: "docs/profit-desktop-preview.png",
       animations: "disabled",
@@ -86,7 +84,7 @@ test("map exposes routes and saved batches, costs and CUI links into profit view
     await page
       .getByTestId("profit-bridge")
       .screenshot({ path: "docs/profit-bridge-preview.png" });
-  await page.getByRole("button", { name: /查看门店利润/ }).click();
+  await page.getByRole("tab", { name: "门店利润", exact: true }).click();
   await expect(
     page.getByRole("tab", { name: "门店利润", exact: true }),
   ).toHaveAttribute("aria-selected", "true");

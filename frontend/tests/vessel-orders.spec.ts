@@ -6,15 +6,19 @@ test("logistics costs compare the same orders across stores and regions below th
 }) => {
   await page.goto("/");
   await page.clock.install();
-  await page.getByTestId("story-command").fill("/vessel-allocation 订单分车");
+  await page.getByTestId("story-command").fill("/order-allocation 订单分车");
   await page.getByTestId("story-command").press("Enter");
   await page.clock.runFor(12000);
   const costs = page.getByTestId("order-logistics-costs");
   await expect(costs).toBeVisible();
   const charts = costs.locator("[data-store-cost-chart]");
   await expect(charts).toHaveCount(4);
-  await expect(charts.first().locator(".voa-cost-chart-metric strong")).toHaveText("1,316,520");
-  await expect(charts.nth(2).locator(".voa-cost-chart-metric strong")).toHaveText("1,032,232");
+  await expect(
+    charts.first().locator(".voa-cost-chart-metric strong"),
+  ).toHaveText("1,316,520");
+  await expect(
+    charts.nth(2).locator(".voa-cost-chart-metric strong"),
+  ).toHaveText("1,032,232");
   const tops = await charts.evaluateAll((nodes) =>
     nodes.map((n) => n.getBoundingClientRect().top),
   );
@@ -49,8 +53,13 @@ test("logistics costs compare the same orders across stores and regions below th
     .getByRole("combobox", { name: "订单品牌" })
     .selectOption("雷克萨斯");
   // D01's Lexus share: 3/8 of a 7,180 truck + two 7,180 trucks + 4,563.
-  await expect(charts.first().locator("[data-store-cost]")).toHaveAttribute("data-cost", "21615.5");
-  await page.getByRole("combobox", { name: "搜索订单门店" }).fill("不存在的门店");
+  await expect(charts.first().locator("[data-store-cost]")).toHaveAttribute(
+    "data-cost",
+    "21615.5",
+  );
+  await page
+    .getByRole("combobox", { name: "搜索订单门店" })
+    .fill("不存在的门店");
   await expect(charts.first().locator("[data-store-cost]")).toHaveCount(0);
   await expect(costs).toContainText("当前筛选没有已分配的运输订单");
   await expect(costs).not.toContainText("NaN");
@@ -65,7 +74,7 @@ test("every store bubble can be clicked and empty filters do not retain stale de
 }) => {
   await page.goto("/");
   await page.clock.install();
-  await page.getByTestId("story-command").fill("/vessel-allocation 订单分车");
+  await page.getByTestId("story-command").fill("/order-allocation 订单分车");
   await page.getByTestId("story-command").press("Enter");
   await page.clock.runFor(12000);
   const workspace = page.getByTestId("vessel-orders");
@@ -104,17 +113,16 @@ test("every store bubble can be clicked and empty filters do not retain stale de
   await expect(page.getByTestId("order-trip-detail")).toHaveCount(0);
 });
 
-test("tab2 links store bubbles, sorted bars, port scenarios and multi-stop trips", async ({
+test("order workspace links store bubbles, sorted bars, port scenarios and multi-stop trips", async ({
   page,
 }) => {
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto("/");
   await page.clock.install();
-  await page.getByTestId("story-command").fill("/vessel-allocation 基本统计");
+  await page.getByTestId("story-command").fill("/order-allocation 订单分车");
   await page.getByTestId("story-command").press("Enter");
   await page.clock.runFor(12000);
-  await page.getByRole("tab", { name: "订单分车", exact: true }).click();
   const workspace = page.getByTestId("vessel-orders");
   await expect(workspace).toBeVisible();
   await expect(workspace.locator("[data-store-bubble]")).toHaveCount(79);
@@ -183,9 +191,8 @@ test("tab2 links store bubbles, sorted bars, port scenarios and multi-stop trips
     .locator(".voa-map-panel, .voa-inspector")
     .evaluateAll((nodes) => nodes.map((n) => n.getBoundingClientRect().top));
   expect(Math.abs(paneBounds[0] - paneBounds[1])).toBeLessThanOrEqual(1);
-  await page
-    .getByRole("button", { name: /查看物流建议/ })
-    .first()
+  await workspace
+    .getByRole("button", { name: "物流建议", exact: true })
     .click();
   await expect(
     page.getByRole("button", { name: "物流建议", exact: true }),
@@ -197,19 +204,19 @@ test("tab2 links store bubbles, sorted bars, port scenarios and multi-stop trips
   expect(errors).toEqual([]);
 });
 
-test("a CUI single-port request opens logistics advice and its statistics link returns to store orders", async ({
+test("a CUI single-port request opens logistics advice and its view switch returns to store orders", async ({
   page,
 }) => {
   await page.goto("/");
   await page.clock.install();
   await page
     .getByTestId("story-command")
-    .fill("/vessel-allocation 物流建议 单港");
+    .fill("/order-allocation 物流建议 单港");
   await page.getByTestId("story-command").press("Enter");
   await page.clock.runFor(12000);
   await expect(
-    page.getByRole("tab", { name: "订单分车", exact: true }),
-  ).toHaveAttribute("aria-selected", "true");
+    page.locator('[data-skill-command="/order-allocation"]'),
+  ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "单港 · 吉达", exact: true }),
   ).toHaveAttribute("aria-pressed", "true");
@@ -217,8 +224,8 @@ test("a CUI single-port request opens logistics advice and its statistics link r
     page.getByTestId("vessel-orders").locator("[data-port='P-E']"),
   ).toHaveCount(0);
   await page
-    .getByRole("button", { name: /查看订单分车/ })
-    .first()
+    .getByTestId("vessel-orders")
+    .getByRole("button", { name: "门店订单", exact: true })
     .click();
   await expect(
     page.getByRole("button", { name: "门店订单", exact: true }),
@@ -231,7 +238,7 @@ test("store search suggests cities and stores, and accepts mouse and keyboard se
 }) => {
   await page.goto("/");
   await page.clock.install();
-  await page.getByTestId("story-command").fill("/vessel-allocation 订单分车");
+  await page.getByTestId("story-command").fill("/order-allocation 订单分车");
   await page.getByTestId("story-command").press("Enter");
   await page.clock.runFor(12000);
   const search = page.getByRole("combobox", { name: "搜索订单门店" });

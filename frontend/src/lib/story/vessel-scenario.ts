@@ -6,10 +6,12 @@ import {
 } from "./vessel-replenishment";
 import {
   calculateCommercial,
+  commercialCalculationVersion,
   defaultCommercialParameters,
 } from "./vessel-commercial";
 import type { PlanningSnapshot } from "./store-planning";
 import type { StoryRun } from "./types";
+import { vesselInventoryVersion } from "./vessel-overview";
 export type VesselScenarioVersion = {
   id: string;
   parentId: string | null;
@@ -56,13 +58,29 @@ export function createVesselScenario(
 export function hydrateVesselScenario(run: StoryRun): StoryRun {
   if (run.planning?.kind !== "allocation" || !run.planning.replenishment)
     return run;
-  if (run.planning.commercial && run.planning.versions?.length) return run;
+  if (
+    run.planning.replenishment.sourceVersion === vesselInventoryVersion &&
+    run.planning.commercial?.calculationVersion ===
+      commercialCalculationVersion &&
+    run.planning.versions?.length
+  )
+    return run;
   if (run.planning.versions?.length)
     return selectVesselScenarioVersion(
       run,
       run.planning.versionId ?? run.planning.versions[0].id,
     );
-  return { ...run, planning: createVesselScenario(run.planning.replenishment) };
+  const next = {
+    ...run,
+    planning: createVesselScenario(
+      calculateVesselReplenishment(
+        normalized(run.planning.replenishment.parameters),
+      ),
+    ),
+  };
+  next.planningSummary = scenarioSummary(next.planning);
+  next.answer = next.planningSummary;
+  return next;
 }
 export function selectVesselScenarioVersion(
   run: StoryRun,

@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import VesselSectionHeading from "./VesselSectionHeading";
+import { StreamBlock } from "./SkillStream";
 import {
   calculateVesselCoverage,
   vesselOverview,
@@ -928,355 +929,371 @@ export default function VesselOverviewDashboard({
           <small>模拟快照 {data.snapshotDate}</small>
         </div>
       </header>
-      <div className="vo-kpis" aria-label="总览关键指标">
-        <article>
-          <span>当船供给</span>
-          <strong>
-            {fmt(summary.supply)}
-            <small>台</small>
-          </strong>
-          <p>
-            <i
-              className={
-                summary.supplyChangePercent < 0
-                  ? "vo-delta-down"
-                  : "vo-delta-up"
-              }
-            >
-              {supplyDelta}
-            </i>{" "}
-            较上月代表船次
-          </p>
-          <small>
-            丰田 {fmt(summary.toyotaSupply)} · 雷克萨斯{" "}
-            {fmt(summary.lexusSupply)}
-          </small>
-        </article>
-        <article>
-          <span>订单缺货</span>
-          <strong>
-            {fmt(summary.orderShortage)}
-            <small>台</small>
-          </strong>
-          <p>当前订单 {fmt(summary.orders)} 台</p>
-          <small>订单优先匹配 · 按车型计算缺口</small>
-        </article>
-        <article>
-          <span>4 周补库存缺货</span>
-          <strong>
-            {fmt(summary.replenishmentShortage)}
-            <small>台</small>
-          </strong>
-          <p>4 周需求 {fmt(summary.demand4Weeks)} 台</p>
-          <small>4 周销售需求包含当前订单</small>
-        </article>
-        <article>
-          <span>仓店当前库存</span>
-          <strong>
-            {fmt(summary.storeStock + summary.vpcStock)}
-            <small>台</small>
-          </strong>
-          <p>
-            VPC {fmt(summary.vpcStock)} · 门店 {fmt(summary.storeStock)}
-          </p>
-          <small>
-            {data.vpcs.length} 个 VPC · {data.regions.length} 个大区 ·{" "}
-            {data.stores.length} 家门店
-          </small>
-        </article>
-        <article className="vo-coverage" data-testid="overview-sellable-weeks">
-          <span>整体预计可售卖周数</span>
-          <strong>
-            {coverage.weeks === null ? "—" : fmt(coverage.weeks, 1)}
-            <small>周</small>
-          </strong>
-          <p>本船＋已有库存 {fmt(coverage.available)} 台</p>
-          <small className="vo-coverage-models">
-            {coverage.models.slice(0, 3).map((model) => (
-              <span key={model.model}>
-                <span>{shortModel(model.model)}</span>
-                <b>{model.weeks === null ? "—" : fmt(model.weeks, 1)} 周</b>
-              </span>
-            ))}
-          </small>
-        </article>
-      </div>
-
-      <OverviewSection
-        number="01"
-        english="VESSEL SUPPLY"
-        title="供给情况"
-        note="品牌口径 · 当船与历史代表船次"
-      >
-        <ChartCard
-          id="supply-models"
-          title="当船车型供给"
-          subtitle="本船各车型可分配数量"
-          type="bar"
-          legend={
-            <Legend
-              items={[
-                { label: "丰田", color: COLORS.toyota },
-                { label: "雷克萨斯", color: COLORS.lexus },
-              ]}
-            />
-          }
-          footer={
-            <span>
-              本船合计 <b>{fmt(summary.supply)} 台</b>
-            </span>
-          }
-        >
-          <HorizontalBars
-            title="当船车型供给"
-            rows={data.models.map((model) => ({
-              id: model.model,
-              label: shortModel(model.model),
-              fullLabel: `${model.brand} · ${model.model}`,
-              segments: [
-                {
-                  label: "当船供给",
-                  value: model.supply,
-                  color: model.brand === "丰田" ? COLORS.toyota : COLORS.lexus,
-                },
-              ],
-            }))}
-          />
-        </ChartCard>
-        <ChartCard
-          id="supply-history"
-          title="历史 13 个月供给"
-          subtitle="2025.07—2026.07 · 每月代表船次"
-          type="stacked-bar"
-          legend={
-            <Legend
-              items={[
-                { label: "丰田", color: COLORS.toyota },
-                { label: "雷克萨斯", color: COLORS.lexus },
-              ]}
-            />
-          }
-          footer={
-            <span>
-              2026.03 起丰田下降含霍尔木兹受扰假设；<b>船次为模拟</b>。
-            </span>
-          }
-        >
-          <SupplyHistoryChart history={data.supplyHistory} />
-        </ChartCard>
-      </OverviewSection>
-
-      <OverviewSection
-        number="02"
-        english="ORDER & REPLENISHMENT DEMAND"
-        title="订单与补库缺货"
-        note="直营 / 授权 · 缺货按车型降序"
-        columns={3}
-      >
-        <ChartCard
-          id="orders"
-          title="订单情况"
-          subtitle="当前订单：已匹配与缺货"
-          type="stacked-bar"
-          legend={
-            <Legend
-              items={[
-                { label: "直营已匹配", color: COLORS.direct },
-                { label: "直营缺货", color: COLORS.directShortage },
-                { label: "授权已匹配", color: COLORS.authorized },
-                { label: "授权缺货", color: COLORS.authorizedShortage },
-              ]}
-            />
-          }
-          footer={
-            <div className="vo-demand-footer">
-              <span>4 周需求</span>
-              {data.channels.map((channel) => (
-                <span key={channel.channel}>
-                  {channel.channel} <b>{fmt(channel.demand4Weeks)}</b> 台
+      <StreamBlock name="statistics-summary">
+        <div className="vo-kpis" aria-label="总览关键指标">
+          <article>
+            <span>当船供给</span>
+            <strong>
+              {fmt(summary.supply)}
+              <small>台</small>
+            </strong>
+            <p>
+              <i
+                className={
+                  summary.supplyChangePercent < 0
+                    ? "vo-delta-down"
+                    : "vo-delta-up"
+                }
+              >
+                {supplyDelta}
+              </i>{" "}
+              较上月代表船次
+            </p>
+            <small>
+              丰田 {fmt(summary.toyotaSupply)} · 雷克萨斯{" "}
+              {fmt(summary.lexusSupply)}
+            </small>
+          </article>
+          <article>
+            <span>订单缺货</span>
+            <strong>
+              {fmt(summary.orderShortage)}
+              <small>台</small>
+            </strong>
+            <p>当前订单 {fmt(summary.orders)} 台</p>
+            <small>订单优先匹配 · 按车型计算缺口</small>
+          </article>
+          <article>
+            <span>4 周补库存缺货</span>
+            <strong>
+              {fmt(summary.replenishmentShortage)}
+              <small>台</small>
+            </strong>
+            <p>4 周需求 {fmt(summary.demand4Weeks)} 台</p>
+            <small>4 周销售需求包含当前订单</small>
+          </article>
+          <article>
+            <span>仓店当前库存</span>
+            <strong>
+              {fmt(summary.storeStock + summary.vpcStock)}
+              <small>台</small>
+            </strong>
+            <p>
+              VPC {fmt(summary.vpcStock)} · 门店 {fmt(summary.storeStock)}
+            </p>
+            <small>
+              {data.vpcs.length} 个 VPC · {data.regions.length} 个大区 ·{" "}
+              {data.stores.length} 家门店
+            </small>
+          </article>
+          <article
+            className="vo-coverage"
+            data-testid="overview-sellable-weeks"
+          >
+            <span>整体预计可售卖周数</span>
+            <strong>
+              {coverage.weeks === null ? "—" : fmt(coverage.weeks, 1)}
+              <small>周</small>
+            </strong>
+            <p>本船＋已有库存 {fmt(coverage.available)} 台</p>
+            <small className="vo-coverage-models">
+              {coverage.models.slice(0, 3).map((model) => (
+                <span key={model.model}>
+                  <span>{shortModel(model.model)}</span>
+                  <b>{model.weeks === null ? "—" : fmt(model.weeks, 1)} 周</b>
                 </span>
               ))}
-            </div>
-          }
+            </small>
+          </article>
+        </div>
+      </StreamBlock>
+
+      <StreamBlock name="statistics-supply">
+        <OverviewSection
+          number="01"
+          english="VESSEL SUPPLY"
+          title="供给情况"
+          note="品牌口径 · 当船与历史代表船次"
         >
-          <HorizontalBars
-            title="直营与授权订单情况"
-            labelWidth={42}
-            rows={data.channels.map((channel) => ({
-              id: channel.channel,
-              label: channel.channel,
-              segments: [
-                {
-                  label: "已匹配",
-                  value: channel.orders - channel.orderShortage,
-                  color:
-                    channel.channel === "直营"
-                      ? COLORS.direct
-                      : COLORS.authorized,
-                },
-                {
-                  label: "缺货",
-                  value: channel.orderShortage,
-                  color:
-                    channel.channel === "直营"
-                      ? COLORS.directShortage
-                      : COLORS.authorizedShortage,
-                },
-              ],
-            }))}
-          />
-        </ChartCard>
-        <ChartCard
-          id="order-shortage"
-          title="各车型订单缺货"
-          subtitle="按订单优先匹配后的缺口"
-          type="stacked-bar"
-          legend={<Legend items={channelLegend} />}
-          footer={
-            <span>
-              订单缺货合计 <b>{fmt(summary.orderShortage)} 台</b>
-            </span>
-          }
+          <ChartCard
+            id="supply-models"
+            title="当船车型供给"
+            subtitle="本船各车型可分配数量"
+            type="bar"
+            legend={
+              <Legend
+                items={[
+                  { label: "丰田", color: COLORS.toyota },
+                  { label: "雷克萨斯", color: COLORS.lexus },
+                ]}
+              />
+            }
+            footer={
+              <span>
+                本船合计 <b>{fmt(summary.supply)} 台</b>
+              </span>
+            }
+          >
+            <HorizontalBars
+              title="当船车型供给"
+              rows={data.models.map((model) => ({
+                id: model.model,
+                label: shortModel(model.model),
+                fullLabel: `${model.brand} · ${model.model}`,
+                segments: [
+                  {
+                    label: "当船供给",
+                    value: model.supply,
+                    color:
+                      model.brand === "丰田" ? COLORS.toyota : COLORS.lexus,
+                  },
+                ],
+              }))}
+            />
+          </ChartCard>
+          <ChartCard
+            id="supply-history"
+            title="历史 13 个月供给"
+            subtitle="2025.07—2026.07 · 每月代表船次"
+            type="stacked-bar"
+            legend={
+              <Legend
+                items={[
+                  { label: "丰田", color: COLORS.toyota },
+                  { label: "雷克萨斯", color: COLORS.lexus },
+                ]}
+              />
+            }
+            footer={
+              <span>
+                2026.03 起丰田下降含霍尔木兹受扰假设；<b>船次为模拟</b>。
+              </span>
+            }
+          >
+            <SupplyHistoryChart history={data.supplyHistory} />
+          </ChartCard>
+        </OverviewSection>
+      </StreamBlock>
+
+      <StreamBlock name="statistics-demand">
+        <OverviewSection
+          number="02"
+          english="ORDER & REPLENISHMENT DEMAND"
+          title="订单与补库缺货"
+          note="直营 / 授权 · 缺货按车型降序"
+          columns={3}
         >
-          <HorizontalBars
+          <ChartCard
+            id="orders"
+            title="订单情况"
+            subtitle="当前订单：已匹配与缺货"
+            type="stacked-bar"
+            legend={
+              <Legend
+                items={[
+                  { label: "直营已匹配", color: COLORS.direct },
+                  { label: "直营缺货", color: COLORS.directShortage },
+                  { label: "授权已匹配", color: COLORS.authorized },
+                  { label: "授权缺货", color: COLORS.authorizedShortage },
+                ]}
+              />
+            }
+            footer={
+              <div className="vo-demand-footer">
+                <span>4 周需求</span>
+                {data.channels.map((channel) => (
+                  <span key={channel.channel}>
+                    {channel.channel} <b>{fmt(channel.demand4Weeks)}</b> 台
+                  </span>
+                ))}
+              </div>
+            }
+          >
+            <HorizontalBars
+              title="直营与授权订单情况"
+              labelWidth={42}
+              rows={data.channels.map((channel) => ({
+                id: channel.channel,
+                label: channel.channel,
+                segments: [
+                  {
+                    label: "已匹配",
+                    value: channel.orders - channel.orderShortage,
+                    color:
+                      channel.channel === "直营"
+                        ? COLORS.direct
+                        : COLORS.authorized,
+                  },
+                  {
+                    label: "缺货",
+                    value: channel.orderShortage,
+                    color:
+                      channel.channel === "直营"
+                        ? COLORS.directShortage
+                        : COLORS.authorizedShortage,
+                  },
+                ],
+              }))}
+            />
+          </ChartCard>
+          <ChartCard
+            id="order-shortage"
             title="各车型订单缺货"
-            rows={shortageRows("order")}
-            labelWidth={68}
-          />
-        </ChartCard>
-        <ChartCard
-          id="replenishment-shortage"
-          title="各车型 4 周补库缺货"
-          subtitle="未来 4 周销售需求的未覆盖量"
-          type="stacked-bar"
-          legend={<Legend items={channelLegend} />}
-          footer={
-            <span>
-              补库缺货合计 <b>{fmt(summary.replenishmentShortage)} 台</b>
-            </span>
-          }
-        >
-          <HorizontalBars
-            title="各车型4周补库存缺货"
-            rows={shortageRows("replenishment")}
-            labelWidth={68}
-          />
-        </ChartCard>
-      </OverviewSection>
+            subtitle="按订单优先匹配后的缺口"
+            type="stacked-bar"
+            legend={<Legend items={channelLegend} />}
+            footer={
+              <span>
+                订单缺货合计 <b>{fmt(summary.orderShortage)} 台</b>
+              </span>
+            }
+          >
+            <HorizontalBars
+              title="各车型订单缺货"
+              rows={shortageRows("order")}
+              labelWidth={68}
+            />
+          </ChartCard>
+          <ChartCard
+            id="replenishment-shortage"
+            title="各车型 4 周补库缺货"
+            subtitle="未来 4 周销售需求的未覆盖量"
+            type="stacked-bar"
+            legend={<Legend items={channelLegend} />}
+            footer={
+              <span>
+                补库缺货合计 <b>{fmt(summary.replenishmentShortage)} 台</b>
+              </span>
+            }
+          >
+            <HorizontalBars
+              title="各车型4周补库存缺货"
+              rows={shortageRows("replenishment")}
+              labelWidth={68}
+            />
+          </ChartCard>
+        </OverviewSection>
+      </StreamBlock>
 
-      <OverviewSection
-        number="03"
-        english="VPC SALES & INVENTORY"
-        title="VPC 销速与库存"
-        note={`${data.vpcs.length} 个车辆处理中心 · 共用同一配色`}
-      >
-        <ChartCard
-          id="vpc-sales"
-          title="VPC 历史周销速"
-          subtitle="2025.07—2026.07 · 月销量折算"
-          type="line"
-          legend={<Legend items={vpcSeries} lines />}
-          footer={<span>周销速 = 月销量 × 7 ÷ 当月天数</span>}
+      <StreamBlock name="statistics-sales">
+        <OverviewSection
+          number="03"
+          english="VPC SALES & INVENTORY"
+          title="VPC 销速与库存"
+          note={`${data.vpcs.length} 个车辆处理中心 · 共用同一配色`}
         >
-          <SalesLines title="三个VPC历史周销速" series={vpcSeries} />
-        </ChartCard>
-        <ChartCard
-          id="vpc-stock"
-          title="VPC 当前库存"
-          subtitle={`模拟快照 ${data.snapshotDate} · 台`}
-          type="bar"
-          legend={<Legend items={vpcSeries} />}
-          footer={
-            <span>
-              VPC 库存合计 <b>{fmt(summary.vpcStock)} 台</b>
-            </span>
-          }
-        >
-          <StockBars
-            title="三个VPC当前库存"
-            rows={data.vpcs.map((vpc, index) => ({
-              id: vpc.id,
-              label: vpc.id,
-              value: vpc.stock,
-              color: REGION_COLORS[index],
-            }))}
-          />
-        </ChartCard>
-      </OverviewSection>
+          <ChartCard
+            id="vpc-sales"
+            title="VPC 历史周销速"
+            subtitle="2025.07—2026.07 · 月销量折算"
+            type="line"
+            legend={<Legend items={vpcSeries} lines />}
+            footer={<span>周销速 = 月销量 × 7 ÷ 当月天数</span>}
+          >
+            <SalesLines title="三个VPC历史周销速" series={vpcSeries} />
+          </ChartCard>
+          <ChartCard
+            id="vpc-stock"
+            title="VPC 当前库存"
+            subtitle={`模拟快照 ${data.snapshotDate} · 台`}
+            type="bar"
+            legend={<Legend items={vpcSeries} />}
+            footer={
+              <span>
+                VPC 库存合计 <b>{fmt(summary.vpcStock)} 台</b>
+              </span>
+            }
+          >
+            <StockBars
+              title="三个VPC当前库存"
+              rows={data.vpcs.map((vpc, index) => ({
+                id: vpc.id,
+                label: vpc.id,
+                value: vpc.stock,
+                color: REGION_COLORS[index],
+              }))}
+            />
+          </ChartCard>
+        </OverviewSection>
+      </StreamBlock>
 
-      <OverviewSection
-        number="04"
-        english="REGIONAL SALES & INVENTORY"
-        title="大区销速与库存"
-        note={`${data.regions.length} 个大区 · 同色对应同一区域`}
-      >
-        <ChartCard
-          id="region-sales"
-          title="大区历史周销速"
-          subtitle="2025.07—2026.07 · 月销量折算"
-          type="line"
-          legend={<Legend items={regionSeries} lines />}
-          footer={<span>周销速 = 月销量 × 7 ÷ 当月天数</span>}
+      <StreamBlock name="statistics-inventory">
+        <OverviewSection
+          number="04"
+          english="REGIONAL SALES & INVENTORY"
+          title="大区销速与库存"
+          note={`${data.regions.length} 个大区 · 同色对应同一区域`}
         >
-          <SalesLines title="五个大区历史周销速" series={regionSeries} />
-        </ChartCard>
-        <ChartCard
-          id="region-stock"
-          title="大区当前库存"
-          subtitle={`模拟快照 ${data.snapshotDate} · 台`}
-          type="bar"
-          legend={<Legend items={regionSeries} />}
-          footer={<span>大区库存按门店所属区域汇总</span>}
-        >
-          <StockBars
-            title="五个大区当前库存"
-            rows={data.regions.map((region, index) => ({
-              id: region.id,
-              label: region.name,
-              value: region.stock,
-              color: REGION_COLORS[index],
-            }))}
-          />
-        </ChartCard>
-      </OverviewSection>
+          <ChartCard
+            id="region-sales"
+            title="大区历史周销速"
+            subtitle="2025.07—2026.07 · 月销量折算"
+            type="line"
+            legend={<Legend items={regionSeries} lines />}
+            footer={<span>周销速 = 月销量 × 7 ÷ 当月天数</span>}
+          >
+            <SalesLines title="五个大区历史周销速" series={regionSeries} />
+          </ChartCard>
+          <ChartCard
+            id="region-stock"
+            title="大区当前库存"
+            subtitle={`模拟快照 ${data.snapshotDate} · 台`}
+            type="bar"
+            legend={<Legend items={regionSeries} />}
+            footer={<span>大区库存按门店所属区域汇总</span>}
+          >
+            <StockBars
+              title="五个大区当前库存"
+              rows={data.regions.map((region, index) => ({
+                id: region.id,
+                label: region.name,
+                value: region.stock,
+                color: REGION_COLORS[index],
+              }))}
+            />
+          </ChartCard>
+        </OverviewSection>
+      </StreamBlock>
 
-      <OverviewSection
-        number="05"
-        english="STORE SALES & INVENTORY"
-        title="门店销速与库存"
-        note={`全部 ${data.stores.length} 家门店 · 两图按周均销量同序排列`}
-      >
-        <ChartCard
-          id="store-sales"
-          title="门店近 8 周周均销量"
-          subtitle={`${data.weeklyWindow.start}—${data.weeklyWindow.end} · 销量降序`}
-          type="bar"
-          legend={<Legend items={channelLegend} />}
-          footer={
-            <span>
-              周均销量 = 窗口销量 ÷ {data.weeklyWindow.weeks} 周 ·{" "}
-              <b>横向滚动查看全部门店 →</b>
-            </span>
-          }
+      <StreamBlock name="statistics-stores">
+        <OverviewSection
+          number="05"
+          english="STORE SALES & INVENTORY"
+          title="门店销速与库存"
+          note={`全部 ${data.stores.length} 家门店 · 两图按周均销量同序排列`}
         >
-          <StoreBars metric="weeklySales" />
-        </ChartCard>
-        <ChartCard
-          id="store-stock"
-          title="门店当前库存"
-          subtitle={`模拟快照 ${data.snapshotDate} · 沿用左图门店顺序`}
-          type="bar"
-          legend={<Legend items={channelLegend} />}
-          footer={
-            <span>
-              门店库存合计 <b>{fmt(summary.storeStock)} 台</b> ·
-              悬停或聚焦查看门店全名
-            </span>
-          }
-        >
-          <StoreBars metric="stock" />
-        </ChartCard>
-      </OverviewSection>
+          <ChartCard
+            id="store-sales"
+            title="门店近 8 周周均销量"
+            subtitle={`${data.weeklyWindow.start}—${data.weeklyWindow.end} · 销量降序`}
+            type="bar"
+            legend={<Legend items={channelLegend} />}
+            footer={
+              <span>
+                周均销量 = 窗口销量 ÷ {data.weeklyWindow.weeks} 周 ·{" "}
+                <b>横向滚动查看全部门店 →</b>
+              </span>
+            }
+          >
+            <StoreBars metric="weeklySales" />
+          </ChartCard>
+          <ChartCard
+            id="store-stock"
+            title="门店当前库存"
+            subtitle={`模拟快照 ${data.snapshotDate} · 沿用左图门店顺序`}
+            type="bar"
+            legend={<Legend items={channelLegend} />}
+            footer={
+              <span>
+                门店期初库存 <b>{fmt(summary.storeStock)} 台</b> · 按 4
+                周目标，期初满足率 15%–35%
+              </span>
+            }
+          >
+            <StoreBars metric="stock" />
+          </ChartCard>
+        </OverviewSection>
+      </StreamBlock>
 
       <details className="vo-provenance">
         <summary>

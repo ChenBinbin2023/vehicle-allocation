@@ -4,6 +4,7 @@ test("collapsing navigation gives the canvas more space and keeps navigation usa
   page,
 }) => {
   await page.goto("/");
+  await page.getByRole("button", { name: "供应链工作台", exact: true }).click();
   const canvas = page.locator("main.story-canvas");
   const before = (await canvas.boundingBox())!.width;
   await page.getByRole("button", { name: "收起导航", exact: true }).click();
@@ -16,7 +17,7 @@ test("collapsing navigation gives the canvas more space and keeps navigation usa
   ).toBeVisible();
   await page.getByRole("button", { name: "展开导航", exact: true }).click();
   await expect(page.getByTestId("workspace-project-tree")).toContainText(
-    "ALJ · 沙特供应链",
+    "分车计划",
   );
 });
 
@@ -26,6 +27,7 @@ test("closing the desktop CUI expands the canvas and preserves an unfinished com
   await page.goto("/");
   const command = page.getByTestId("story-command");
   await command.fill("/smart-query 查看月度销量");
+  await page.getByRole("button", { name: "供应链工作台", exact: true }).click();
   const canvas = page.locator("main.story-canvas");
   const before = (await canvas.boundingBox())!.width;
   await page.getByRole("button", { name: "关闭 CUI", exact: true }).click();

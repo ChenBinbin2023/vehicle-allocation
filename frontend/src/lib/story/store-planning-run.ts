@@ -40,6 +40,7 @@ import {
 } from "./vessel-replenishment";
 
 export type PlanningRunOptions = {
+  dispatchRunId?: string;
   input?: PlanningInput;
   allocationRunId?: string;
   profitInput?: import("./profit-analysis").ProfitScenario;
@@ -51,6 +52,7 @@ export function latestStoreAllocation(state: CampaignState, id?: string) {
     .reverse()
     .find(
       (run) =>
+        run.command === "/vessel-allocation" &&
         run.planning?.kind === "allocation" &&
         run.status === "complete" &&
         !run.blocks.some((b) => b.status === "stale") &&

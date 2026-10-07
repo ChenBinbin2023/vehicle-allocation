@@ -10,7 +10,7 @@ async function runSkill(page: Page, command: string) {
   await page.getByTestId("story-command").press("Enter");
   await page.clock.runFor(8000);
 }
-test("process links reveal the matching delivery tab and report unknown receiving dates", async ({
+test("delivery tabs reveal matching results and report unknown receiving dates", async ({
   page,
 }) => {
   const errors: string[] = [];
@@ -20,7 +20,7 @@ test("process links reveal the matching delivery tab and report unknown receivin
   await expect(page.locator(".story-sidebar")).not.toContainText("故事进度");
   await runSkill(page, "/vessel-allocation");
   await runSkill(page, "/delivery-plan");
-  await page.getByRole("button", { name: /查看到店批次/ }).click();
+  await page.getByRole("tab", { name: "到店批次", exact: true }).click();
   await expect(
     page.getByRole("tab", { name: "到店批次", exact: true }),
   ).toHaveAttribute("aria-selected", "true");

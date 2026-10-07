@@ -82,9 +82,12 @@ export type CommercialProfitRow = CommercialMoney & {
   unitFixed: number;
   priceFactor: number;
 };
+export const commercialCalculationVersion = "CAPACITY_BUDGET_V1";
 export type CommercialResult = {
+  calculationVersion?: string;
   input: CommercialParameters;
   logistics: {
+    truckCapacity: number;
     quantity: number;
     direct: number;
     viaHub: number;
@@ -266,7 +269,9 @@ export function calculateCommercial(
   validateCommercialParameters(input);
   const stores = result.stores.map((s) => {
     const r = input.logistics[s.id],
-      unitCost = cents(r.baseUnitCost * r.factor);
+      // The editable baseline is an 8-car full-load budget. Hold the vehicle
+      // budget constant and spread it across the selected 8–10 car capacity.
+      unitCost = cents((r.baseUnitCost * r.factor * 8) / capacity);
     return {
       storeId: s.id,
       name: s.name,
@@ -446,8 +451,10 @@ export function calculateCommercial(
     flush();
   }
   return {
+    calculationVersion: commercialCalculationVersion,
     input,
     logistics: {
+      truckCapacity: capacity,
       quantity: result.summary.replenishment,
       direct: result.summary.direct,
       viaHub: result.summary.vpc,
